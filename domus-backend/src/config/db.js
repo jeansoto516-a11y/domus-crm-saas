@@ -1,11 +1,18 @@
+require('dotenv').config();
+
 const { Pool } = require('pg');
 
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL não definida');
+}
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
+  connectionString,
+  ssl: {
     rejectUnauthorized: false
-    },
-  family: 4 // força IPv4 (RESOLVE ESSE ERRO)
+  }
 });
 
 module.exports = pool;
