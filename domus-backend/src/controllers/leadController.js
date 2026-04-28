@@ -15,7 +15,6 @@ const statusFlow = {
 exports.createLead = async (req, res) => {
   const { name, email, phone, status } = req.body;
 
-  // valida status
   if (status && !validStatus.includes(status)) {
     return res.status(400).json({ error: 'Status inválido' });
   }
@@ -40,13 +39,13 @@ exports.createLead = async (req, res) => {
   }
 };
 
-// LISTAR LEADS (MULTI-TENANT + FILTRO POR STATUS)
+// LISTAR LEADS (COM FILTRO POR STATUS + DATA)
 exports.getLeads = async (req, res) => {
-  const { status } = req.query;
+  const { status, date } = req.query;
 
-  console.log('STATUS:', status); 
+  console.log('STATUS:', status);
+  console.log('DATE:', date);
 
-  // valida status (se vier)
   if (status && !validStatus.includes(status)) {
     return res.status(400).json({ error: 'Status inválido' });
   }
@@ -54,26 +53,30 @@ exports.getLeads = async (req, res) => {
   try {
     let query = '';
     let values = [];
+    let index = 1;
 
-    // ADMIN → vê tudo da imobiliaria
     if (req.user.role === 'admin') {
       query = 'SELECT * FROM leads WHERE company_id = $1';
-      values = [req.user.company_id];
-
-      if (status) {
-        query += ' AND status = $2';
-        values.push(status);
-      }
-
+      values.push(req.user.company_id);
+      index++;
     } else {
-      // CORRETOR → vê só os próprios leads
       query = 'SELECT * FROM leads WHERE user_id = $1 AND company_id = $2';
-      values = [req.user.id, req.user.company_id];
+      values.push(req.user.id, req.user.company_id);
+      index += 2;
+    }
 
-      if (status) {
-        query += ' AND status = $3';
-        values.push(status);
-      }
+    // filtro por status
+    if (status) {
+      query += ` AND status = $${index}`;
+      values.push(status);
+      index++;
+    }
+
+    // 🔥 filtro por data
+    if (date) {
+      query += ` AND DATE(created_at) = $${index}`;
+      values.push(date);
+      index++;
     }
 
     const result = await pool.query(query, values);
@@ -86,23 +89,20 @@ exports.getLeads = async (req, res) => {
   }
 };
 
-// ATUALIZAR LEAD (COM CONTROLE DE PIPELINE)
+// ATUALIZAR LEAD (PIPELINE)
 exports.updateLead = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  // valida se veio status
   if (!status) {
     return res.status(400).json({ error: 'Status é obrigatório' });
   }
 
-  // valida status válido
   if (!validStatus.includes(status)) {
     return res.status(400).json({ error: 'Status inválido' });
   }
 
   try {
-    // busca o lead atual
     const currentLead = await pool.query(
       'SELECT status FROM leads WHERE id = $1 AND company_id = $2',
       [id, req.user.company_id]
@@ -113,8 +113,6 @@ exports.updateLead = async (req, res) => {
     }
 
     const currentStatus = currentLead.rows[0].status;
-
-    // verifica se pode avançar no pipeline
     const allowedNext = statusFlow[currentStatus];
 
     if (!allowedNext.includes(status)) {
@@ -123,7 +121,6 @@ exports.updateLead = async (req, res) => {
       });
     }
 
-    // faz update
     const result = await pool.query(
       'UPDATE leads SET status = $1 WHERE id = $2 AND company_id = $3 RETURNING *',
       [status, id, req.user.company_id]
@@ -137,93 +134,12 @@ exports.updateLead = async (req, res) => {
   }
 };
 
-// CONTAGEM DE LEADS POR STATUS (DASHBOARD)
-exports.getLeadsStats = async (req, res) => {
-  try {
-    const result = await pool.query(
-      `
-      SELECT status, COUNT(*) 
-      FROM leads
-      WHERE company_id = $1
-      GROUP BY status
-      `,
-      [req.user.company_id]
-    );
-
-    // estrutura padrão quantidade de leads por status
-    const stats = {
-      novo: 0,
-      contato: 0,
-      visita: 0,
-      proposta: 0,
-      fechado: 0
-    };
-
-    // preencher com dados do banco
-    result.rows.forEach(row => {
-      stats[row.status] = parseInt(row.count);
-    });
-
-    res.json(stats);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
-  }
-};
-
+// DASHBOARD COMPLETO
 exports.getDashboard = async (req, res) => {
   try {
     const companyId = req.user.company_id;
 
-    // total de leads
-    const totalResult = await pool.query(
-      'SELECT COUNT(*) FROM leads WHERE company_id = $1',
-      [companyId]
-    );
-
-    // contagem por status
-    const statsResult = await pool.query(
-      `
-      SELECT status, COUNT(*) 
-      FROM leads
-      WHERE company_id = $1
-      GROUP BY status
-      `,
-      [companyId]
-    );
-
-    const stats = {
-      novo: 0,
-      contato: 0,
-      visita: 0,
-      proposta: 0,
-      fechado: 0
-    };
-
-    statsResult.rows.forEach(row => {
-      stats[row.status] = parseInt(row.count);
-    });
-
-    res.json({
-      leads: {
-        total: parseInt(totalResult.rows[0].count),
-        por_status: stats
-      }
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao carregar dashboard' });
-  }
-};
-
-//DASHBOARD — (APENAS TOTAL)
-exports.getDashboard = async (req, res) => {
-  try {
-    const companyId = req.user.company_id;
-
-    // TOTAL DE LEADS
+    // TOTAL
     const totalResult = await pool.query(
       'SELECT COUNT(*) FROM leads WHERE company_id = $1',
       [companyId]
@@ -231,7 +147,7 @@ exports.getDashboard = async (req, res) => {
 
     const total = Number(totalResult.rows[0].count);
 
-    // CONTAGEM POR STATUS
+    // POR STATUS
     const statsResult = await pool.query(
       `
       SELECT status, COUNT(*) 
@@ -261,7 +177,6 @@ exports.getDashboard = async (req, res) => {
       ? ((fechados / total) * 100).toFixed(2) + '%'
       : '0%';
 
-    // RESPOSTA FINAL (PADRÃO CORRETO)
     return res.json({
       total,
       por_status,
