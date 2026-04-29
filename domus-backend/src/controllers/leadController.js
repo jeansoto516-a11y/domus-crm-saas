@@ -2,31 +2,28 @@ const pool = require('../config/db');
 
 const validStatus = ['novo', 'contato', 'visita', 'proposta', 'fechado'];
 
-// fluxo permitido de status (pipeline)
-const statusFlow = {
-  novo: ['contato'],
-  contato: ['visita'],
-  visita: ['proposta'],
-  proposta: ['fechado'],
-  fechado: []
-};
-
-// CRIAR LEAD
+/**
+ * CRIAR LEAD
+ */
 exports.createLead = async (req, res) => {
   const { name, email, phone, status } = req.body;
 
-  if (status && !validStatus.includes(status)) {
+  const normalizedStatus = status?.trim().toLowerCase();
+
+  if (status && !validStatus.includes(normalizedStatus)) {
     return res.status(400).json({ error: 'Status inválido' });
   }
 
   try {
     const result = await pool.query(
-      'INSERT INTO leads (name, email, phone, status, user_id, company_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      `INSERT INTO leads (name, email, phone, status, user_id, company_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
       [
         name,
         email,
         phone,
-        status || 'novo',
+        normalizedStatus || 'novo',
         req.user.id,
         req.user.company_id
       ]
@@ -34,45 +31,44 @@ exports.createLead = async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('ERRO CREATE:', err);
     res.status(500).json({ error: 'Erro ao criar lead' });
   }
 };
 
-// LISTAR LEADS (COM FILTRO POR STATUS + DATA)
+/**
+ * LISTAR LEADS
+ */
 exports.getLeads = async (req, res) => {
   const { status, date } = req.query;
 
-  console.log('STATUS:', status);
-  console.log('DATE:', date);
-
-  if (status && !validStatus.includes(status)) {
-    return res.status(400).json({ error: 'Status inválido' });
-  }
-
   try {
-    let query = '';
+    let query;
     let values = [];
     let index = 1;
 
     if (req.user.role === 'admin') {
       query = 'SELECT * FROM leads WHERE company_id = $1';
       values.push(req.user.company_id);
-      index++;
+      index = 2;
     } else {
       query = 'SELECT * FROM leads WHERE user_id = $1 AND company_id = $2';
       values.push(req.user.id, req.user.company_id);
-      index += 2;
+      index = 3;
     }
 
-    // filtro por status
     if (status) {
+      const normalizedStatus = status.trim().toLowerCase();
+
+      if (!validStatus.includes(normalizedStatus)) {
+        return res.status(400).json({ error: 'Status inválido' });
+      }
+
       query += ` AND status = $${index}`;
-      values.push(status);
+      values.push(normalizedStatus);
       index++;
     }
 
-    // 🔥 filtro por data
     if (date) {
       query += ` AND DATE(created_at) = $${index}`;
       values.push(date);
@@ -82,29 +78,36 @@ exports.getLeads = async (req, res) => {
     const result = await pool.query(query, values);
 
     res.json(result.rows);
-
   } catch (err) {
-    console.error(err);
+    console.error('ERRO GET:', err);
     res.status(500).json({ error: 'Erro ao buscar leads' });
   }
 };
 
-// ATUALIZAR LEAD (PIPELINE)
+/**
+ * ATUALIZAR LEAD (COM DEBUG REAL)
+ */
 exports.updateLead = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  if (!status) {
+  console.log('🔥 UPDATE LEAD CHAMADO');
+  console.log('ID:', id);
+  console.log('STATUS RECEBIDO:', status);
+
+  const normalizedStatus = status?.trim().toLowerCase();
+
+  if (!normalizedStatus) {
     return res.status(400).json({ error: 'Status é obrigatório' });
   }
 
-  if (!validStatus.includes(status)) {
+  if (!validStatus.includes(normalizedStatus)) {
     return res.status(400).json({ error: 'Status inválido' });
   }
 
   try {
     const currentLead = await pool.query(
-      'SELECT status FROM leads WHERE id = $1 AND company_id = $2',
+      `SELECT status FROM leads WHERE id = $1 AND company_id = $2`,
       [id, req.user.company_id]
     );
 
@@ -112,34 +115,34 @@ exports.updateLead = async (req, res) => {
       return res.status(404).json({ error: 'Lead não encontrado' });
     }
 
-    const currentStatus = currentLead.rows[0].status;
-    const allowedNext = statusFlow[currentStatus];
-
-    if (!allowedNext.includes(status)) {
-      return res.status(400).json({
-        error: `Transição inválida: ${currentStatus} → ${status}`
-      });
-    }
+    console.log('STATUS ATUAL NO BANCO:', currentLead.rows[0].status);
+    console.log('NOVO STATUS:', normalizedStatus);
 
     const result = await pool.query(
-      'UPDATE leads SET status = $1 WHERE id = $2 AND company_id = $3 RETURNING *',
-      [status, id, req.user.company_id]
+      `UPDATE leads
+       SET status = $1
+       WHERE id = $2 AND company_id = $3
+       RETURNING *`,
+      [normalizedStatus, id, req.user.company_id]
     );
 
-    res.json(result.rows[0]);
+    console.log('RESULTADO UPDATE:', result.rows[0]);
+
+    return res.json(result.rows[0]);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao atualizar lead' });
+    console.error('ERRO UPDATE:', err);
+    return res.status(500).json({ error: 'Erro ao atualizar lead' });
   }
 };
 
-// DASHBOARD COMPLETO
+/**
+ * DASHBOARD
+ */
 exports.getDashboard = async (req, res) => {
   try {
     const companyId = req.user.company_id;
 
-    // TOTAL
     const totalResult = await pool.query(
       'SELECT COUNT(*) FROM leads WHERE company_id = $1',
       [companyId]
@@ -147,7 +150,6 @@ exports.getDashboard = async (req, res) => {
 
     const total = Number(totalResult.rows[0].count);
 
-    // POR STATUS
     const statsResult = await pool.query(
       `
       SELECT status, COUNT(*) 
@@ -170,7 +172,6 @@ exports.getDashboard = async (req, res) => {
       por_status[row.status] = Number(row.count);
     });
 
-    // CONVERSÃO
     const fechados = por_status.fechado;
 
     const conversao = total > 0
@@ -184,8 +185,7 @@ exports.getDashboard = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Erro ao carregar dashboard:', err);
-
+    console.error('Erro dashboard:', err);
     return res.status(500).json({
       error: 'Erro ao carregar dashboard'
     });
