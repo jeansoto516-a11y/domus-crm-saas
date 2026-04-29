@@ -85,7 +85,7 @@ exports.getLeads = async (req, res) => {
 };
 
 /**
- * ATUALIZAR LEAD (COM DEBUG REAL)
+ * ATUALIZAR LEAD
  */
 exports.updateLead = async (req, res) => {
   const { id } = req.params;
@@ -137,27 +137,49 @@ exports.updateLead = async (req, res) => {
 };
 
 /**
- * DASHBOARD
+ * DASHBOARD COM FILTRO DE DATA 🔥
  */
 exports.getDashboard = async (req, res) => {
   try {
     const companyId = req.user.company_id;
+    const { startDate, endDate } = req.query;
 
+    let where = `WHERE company_id = $1`;
+    let values = [companyId];
+    let index = 2;
+
+    // 🔥 FILTRO POR PERÍODO
+    if (startDate && endDate) {
+      where += ` AND DATE(created_at) BETWEEN $${index} AND $${index + 1}`;
+      values.push(startDate, endDate);
+      index += 2;
+    } else if (startDate) {
+      where += ` AND DATE(created_at) >= $${index}`;
+      values.push(startDate);
+      index++;
+    } else if (endDate) {
+      where += ` AND DATE(created_at) <= $${index}`;
+      values.push(endDate);
+      index++;
+    }
+
+    // 🔥 TOTAL
     const totalResult = await pool.query(
-      'SELECT COUNT(*) FROM leads WHERE company_id = $1',
-      [companyId]
+      `SELECT COUNT(*) FROM leads ${where}`,
+      values
     );
 
     const total = Number(totalResult.rows[0].count);
 
+    // 🔥 POR STATUS
     const statsResult = await pool.query(
       `
       SELECT status, COUNT(*) 
       FROM leads
-      WHERE company_id = $1
+      ${where}
       GROUP BY status
       `,
-      [companyId]
+      values
     );
 
     const por_status = {
