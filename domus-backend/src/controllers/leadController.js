@@ -17,7 +17,7 @@ exports.createLead = async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO leads (name, email, phone, status, user_id, company_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
         name,
@@ -91,7 +91,7 @@ exports.updateLead = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  console.log('🔥 UPDATE LEAD CHAMADO');
+  console.log(' UPDATE LEAD CHAMADO');
   console.log('ID:', id);
   console.log('STATUS RECEBIDO:', status);
 
@@ -120,9 +120,9 @@ exports.updateLead = async (req, res) => {
 
     const result = await pool.query(
       `UPDATE leads
-       SET status = $1
-       WHERE id = $2 AND company_id = $3
-       RETURNING *`,
+        SET status = $1
+        WHERE id = $2 AND company_id = $3
+        RETURNING *`,
       [normalizedStatus, id, req.user.company_id]
     );
 
@@ -137,7 +137,7 @@ exports.updateLead = async (req, res) => {
 };
 
 /**
- * DASHBOARD COM FILTRO DE DATA 🔥
+ * DASHBOARD COM FILTRO DE DATA 
  */
 exports.getDashboard = async (req, res) => {
   try {
@@ -148,7 +148,7 @@ exports.getDashboard = async (req, res) => {
     let values = [companyId];
     let index = 2;
 
-    // 🔥 FILTRO POR PERÍODO
+    // FILTRO POR PERÍODO
     if (startDate && endDate) {
       where += ` AND DATE(created_at) BETWEEN $${index} AND $${index + 1}`;
       values.push(startDate, endDate);
@@ -163,7 +163,7 @@ exports.getDashboard = async (req, res) => {
       index++;
     }
 
-    // 🔥 TOTAL
+    // TOTAL
     const totalResult = await pool.query(
       `SELECT COUNT(*) FROM leads ${where}`,
       values
@@ -171,7 +171,7 @@ exports.getDashboard = async (req, res) => {
 
     const total = Number(totalResult.rows[0].count);
 
-    // 🔥 POR STATUS
+    // POR STATUS
     const statsResult = await pool.query(
       `
       SELECT status, COUNT(*) 
