@@ -1,5 +1,7 @@
 const pool = require('../config/db');
 
+const { calculateScore, getTemperature } = require('../services/leadScoringService');
+
 const validStatus = ['novo', 'contato', 'visita', 'proposta', 'fechado'];
 
 /**
@@ -15,21 +17,52 @@ exports.createLead = async (req, res) => {
   }
 
   try {
+
+    const leadData = {
+      name,
+      email,
+      phone,
+      status: normalizedStatus || 'novo'
+    };
+
+    // SCORE
+    const score = calculateScore(leadData);
+
+    // TEMPERATURA
+    const temperature = getTemperature(score);
+
     const result = await pool.query(
-      `INSERT INTO leads (name, email, phone, status, user_id, company_id)
-        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
+      `
+      INSERT INTO leads 
+      (
+        name,
+        email,
+        phone,
+        status,
+        score,
+        temperature,
+        user_id,
+        company_id
+      )
+      
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      
+      RETURNING *
+      `,
       [
         name,
         email,
         phone,
-        normalizedStatus || 'novo',
+        leadData.status,
+        score,
+        temperature,
         req.user.id,
         req.user.company_id
       ]
     );
 
     res.status(201).json(result.rows[0]);
+
   } catch (err) {
     console.error('ERRO CREATE:', err);
     res.status(500).json({ error: 'Erro ao criar lead' });
@@ -78,6 +111,7 @@ exports.getLeads = async (req, res) => {
     const result = await pool.query(query, values);
 
     res.json(result.rows);
+
   } catch (err) {
     console.error('ERRO GET:', err);
     res.status(500).json({ error: 'Erro ao buscar leads' });
@@ -91,7 +125,7 @@ exports.updateLead = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  console.log(' UPDATE LEAD CHAMADO');
+  console.log('UPDATE LEAD CHAMADO');
   console.log('ID:', id);
   console.log('STATUS RECEBIDO:', status);
 
@@ -106,8 +140,12 @@ exports.updateLead = async (req, res) => {
   }
 
   try {
+
     const currentLead = await pool.query(
-      `SELECT status FROM leads WHERE id = $1 AND company_id = $2`,
+      `
+      SELECT * FROM leads 
+      WHERE id = $1 AND company_id = $2
+      `,
       [id, req.user.company_id]
     );
 
@@ -115,15 +153,37 @@ exports.updateLead = async (req, res) => {
       return res.status(404).json({ error: 'Lead não encontrado' });
     }
 
-    console.log('STATUS ATUAL NO BANCO:', currentLead.rows[0].status);
-    console.log('NOVO STATUS:', normalizedStatus);
+    const currentData = currentLead.rows[0];
+
+    const updatedLead = {
+      ...currentData,
+      status: normalizedStatus
+    };
+
+    // SCORE
+    const score = calculateScore(updatedLead);
+
+    // TEMPERATURA
+    const temperature = getTemperature(score);
 
     const result = await pool.query(
-      `UPDATE leads
-        SET status = $1
-        WHERE id = $2 AND company_id = $3
-        RETURNING *`,
-      [normalizedStatus, id, req.user.company_id]
+      `
+      UPDATE leads
+      SET 
+        status = $1,
+        score = $2,
+        temperature = $3
+      WHERE id = $4 AND company_id = $5
+      
+      RETURNING *
+      `,
+      [
+        normalizedStatus,
+        score,
+        temperature,
+        id,
+        req.user.company_id
+      ]
     );
 
     console.log('RESULTADO UPDATE:', result.rows[0]);
@@ -137,29 +197,44 @@ exports.updateLead = async (req, res) => {
 };
 
 /**
- * DASHBOARD COM FILTRO DE DATA 
+ * DASHBOARD COM FILTRO DE DATA
  */
 exports.getDashboard = async (req, res) => {
   try {
+
     const companyId = req.user.company_id;
+
     const { startDate, endDate } = req.query;
 
     let where = `WHERE company_id = $1`;
+
     let values = [companyId];
+
     let index = 2;
 
     // FILTRO POR PERÍODO
     if (startDate && endDate) {
+
       where += ` AND DATE(created_at) BETWEEN $${index} AND $${index + 1}`;
+
       values.push(startDate, endDate);
+
       index += 2;
+
     } else if (startDate) {
+
       where += ` AND DATE(created_at) >= $${index}`;
+
       values.push(startDate);
+
       index++;
+
     } else if (endDate) {
+
       where += ` AND DATE(created_at) <= $${index}`;
+
       values.push(endDate);
+
       index++;
     }
 
@@ -207,7 +282,9 @@ exports.getDashboard = async (req, res) => {
     });
 
   } catch (err) {
+
     console.error('Erro dashboard:', err);
+
     return res.status(500).json({
       error: 'Erro ao carregar dashboard'
     });
