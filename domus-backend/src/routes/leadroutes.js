@@ -1,9 +1,13 @@
 const express = require('express');
+
 const router = express.Router();
 
 const leadController = require('../controllers/leadController');
+
 const paymentController = require('../controllers/paymentController');
+
 const authMiddleware = require('../middlewares/authMiddleware');
+
 const checkSubscription = require('../middlewares/checkSubscription');
 
 // DASHBOARD
@@ -14,6 +18,14 @@ router.get(
     leadController.getDashboard
 );
 
+// LISTAR LEADS
+router.get(
+    '/',
+    authMiddleware,
+    checkSubscription,
+    leadController.getLeads
+);
+
 // CRIAR LEAD
 router.post(
     '/',
@@ -22,15 +34,7 @@ router.post(
     leadController.createLead
 );
 
-//LISTAR LEADS
-router.get(
-    '/',
-    authMiddleware,
-    checkSubscription,
-    leadController.getLeads
-);
-
-//ATUALIZAR LEAD (STATUS PIPELINE)
+// ATUALIZAR LEAD
 router.put(
     '/:id',
     authMiddleware,
@@ -38,13 +42,13 @@ router.put(
     leadController.updateLead
 );
 
-//PAGAMENTOS
+// PAGAMENTOS
 router.post(
     '/payment',
     paymentController.createPayment
 );
 
-//WEBHOOKS
+// WEBHOOKS
 router.post(
     '/webhook',
     paymentController.webhook
@@ -54,5 +58,6 @@ router.post(
     '/conduz/webhook',
     paymentController.webhook
 );
+
 
 module.exports = router;
