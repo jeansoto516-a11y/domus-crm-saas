@@ -1,19 +1,41 @@
 const pool = require('../config/db');
 
-const { calculateScore, getTemperature } = require('../services/leadScoringService');
+const {
+  calculateScore,
+  getTemperature
+} = require('../services/leadScoringService');
 
-const validStatus = ['novo', 'contato', 'visita', 'proposta', 'fechado'];
+const validStatus = [
+  'novo',
+  'contato',
+  'visita',
+  'proposta',
+  'fechado'
+];
 
 /**
  * CRIAR LEAD
  */
 exports.createLead = async (req, res) => {
-  const { name, email, phone, status } = req.body;
 
-  const normalizedStatus = status?.trim().toLowerCase();
+  const {
+    name,
+    email,
+    phone,
+    status
+  } = req.body;
 
-  if (status && !validStatus.includes(normalizedStatus)) {
-    return res.status(400).json({ error: 'Status inválido' });
+  const normalizedStatus =
+    status?.trim().toLowerCase();
+
+  if (
+    status &&
+    !validStatus.includes(normalizedStatus)
+  ) {
+
+    return res.status(400).json({
+      error: 'Status inválido'
+    });
   }
 
   try {
@@ -26,14 +48,16 @@ exports.createLead = async (req, res) => {
     };
 
     // SCORE
-    const score = calculateScore(leadData);
+    const score =
+      calculateScore(leadData);
 
     // TEMPERATURA
-    const temperature = getTemperature(score);
+    const temperature =
+      getTemperature(score);
 
     const result = await pool.query(
       `
-      INSERT INTO leads 
+      INSERT INTO leads
       (
         name,
         email,
@@ -44,9 +68,9 @@ exports.createLead = async (req, res) => {
         user_id,
         company_id
       )
-      
+
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      
+
       RETURNING *
       `,
       [
@@ -61,11 +85,20 @@ exports.createLead = async (req, res) => {
       ]
     );
 
-    res.status(201).json(result.rows[0]);
+    return res.status(201).json(
+      result.rows[0]
+    );
 
   } catch (err) {
-    console.error('ERRO CREATE:', err);
-    res.status(500).json({ error: 'Erro ao criar lead' });
+
+    console.error(
+      'ERRO CREATE:',
+      err
+    );
+
+    return res.status(500).json({
+      error: 'Erro ao criar lead'
+    });
   }
 };
 
@@ -73,48 +106,94 @@ exports.createLead = async (req, res) => {
  * LISTAR LEADS
  */
 exports.getLeads = async (req, res) => {
-  const { status, date } = req.query;
+
+  const {
+    status,
+    date
+  } = req.query;
 
   try {
+
     let query;
+
     let values = [];
+
     let index = 1;
 
     if (req.user.role === 'admin') {
-      query = 'SELECT * FROM leads WHERE company_id = $1';
-      values.push(req.user.company_id);
+
+      query =
+        'SELECT * FROM leads WHERE company_id = $1';
+
+      values.push(
+        req.user.company_id
+      );
+
       index = 2;
+
     } else {
-      query = 'SELECT * FROM leads WHERE user_id = $1 AND company_id = $2';
-      values.push(req.user.id, req.user.company_id);
+
+      query =
+        'SELECT * FROM leads WHERE user_id = $1 AND company_id = $2';
+
+      values.push(
+        req.user.id,
+        req.user.company_id
+      );
+
       index = 3;
     }
 
     if (status) {
-      const normalizedStatus = status.trim().toLowerCase();
 
-      if (!validStatus.includes(normalizedStatus)) {
-        return res.status(400).json({ error: 'Status inválido' });
+      const normalizedStatus =
+        status.trim().toLowerCase();
+
+      if (
+        !validStatus.includes(
+          normalizedStatus
+        )
+      ) {
+
+        return res.status(400).json({
+          error: 'Status inválido'
+        });
       }
 
       query += ` AND status = $${index}`;
+
       values.push(normalizedStatus);
+
       index++;
     }
 
     if (date) {
+
       query += ` AND DATE(created_at) = $${index}`;
+
       values.push(date);
+
       index++;
     }
 
-    const result = await pool.query(query, values);
+    const result =
+      await pool.query(
+        query,
+        values
+      );
 
-    res.json(result.rows);
+    return res.json(result.rows);
 
   } catch (err) {
-    console.error('ERRO GET:', err);
-    res.status(500).json({ error: 'Erro ao buscar leads' });
+
+    console.error(
+      'ERRO GET:',
+      err
+    );
+
+    return res.status(500).json({
+      error: 'Erro ao buscar leads'
+    });
   }
 };
 
@@ -122,38 +201,69 @@ exports.getLeads = async (req, res) => {
  * ATUALIZAR LEAD
  */
 exports.updateLead = async (req, res) => {
+
   const { id } = req.params;
+
   const { status } = req.body;
 
-  console.log('UPDATE LEAD CHAMADO');
-  console.log('ID:', id);
-  console.log('STATUS RECEBIDO:', status);
+  console.log(
+    'UPDATE LEAD CHAMADO'
+  );
 
-  const normalizedStatus = status?.trim().toLowerCase();
+  console.log('ID:', id);
+
+  console.log(
+    'STATUS RECEBIDO:',
+    status
+  );
+
+  const normalizedStatus =
+    status?.trim().toLowerCase();
 
   if (!normalizedStatus) {
-    return res.status(400).json({ error: 'Status é obrigatório' });
+
+    return res.status(400).json({
+      error: 'Status é obrigatório'
+    });
   }
 
-  if (!validStatus.includes(normalizedStatus)) {
-    return res.status(400).json({ error: 'Status inválido' });
+  if (
+    !validStatus.includes(
+      normalizedStatus
+    )
+  ) {
+
+    return res.status(400).json({
+      error: 'Status inválido'
+    });
   }
 
   try {
 
-    const currentLead = await pool.query(
-      `
-      SELECT * FROM leads 
-      WHERE id = $1 AND company_id = $2
-      `,
-      [id, req.user.company_id]
-    );
+    const currentLead =
+      await pool.query(
+        `
+        SELECT * FROM leads
+        WHERE id = $1
+        AND company_id = $2
+        `,
+        [
+          id,
+          req.user.company_id
+        ]
+      );
 
-    if (currentLead.rows.length === 0) {
-      return res.status(404).json({ error: 'Lead não encontrado' });
+    if (
+      currentLead.rows.length === 0
+    ) {
+
+      return res.status(404).json({
+        error: 'Lead não encontrado'
+      });
     }
 
-    const currentData = currentLead.rows[0];
+    const currentData =
+      currentLead.rows[0];
 
     const updatedLead = {
       ...currentData,
@@ -161,69 +271,105 @@ exports.updateLead = async (req, res) => {
     };
 
     // SCORE
-    const score = calculateScore(updatedLead);
+    const score =
+      calculateScore(updatedLead);
 
     // TEMPERATURA
-    const temperature = getTemperature(score);
+    const temperature =
+      getTemperature(score);
 
-    const result = await pool.query(
-      `
-      UPDATE leads
-      SET 
-        status = $1,
-        score = $2,
-        temperature = $3
-      WHERE id = $4 AND company_id = $5
-      
-      RETURNING *
-      `,
-      [
-        normalizedStatus,
-        score,
-        temperature,
-        id,
-        req.user.company_id
-      ]
+    const result =
+      await pool.query(
+        `
+        UPDATE leads
+        SET
+          status = $1,
+          score = $2,
+          temperature = $3
+        WHERE id = $4
+        AND company_id = $5
+
+        RETURNING *
+        `,
+        [
+          normalizedStatus,
+          score,
+          temperature,
+          id,
+          req.user.company_id
+        ]
+      );
+
+    console.log(
+      'RESULTADO UPDATE:',
+      result.rows[0]
     );
 
-    console.log('RESULTADO UPDATE:', result.rows[0]);
-
-    return res.json(result.rows[0]);
+    return res.json(
+      result.rows[0]
+    );
 
   } catch (err) {
-    console.error('ERRO UPDATE:', err);
-    return res.status(500).json({ error: 'Erro ao atualizar lead' });
+
+    console.error(
+      'ERRO UPDATE:',
+      err
+    );
+
+    return res.status(500).json({
+      error: 'Erro ao atualizar lead'
+    });
   }
 };
 
 /**
- * DASHBOARD COM FILTRO DE DATA
+ * DASHBOARD
  */
 exports.getDashboard = async (req, res) => {
+
+  console.log("=================================");
+  console.log("CHEGOU NA DASHBOARD");
+  console.log("USER:", req.user);
+  console.log("QUERY:", req.query);
+  console.log("=================================");
+
   try {
 
-    const companyId = req.user.company_id;
+    const companyId =
+      req.user.company_id;
 
-    const { startDate, endDate } = req.query;
+    const {
+      startDate,
+      endDate
+    } = req.query;
 
-    let where = `WHERE company_id = $1`;
+    let where =
+      `WHERE company_id = $1`;
 
     let values = [companyId];
 
     let index = 2;
 
-    // FILTRO POR PERÍODO
-    if (startDate && endDate) {
+    // FILTRO POR DATA
+    if (
+      startDate &&
+      endDate
+    ) {
 
-      where += ` AND DATE(created_at) BETWEEN $${index} AND $${index + 1}`;
+      where +=
+        ` AND DATE(created_at) BETWEEN $${index} AND $${index + 1}`;
 
-      values.push(startDate, endDate);
+      values.push(
+        startDate,
+        endDate
+      );
 
       index += 2;
 
     } else if (startDate) {
 
-      where += ` AND DATE(created_at) >= $${index}`;
+      where +=
+        ` AND DATE(created_at) >= $${index}`;
 
       values.push(startDate);
 
@@ -231,31 +377,39 @@ exports.getDashboard = async (req, res) => {
 
     } else if (endDate) {
 
-      where += ` AND DATE(created_at) <= $${index}`;
+      where +=
+        ` AND DATE(created_at) <= $${index}`;
 
       values.push(endDate);
 
       index++;
     }
 
+    console.log("WHERE:", where);
+    console.log("VALUES:", values);
+
     // TOTAL
-    const totalResult = await pool.query(
-      `SELECT COUNT(*) FROM leads ${where}`,
-      values
+    const totalResult =
+      await pool.query(
+        `SELECT COUNT(*) FROM leads ${where}`,
+        values
+      );
+
+    const total = Number(
+      totalResult.rows[0].count
     );
 
-    const total = Number(totalResult.rows[0].count);
-
-    // POR STATUS
-    const statsResult = await pool.query(
-      `
-      SELECT status, COUNT(*) 
-      FROM leads
-      ${where}
-      GROUP BY status
-      `,
-      values
-    );
+    // STATUS
+    const statsResult =
+      await pool.query(
+        `
+        SELECT status, COUNT(*)
+        FROM leads
+        ${where}
+        GROUP BY status
+        `,
+        values
+      );
 
     const por_status = {
       novo: 0,
@@ -265,15 +419,27 @@ exports.getDashboard = async (req, res) => {
       fechado: 0
     };
 
-    statsResult.rows.forEach(row => {
-      por_status[row.status] = Number(row.count);
-    });
+    statsResult.rows.forEach(
+      (row) => {
 
-    const fechados = por_status.fechado;
+        por_status[row.status] =
+          Number(row.count);
+      }
+    );
 
-    const conversao = total > 0
-      ? ((fechados / total) * 100).toFixed(2) + '%'
-      : '0%';
+    const fechados =
+      por_status.fechado;
+
+    const conversao =
+      total > 0
+        ? (
+            (fechados / total) * 100
+          ).toFixed(2) + '%'
+        : '0%';
+
+    console.log(
+      "DASHBOARD OK"
+    );
 
     return res.json({
       total,
@@ -283,10 +449,14 @@ exports.getDashboard = async (req, res) => {
 
   } catch (err) {
 
-    console.error('Erro dashboard:', err);
+    console.error(
+      'ERRO DASHBOARD:',
+      err
+    );
 
     return res.status(500).json({
-      error: 'Erro ao carregar dashboard'
+      error:
+        'Erro ao carregar dashboard'
     });
   }
 };
