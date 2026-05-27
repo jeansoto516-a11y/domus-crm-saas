@@ -2,18 +2,36 @@ require('dotenv').config();
 
 const { Pool } = require('pg');
 
-console.log(
-  "DATABASE_URL:",
-  process.env.DATABASE_URL
-);
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+
+  console.error(
+    '❌ DATABASE_URL não definida'
+  );
+
+  process.exit(1);
+}
+
+console.log('DATABASE OK');
 
 const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL,
+  connectionString: databaseUrl,
 
   ssl: {
     rejectUnauthorized: false
   }
 });
+
+pool.connect()
+  .then(() => {
+    console.log('Banco conectado 🚀');
+  })
+  .catch((err) => {
+    console.error(
+      'Erro ao conectar no banco:',
+      err
+    );
+  });
 
 module.exports = pool;
