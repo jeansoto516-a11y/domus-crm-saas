@@ -29,9 +29,6 @@ function calculateScore(lead) {
         case "fechado":
             score += 50;
             break;
-
-        default:
-            break;
     }
 
     return score;
