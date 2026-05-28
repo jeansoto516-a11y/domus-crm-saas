@@ -206,16 +206,12 @@ exports.updateLead = async (req, res) => {
 
   const { status } = req.body;
 
-  console.log(
-    'UPDATE LEAD CHAMADO'
-  );
-
-  console.log('ID:', id);
-
-  console.log(
-    'STATUS RECEBIDO:',
-    status
-  );
+  console.log("=================================");
+  console.log("UPDATE LEAD");
+  console.log("ID:", id);
+  console.log("STATUS:", status);
+  console.log("USER:", req.user);
+  console.log("=================================");
 
   const normalizedStatus =
     status?.trim().toLowerCase();
@@ -240,18 +236,21 @@ exports.updateLead = async (req, res) => {
 
   try {
 
+    // BUSCA LEAD
     const currentLead =
       await pool.query(
         `
-        SELECT * FROM leads
+        SELECT *
+        FROM leads
         WHERE id = $1
-        AND company_id = $2
         `,
-        [
-          id,
-          req.user.company_id
-        ]
+        [id]
       );
+
+    console.log(
+      "LEAD ENCONTRADO:",
+      currentLead.rows
+    );
 
     if (
       currentLead.rows.length === 0
@@ -265,19 +264,28 @@ exports.updateLead = async (req, res) => {
     const currentData =
       currentLead.rows[0];
 
-    const updatedLead = {
-      ...currentData,
-      status: normalizedStatus
-    };
-
     // SCORE
     const score =
-      calculateScore(updatedLead);
+      calculateScore({
+        ...currentData,
+        status: normalizedStatus
+      });
 
     // TEMPERATURA
     const temperature =
       getTemperature(score);
 
+    console.log(
+      "NOVO SCORE:",
+      score
+    );
+
+    console.log(
+      "NOVA TEMPERATURA:",
+      temperature
+    );
+
+    // UPDATE
     const result =
       await pool.query(
         `
@@ -287,7 +295,6 @@ exports.updateLead = async (req, res) => {
           score = $2,
           temperature = $3
         WHERE id = $4
-        AND company_id = $5
 
         RETURNING *
         `,
@@ -295,13 +302,12 @@ exports.updateLead = async (req, res) => {
           normalizedStatus,
           score,
           temperature,
-          id,
-          req.user.company_id
+          id
         ]
       );
 
     console.log(
-      'RESULTADO UPDATE:',
+      "UPDATE OK:",
       result.rows[0]
     );
 
@@ -312,12 +318,13 @@ exports.updateLead = async (req, res) => {
   } catch (err) {
 
     console.error(
-      'ERRO UPDATE:',
+      "ERRO UPDATE COMPLETO:",
       err
     );
 
     return res.status(500).json({
-      error: 'Erro ao atualizar lead'
+      error: 'Erro ao atualizar lead',
+      details: err.message
     });
   }
 };
