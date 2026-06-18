@@ -1,75 +1,51 @@
-const express = require('express');
-const cors = require('cors');
+require('dotenv').config();
 
+const cors = require('cors');
+const express = require('express');
 const pool = require('./config/db');
 
 const authRoutes = require('./routes/authRoutes');
-const authMiddleware = require('./middlewares/authMiddleware');
 const leadRoutes = require('./routes/leadroutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+const corsOrigin = process.env.CORS_ORIGIN || '*';
 
-
-// =========================
-// MIDDLEWARES
-// =========================
-app.use(cors());
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Domus CRM API',
+    status: 'online'
+  });
+});
 
-// =========================
-// ROTAS
-// =========================
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok' });
+  } catch (err) {
+    res.status(500).json({ status: 'error' });
+  }
+});
+
 app.use('/auth', authRoutes);
 app.use('/leads', leadRoutes);
+app.use('/payments', paymentRoutes);
 
-
-// =========================
-// ROTA TESTE
-// =========================
-app.get('/dashboard', authMiddleware, (req, res) => {
-
-  res.json({
-    message: 'Acesso permitido',
-    user: req.user
-  });
-
+app.use((req, res) => {
+  res.status(404).json({ error: 'Rota nao encontrada.' });
 });
 
-
-// =========================
-// ROTA HOME
-// =========================
-app.get('/', (req, res) => {
-
-  res.send('DOMUS CRM API ONLINE 🚀');
-
-});
-
-
-// =========================
-// PORTA DINÂMICA
-// =========================
-const PORT = process.env.PORT || 3000;
-
-
-// =========================
-// START SERVER
-// =========================
-pool.connect()
+pool.query('SELECT 1')
   .then(() => {
-
-    console.log('Banco conectado');
-
     app.listen(PORT, '0.0.0.0', () => {
-
-      console.log(`Servidor rodando na porta ${PORT}`);
-
+      console.log(`Servidor Domus rodando na porta ${PORT}`);
     });
-
   })
   .catch((err) => {
-
-    console.error('Erro ao conectar no banco', err);
-
+    console.error('Erro ao conectar no banco:', err);
+    process.exit(1);
   });

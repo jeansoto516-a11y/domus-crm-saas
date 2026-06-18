@@ -1,6 +1,11 @@
-// webhook para receber notificações do Mercado Pago
-router.post('/webhook', paymentController.webhook);
+const express = require('express');
+const paymentController = require('../controllers/paymentController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.post('/webhook', paymentController.webhook);
+const router = express.Router();
 
+router.post('/checkout', authMiddleware, paymentController.createPayment);
+router.post('/webhook', paymentController.webhook);
 router.post('/conduz/webhook', paymentController.webhook);
+
+module.exports = router;

@@ -1,265 +1,172 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import api from "../services/api";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+
+const statusLabels = {
+  novo: 'Novos',
+  contato: 'Em contato',
+  visita: 'Visitas',
+  proposta: 'Propostas',
+  fechado: 'Fechados'
+};
 
 function Dashboard() {
+  const [data, setData] = useState(null);
+  const [filters, setFilters] = useState({ startDate: '', endDate: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-    const [data, setData] = useState(null);
-
-    // FILTRO DE DATA
-    const [startDate, setStartDate] = useState("");
-
-    const [endDate, setEndDate] = useState("");
-
-    const navigate = useNavigate();
-
-    useEffect(() => {
-
-        const fetchDashboard = async () => {
-
-            try {
-
-                const response = await api.get(
-                    "/leads/dashboard",
-                    {
-                        params: {
-                            startDate,
-                            endDate,
-                        },
-                    }
-                );
-
-                console.log(
-                    "DASHBOARD:",
-                    response.data
-                );
-
-                setData(response.data);
-
-            } catch (error) {
-
-                console.log(
-                    "ERRO DASHBOARD:",
-                    error
-                );
-
-                console.log(
-                    "STATUS:",
-                    error.response?.status
-                );
-
-                console.log(
-                    "DATA:",
-                    error.response?.data
-                );
-
-                // ⚠ NÃO REDIRECIONA AUTOMATICAMENTE
-                // para conseguirmos ver o erro real
-            }
-        };
-
-        const token =
-            localStorage.getItem("token");
-
-        console.log("TOKEN:", token);
-
-        if (token) {
-
-            fetchDashboard();
-
-        } else {
-
-            console.log(
-                "TOKEN NÃO ENCONTRADO"
-            );
-
-            navigate("/login");
-        }
-
-    }, [navigate, startDate, endDate]);
-
-    // LOADING
-    if (!data) {
-
-        return (
-
-            <div
-                style={{
-                    padding: "40px",
-                    textAlign: "center",
-                }}
-            >
-
-                <h2>
-                    Carregando dashboard...
-                </h2>
-
-                <p>
-                    Abra o console (F12)
-                    para verificar o erro.
-                </p>
-
-            </div>
-        );
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
     }
+  }, []);
 
-    return (
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  }, [navigate]);
 
-        <div
-            style={{
-                padding: "40px",
-                textAlign: "center",
-            }}
-        >
+  useEffect(() => {
+    let active = true;
 
-            <h1>Dashboard 🚀</h1>
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await api.get('/leads/dashboard', { params: filters });
+        if (active) setData(response.data);
+      } catch (err) {
+        if (err.response?.status === 401) {
+          logout();
+          return;
+        }
+        if (active) {
+          setError(err.response?.data?.error || 'Nao foi possivel carregar o dashboard.');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
-            {/* FILTRO DE DATA */}
-            <div
-                style={{
-                    marginBottom: "20px",
-                    display: "flex",
-                    gap: "10px",
-                    justifyContent: "center",
-                }}
-            >
+    fetchDashboard();
 
-                <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) =>
-                        setStartDate(
-                            e.target.value
-                        )
-                    }
-                />
+    return () => {
+      active = false;
+    };
+  }, [filters, logout]);
 
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) =>
-                        setEndDate(
-                            e.target.value
-                        )
-                    }
-                />
+  const updateFilter = (event) => {
+    const { name, value } = event.target;
+    setFilters((current) => ({ ...current, [name]: value }));
+  };
 
-                <button
-                    onClick={() => {
+  const total = data?.total || 0;
+  const conversion = data?.conversao || '0%';
+  const byStatus = data?.por_status || {};
 
-                        setStartDate("");
-
-                        setEndDate("");
-                    }}
-                >
-                    Limpar
-                </button>
-
-            </div>
-
-            {/* TOTAL */}
-            <h2>
-                Total de Leads:
-                {" "}
-                {data.total}
-            </h2>
-
-            {/* STATUS */}
-            <h3>Por Status:</h3>
-
-            <ul
-                style={{
-                    listStyle: "none",
-                    padding: 0,
-                }}
-            >
-
-                <li>
-                    Novo:
-                    {" "}
-                    {data.por_status?.novo || 0}
-                </li>
-
-                <li>
-                    Contato:
-                    {" "}
-                    {data.por_status?.contato || 0}
-                </li>
-
-                <li>
-                    Visita:
-                    {" "}
-                    {data.por_status?.visita || 0}
-                </li>
-
-                <li>
-                    Proposta:
-                    {" "}
-                    {data.por_status?.proposta || 0}
-                </li>
-
-                <li>
-                    Fechado:
-                    {" "}
-                    {data.por_status?.fechado || 0}
-                </li>
-
-            </ul>
-
-            {/* CONVERSÃO */}
-            <h3>Conversão:</h3>
-
-            <p>
-                {data.conversao}
-            </p>
-
-            <br />
-
-            {/* BOTÕES */}
-            <div
-                style={{
-                    display: "flex",
-                    gap: "10px",
-                    justifyContent: "center",
-                }}
-            >
-
-                <button
-                    onClick={() =>
-                        navigate("/leads/novo")
-                    }
-                    style={{
-                        padding: "10px",
-                        backgroundColor: "#4CAF50",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                    }}
-                >
-                    ➕ Criar Lead
-                </button>
-
-                <button
-                    onClick={() =>
-                        navigate("/leads")
-                    }
-                    style={{
-                        padding: "10px",
-                        backgroundColor: "#2196F3",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                    }}
-                >
-                    📊 Ver Leads
-                </button>
-
-            </div>
-
+  return (
+    <main className="app-shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brand-mark">D</span>
+          <span>Domus CRM</span>
         </div>
-    );
+        <nav className="side-nav">
+          <button className="active" onClick={() => navigate('/dashboard')}>Dashboard</button>
+          <button onClick={() => navigate('/leads')}>Leads</button>
+          <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
+        </nav>
+        <button className="ghost-button full" onClick={logout}>Sair</button>
+      </aside>
+
+      <section className="workspace">
+        <header className="workspace-header">
+          <div>
+            <span className="eyebrow">Visao comercial</span>
+            <h1>Dashboard</h1>
+            <p>{user.name ? `Ola, ${user.name}.` : 'Acompanhe a saude do funil.'}</p>
+          </div>
+          <button className="primary-button" onClick={() => navigate('/leads/novo')}>
+            Novo lead
+          </button>
+        </header>
+
+        <section className="filters-bar">
+          <label>
+            Inicio
+            <input name="startDate" onChange={updateFilter} type="date" value={filters.startDate} />
+          </label>
+          <label>
+            Fim
+            <input name="endDate" onChange={updateFilter} type="date" value={filters.endDate} />
+          </label>
+          <button className="secondary-button" onClick={() => setFilters({ startDate: '', endDate: '' })}>
+            Limpar filtros
+          </button>
+        </section>
+
+        {error && <div className="alert error">{error}</div>}
+
+        {loading ? (
+          <div className="empty-state">Carregando indicadores...</div>
+        ) : (
+          <>
+            <section className="metrics-grid">
+              <article className="metric-card">
+                <span>Total de leads</span>
+                <strong>{total}</strong>
+                <p>Leads cadastrados no periodo selecionado.</p>
+              </article>
+              <article className="metric-card">
+                <span>Conversao</span>
+                <strong>{conversion}</strong>
+                <p>Percentual de leads que chegaram em fechado.</p>
+              </article>
+              <article className="metric-card">
+                <span>Em negociacao</span>
+                <strong>{(byStatus.visita || 0) + (byStatus.proposta || 0)}</strong>
+                <p>Oportunidades em visita ou proposta.</p>
+              </article>
+            </section>
+
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <h2>Funil de vendas</h2>
+                  <p>Distribuicao atual por etapa.</p>
+                </div>
+                <button className="secondary-button" onClick={() => navigate('/leads')}>
+                  Ver leads
+                </button>
+              </div>
+              <div className="funnel-grid">
+                {Object.entries(statusLabels).map(([status, label]) => {
+                  const count = byStatus[status] || 0;
+                  const width = total ? Math.max(8, (count / total) * 100) : 8;
+                  return (
+                    <div className="funnel-row" key={status}>
+                      <div>
+                        <span>{label}</span>
+                        <strong>{count}</strong>
+                      </div>
+                      <div className="progress-track">
+                        <span style={{ width: `${width}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </>
+        )}
+      </section>
+    </main>
+  );
 }
 
 export default Dashboard;

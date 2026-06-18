@@ -1,42 +1,43 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-// Páginas
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import CreateLead from './pages/CreateLead';
-import Leads from './pages/Leads';
+import Login from './pages/login';
+import Register from './pages/register';
+import Dashboard from './pages/dashboard';
+import CreateLead from './pages/createlead';
+import Leads from './pages/leads';
 
-// proteção de rota
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+  return token ? children : <Navigate to="/login" replace />;
+}
+
+function PublicRoute({ children }) {
+  const token = localStorage.getItem('token');
+  return token ? <Navigate to="/dashboard" replace /> : children;
 }
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Landing */}
         <Route path="/" element={<Home />} />
-
-        {/* rotas de leads */}
         <Route
-          path="/leads"
+          path="/login"
           element={
-            <PrivateRoute>
-              <Leads />
-            </PrivateRoute>
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
           }
         />
-
-        {/* Autenticação */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* 🔒 Dashboard */}
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={
@@ -45,8 +46,14 @@ function App() {
             </PrivateRoute>
           }
         />
-
-        {/* 🔒 Criar Lead */}
+        <Route
+          path="/leads"
+          element={
+            <PrivateRoute>
+              <Leads />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/leads/novo"
           element={
@@ -55,7 +62,7 @@ function App() {
             </PrivateRoute>
           }
         />
-
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
