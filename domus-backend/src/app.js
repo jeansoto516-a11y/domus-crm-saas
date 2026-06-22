@@ -3,6 +3,7 @@ require('dotenv').config();
 const cors = require('cors');
 const express = require('express');
 const pool = require('./config/db');
+const userRoutes = require('./routes/userRoutes');
 
 const authRoutes = require('./routes/authRoutes');
 const leadRoutes = require('./routes/leadroutes');
@@ -14,6 +15,7 @@ const corsOrigin = process.env.CORS_ORIGIN || '*';
 
 app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
+app.use('/users', userRoutes);
 
 app.get('/', (req, res) => {
   res.json({
