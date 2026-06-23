@@ -1,6 +1,41 @@
 const bcrypt = require('bcrypt');
 const pool = require('../config/db');
 
+/**
+ * Listar corretores da empresa
+ */
+exports.getBrokers = async (req, res) => {
+    try {
+    const result = await pool.query(
+        `
+        SELECT
+        id,
+        name,
+        email,
+        role,
+        company_id,
+        created_at
+        FROM users
+        WHERE company_id = $1
+        ORDER BY created_at DESC
+        `,
+        [req.user.company_id]
+    );
+
+    return res.json(result.rows);
+
+    } catch (err) {
+    console.error('Erro ao buscar corretores:', err);
+
+    return res.status(500).json({
+        error: 'Erro ao buscar corretores.'
+    });
+    }
+};
+
+/**
+ * Criar corretor
+ */
 exports.createBroker = async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -31,10 +66,30 @@ exports.createBroker = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-        `INSERT INTO users
-        (name, email, password, role, company_id)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, name, email, role, company_id`,
+        `
+        INSERT INTO users
+        (
+        name,
+        email,
+        password,
+        role,
+        company_id
+        )
+        VALUES
+        (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5
+        )
+        RETURNING
+        id,
+        name,
+        email,
+        role,
+        company_id
+        `,
         [
         name,
         email,
@@ -50,7 +105,7 @@ exports.createBroker = async (req, res) => {
     });
 
     } catch (err) {
-    console.error(err);
+    console.error('Erro ao criar corretor:', err);
 
     return res.status(500).json({
         error: 'Erro ao criar corretor.'

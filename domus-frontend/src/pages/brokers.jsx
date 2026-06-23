@@ -1,22 +1,39 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 function Brokers() {
     const navigate = useNavigate();
 
-  // Estado do formulário
     const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: ''
     });
 
-  // Mensagens
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [brokers, setBrokers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  // Atualiza os campos
+  // Carrega os corretores
+    const loadBrokers = async () => {
+    try {
+        const response = await api.get('/users');
+        setBrokers(response.data);
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setLoading(false);
+    }
+    };
+
+  // Executa ao abrir a página
+    useEffect(() => {
+    loadBrokers();
+    }, []);
+
+  // Atualiza formulário
     const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -26,7 +43,7 @@ function Brokers() {
     }));
     };
 
-  // Envia para a API
+  // Cadastra corretor
     const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -37,6 +54,8 @@ function Brokers() {
         const response = await api.post('/users', formData);
 
         setMessage(response.data.message);
+
+        await loadBrokers();
 
         setFormData({
         name: '',
@@ -147,6 +166,34 @@ function Brokers() {
                 Cadastrar Corretor
             </button>
             </form>
+
+            <hr style={{ margin: '30px 0' }} />
+
+            <h2>Corretores cadastrados</h2>
+
+            {loading ? (
+            <p>Carregando...</p>
+            ) : (
+            <table style={{ width: '100%', marginTop: '20px' }}>
+                <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Perfil</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {brokers.map((broker) => (
+                    <tr key={broker.id}>
+                    <td>{broker.name}</td>
+                    <td>{broker.email}</td>
+                    <td>{broker.role}</td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            )}
         </section>
         </section>
     </main>
