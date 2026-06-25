@@ -119,14 +119,14 @@ exports.createBroker = async (req, res) => {
 exports.deleteBroker = async (req, res) => {
     const { id } = req.params;
 
-    // Apenas administrador
+    // Apenas administradores podem excluir corretores
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             error: 'Apenas administradores podem excluir corretores.'
         });
     }
 
-    // Não permitir excluir a si mesmo
+    // Não permitir excluir o próprio usuário
     if (Number(id) === req.user.id) {
         return res.status(400).json({
             error: 'Você não pode excluir seu próprio usuário.'
@@ -135,21 +135,41 @@ exports.deleteBroker = async (req, res) => {
 
     try {
 
-        const result = await pool.query(
+        // Verifica se o usuário existe e pertence à mesma empresa
+        const broker = await pool.query(
             `
-            DELETE FROM users
+            SELECT
+                id,
+                role
+            FROM users
             WHERE id = $1
             AND company_id = $2
-            RETURNING id
             `,
             [id, req.user.company_id]
         );
 
-        if (result.rows.length === 0) {
+        if (broker.rows.length === 0) {
             return res.status(404).json({
                 error: 'Corretor não encontrado.'
             });
         }
+
+        // Nunca permitir excluir administradores
+        if (broker.rows[0].role === 'admin') {
+            return res.status(403).json({
+                error: 'Administradores não podem ser excluídos.'
+            });
+        }
+
+        // Exclui somente o corretor encontrado
+        await pool.query(
+            `
+            DELETE FROM users
+            WHERE id = $1
+            AND company_id = $2
+            `,
+            [id, req.user.company_id]
+        );
 
         return res.json({
             message: 'Corretor excluído com sucesso.'
@@ -157,7 +177,7 @@ exports.deleteBroker = async (req, res) => {
 
     } catch (err) {
 
-        console.error(err);
+        console.error('Erro ao excluir corretor:', err);
 
         return res.status(500).json({
             error: 'Erro ao excluir corretor.'

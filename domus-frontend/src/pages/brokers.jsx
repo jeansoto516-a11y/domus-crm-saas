@@ -28,6 +28,37 @@ function Brokers() {
     }
     };
 
+    const handleDelete = async (id, name) => {
+
+    const confirmDelete = window.confirm(
+        `Deseja realmente excluir o corretor "${name}"?`
+    );
+
+    if (!confirmDelete) {
+        return;
+    }
+
+    try {
+
+        const response = await api.delete(`/users/${id}`);
+
+        setMessage(response.data.message);
+        setError('');
+
+        // Atualiza a lista
+        loadBrokers();
+
+    } catch (err) {
+
+        setError(
+            err.response?.data?.error ||
+            'Erro ao excluir corretor.'
+        );
+
+    }
+
+};
+
   // Executa ao abrir a página
     useEffect(() => {
     loadBrokers();
@@ -173,27 +204,84 @@ function Brokers() {
 
             {loading ? (
             <p>Carregando...</p>
+            ) : brokers.length === 0 ? (
+            <p>Nenhum corretor cadastrado.</p>
             ) : (
-            <table style={{ width: '100%', marginTop: '20px' }}>
-                <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>E-mail</th>
-                    <th>Perfil</th>
-                </tr>
-                </thead>
+            <table
+            style={{
+            width: '100%',
+            marginTop: '20px',
+            borderCollapse: 'collapse'
+        }}
+        >
+        <thead>
+            <tr>
+                <th style={{ padding: '10px', textAlign: 'left' }}>
+                    Nome
+                </th>
 
-                <tbody>
-                {brokers.map((broker) => (
-                    <tr key={broker.id}>
-                    <td>{broker.name}</td>
-                    <td>{broker.email}</td>
-                    <td>{broker.role}</td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-            )}
+                <th style={{ padding: '10px', textAlign: 'left' }}>
+                    E-mail
+                </th>
+
+                <th style={{ padding: '10px', textAlign: 'left' }}>
+                    Perfil
+                </th>
+
+                <th style={{ padding: '10px', textAlign: 'center' }}>
+                    Ações
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {brokers.map((broker) => (
+                <tr key={broker.id}>
+                    <td style={{ padding: '10px' }}>
+                        {broker.name}
+                    </td>
+
+                    <td style={{ padding: '10px' }}>
+                        {broker.email}
+                    </td>
+
+                    <td style={{ padding: '10px' }}>
+                        {broker.role}
+                    </td>
+
+                    <td
+                        style={{
+                            padding: '10px',
+                            textAlign: 'center'
+                        }}
+                    >
+                        {broker.role !== 'admin' && (
+                            <button
+                                onClick={() =>
+                                    handleDelete(
+                                        broker.id,
+                                        broker.name
+                                    )
+                                }
+                                style={{
+                                    backgroundColor: '#dc3545',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '8px 14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Excluir
+                            </button>
+                        )}
+                    </td>
+                </tr>
+            ))}
+        </tbody>
+    </table>
+)}
+
         </section>
         </section>
     </main>
