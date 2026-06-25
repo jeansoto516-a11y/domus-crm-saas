@@ -112,3 +112,56 @@ exports.createBroker = async (req, res) => {
     });
     }
 };
+
+/**
+ * Excluir corretor
+ */
+exports.deleteBroker = async (req, res) => {
+    const { id } = req.params;
+
+    // Apenas administrador
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({
+            error: 'Apenas administradores podem excluir corretores.'
+        });
+    }
+
+    // Não permitir excluir a si mesmo
+    if (Number(id) === req.user.id) {
+        return res.status(400).json({
+            error: 'Você não pode excluir seu próprio usuário.'
+        });
+    }
+
+    try {
+
+        const result = await pool.query(
+            `
+            DELETE FROM users
+            WHERE id = $1
+            AND company_id = $2
+            RETURNING id
+            `,
+            [id, req.user.company_id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                error: 'Corretor não encontrado.'
+            });
+        }
+
+        return res.json({
+            message: 'Corretor excluído com sucesso.'
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        return res.status(500).json({
+            error: 'Erro ao excluir corretor.'
+        });
+
+    }
+};

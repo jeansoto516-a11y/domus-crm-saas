@@ -16,5 +16,10 @@ router.post(
     userController.createBroker
 );
 
+router.delete(
+    '/:id',
+    authMiddleware,
+    userController.deleteBroker
+);
 
 module.exports = router;
