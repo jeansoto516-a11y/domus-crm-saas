@@ -16,6 +16,12 @@ router.post(
     userController.createBroker
 );
 
+router.put(
+    '/:id',
+    authMiddleware,
+    userController.updateBroker
+);
+
 router.delete(
     '/:id',
     authMiddleware,

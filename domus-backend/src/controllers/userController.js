@@ -6,30 +6,33 @@ const pool = require('../config/db');
  */
 exports.getBrokers = async (req, res) => {
     try {
-    const result = await pool.query(
-        `
-        SELECT
-        id,
-        name,
-        email,
-        role,
-        company_id,
-        created_at
-        FROM users
-        WHERE company_id = $1
-        ORDER BY created_at DESC
-        `,
-        [req.user.company_id]
-    );
 
-    return res.json(result.rows);
+        const result = await pool.query(
+            `
+            SELECT
+                id,
+                name,
+                email,
+                role,
+                company_id,
+                created_at
+            FROM users
+            WHERE company_id = $1
+            ORDER BY created_at DESC
+            `,
+            [req.user.company_id]
+        );
+
+        return res.json(result.rows);
 
     } catch (err) {
-    console.error('Erro ao buscar corretores:', err);
 
-    return res.status(500).json({
-        error: 'Erro ao buscar corretores.'
-    });
+        console.error('Erro ao buscar corretores:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar corretores.'
+        });
+
     }
 };
 
@@ -37,96 +40,100 @@ exports.getBrokers = async (req, res) => {
  * Criar corretor
  */
 exports.createBroker = async (req, res) => {
+
     const { name, email, password } = req.body;
 
     if (req.user.role !== 'admin') {
-    return res.status(403).json({
-        error: 'Apenas administradores podem criar corretores.'
-    });
-    }
-
-    if (!name || !email || !password) {
-    return res.status(400).json({
-        error: 'Preencha todos os campos.'
-    });
-    }
-
-    try {
-    const userExists = await pool.query(
-        'SELECT id FROM users WHERE email = $1',
-        [email]
-    );
-
-    if (userExists.rows.length > 0) {
-        return res.status(400).json({
-        error: 'Email ja cadastrado.'
+        return res.status(403).json({
+            error: 'Apenas administradores podem criar corretores.'
         });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (!name || !email || !password) {
+        return res.status(400).json({
+            error: 'Preencha todos os campos.'
+        });
+    }
 
-    const result = await pool.query(
-        `
-        INSERT INTO users
-        (
-        name,
-        email,
-        password,
-        role,
-        company_id
-        )
-        VALUES
-        (
-        $1,
-        $2,
-        $3,
-        $4,
-        $5
-        )
-        RETURNING
-        id,
-        name,
-        email,
-        role,
-        company_id
-        `,
-        [
-        name,
-        email,
-        hashedPassword,
-        'user',
-        req.user.company_id
-        ]
-    );
+    try {
 
-    return res.status(201).json({
-        message: 'Corretor criado com sucesso.',
-        user: result.rows[0]
-    });
+        const userExists = await pool.query(
+            'SELECT id FROM users WHERE email = $1',
+            [email]
+        );
+
+        if (userExists.rows.length > 0) {
+            return res.status(400).json({
+                error: 'Email já cadastrado.'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const result = await pool.query(
+            `
+            INSERT INTO users
+            (
+                name,
+                email,
+                password,
+                role,
+                company_id
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                $3,
+                $4,
+                $5
+            )
+            RETURNING
+                id,
+                name,
+                email,
+                role,
+                company_id
+            `,
+            [
+                name,
+                email,
+                hashedPassword,
+                'user',
+                req.user.company_id
+            ]
+        );
+
+        return res.status(201).json({
+            message: 'Corretor criado com sucesso.',
+            user: result.rows[0]
+        });
 
     } catch (err) {
-    console.error('Erro ao criar corretor:', err);
 
-    return res.status(500).json({
-        error: 'Erro ao criar corretor.'
-    });
+        console.error('Erro ao criar corretor:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao criar corretor.'
+        });
+
     }
+
 };
 
 /**
  * Excluir corretor
  */
 exports.deleteBroker = async (req, res) => {
+
     const { id } = req.params;
 
-    // Apenas administradores podem excluir corretores
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             error: 'Apenas administradores podem excluir corretores.'
         });
     }
 
-    // Não permitir excluir o próprio usuário
     if (Number(id) === req.user.id) {
         return res.status(400).json({
             error: 'Você não pode excluir seu próprio usuário.'
@@ -135,7 +142,6 @@ exports.deleteBroker = async (req, res) => {
 
     try {
 
-        // Verifica se o usuário existe e pertence à mesma empresa
         const broker = await pool.query(
             `
             SELECT
@@ -145,7 +151,10 @@ exports.deleteBroker = async (req, res) => {
             WHERE id = $1
             AND company_id = $2
             `,
-            [id, req.user.company_id]
+            [
+                id,
+                req.user.company_id
+            ]
         );
 
         if (broker.rows.length === 0) {
@@ -154,21 +163,22 @@ exports.deleteBroker = async (req, res) => {
             });
         }
 
-        // Nunca permitir excluir administradores
         if (broker.rows[0].role === 'admin') {
             return res.status(403).json({
                 error: 'Administradores não podem ser excluídos.'
             });
         }
 
-        // Exclui somente o corretor encontrado
         await pool.query(
             `
             DELETE FROM users
             WHERE id = $1
             AND company_id = $2
             `,
-            [id, req.user.company_id]
+            [
+                id,
+                req.user.company_id
+            ]
         );
 
         return res.json({
@@ -184,4 +194,136 @@ exports.deleteBroker = async (req, res) => {
         });
 
     }
+
+};
+
+/**
+ * Editar corretor
+ */
+exports.updateBroker = async (req, res) => {
+
+    const { id } = req.params;
+    const { name, email, password } = req.body;
+
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({
+            error: 'Apenas administradores podem editar corretores.'
+        });
+    }
+
+    if (!name || !email) {
+        return res.status(400).json({
+            error: 'Nome e e-mail são obrigatórios.'
+        });
+    }
+
+    try {
+
+        // Verifica se o corretor existe
+        const broker = await pool.query(
+            `
+            SELECT
+                id,
+                role
+            FROM users
+            WHERE id = $1
+            AND company_id = $2
+            `,
+            [
+                id,
+                req.user.company_id
+            ]
+        );
+
+        if (broker.rows.length === 0) {
+            return res.status(404).json({
+                error: 'Corretor não encontrado.'
+            });
+        }
+
+        // Nunca editar administradores
+        if (broker.rows[0].role === 'admin') {
+            return res.status(403).json({
+                error: 'Administradores não podem ser editados.'
+            });
+        }
+
+        // Verifica e-mail duplicado
+        const emailExists = await pool.query(
+            `
+            SELECT id
+            FROM users
+            WHERE email = $1
+            AND id <> $2
+            `,
+            [
+                email,
+                id
+            ]
+        );
+
+        if (emailExists.rows.length > 0) {
+            return res.status(400).json({
+                error: 'Este e-mail já está sendo utilizado.'
+            });
+        }
+
+        if (password && password.trim() !== '') {
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            await pool.query(
+                `
+                UPDATE users
+                SET
+                    name = $1,
+                    email = $2,
+                    password = $3
+                WHERE id = $4
+                AND company_id = $5
+                `,
+                [
+                    name,
+                    email,
+                    hashedPassword,
+                    id,
+                    req.user.company_id
+                ]
+            );
+
+        } else {
+
+            await pool.query(
+                `
+                UPDATE users
+                SET
+                    name = $1,
+                    email = $2
+                WHERE id = $3
+                AND company_id = $4
+                `,
+                [
+                    name,
+                    email,
+                    id,
+                    req.user.company_id
+                ]
+            );
+
+        }
+
+        return res.json({
+            message: 'Corretor atualizado com sucesso.'
+        });
+
+    } catch (err) {
+
+        console.error('Erro ao atualizar corretor:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao atualizar corretor.'
+        });
+
+    }
+
 };
