@@ -6,9 +6,9 @@ function Brokers() {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: ''
+        name: '',
+        email: '',
+        password: ''
     });
 
     const [message, setMessage] = useState('');
@@ -16,275 +16,244 @@ function Brokers() {
     const [brokers, setBrokers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-  // Carrega os corretores
+    // corretor em edição
+    const [editingBroker, setEditingBroker] = useState(null);
+
+    // carrega corretores
     const loadBrokers = async () => {
-    try {
-        const response = await api.get('/users');
-        setBrokers(response.data);
-    } catch (err) {
-        console.error(err);
-    } finally {
-        setLoading(false);
-    }
+        try {
+            const response = await api.get('/users');
+            setBrokers(response.data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleDelete = async (id, name) => {
-
-    const confirmDelete = window.confirm(
-        `Deseja realmente excluir o corretor "${name}"?`
-    );
-
-    if (!confirmDelete) {
-        return;
-    }
-
-    try {
-
-        const response = await api.delete(`/users/${id}`);
-
-        setMessage(response.data.message);
-        setError('');
-
-        // Atualiza a lista
-        loadBrokers();
-
-    } catch (err) {
-
-        setError(
-            err.response?.data?.error ||
-            'Erro ao excluir corretor.'
-        );
-
-    }
-
-};
-
-  // Executa ao abrir a página
     useEffect(() => {
-    loadBrokers();
+        loadBrokers();
     }, []);
 
-  // Atualiza formulário
-    const handleChange = (event) => {
-    const { name, value } = event.target;
+        const handleDelete = async (id, name) => {
+        const confirmDelete = window.confirm(
+            `Deseja realmente excluir o corretor "${name}"?`
+        );
 
-    setFormData((current) => ({
-        ...current,
-        [name]: value
-    }));
+        if (!confirmDelete) return;
+
+        try {
+            const response = await api.delete(`/users/${id}`);
+
+            setMessage(response.data.message);
+            setError('');
+
+            loadBrokers();
+
+        } catch (err) {
+            setError(
+                err.response?.data?.error ||
+                'Erro ao excluir corretor.'
+            );
+        }
     };
 
-  // Cadastra corretor
-    const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    setMessage('');
-    setError('');
-
-    try {
-        const response = await api.post('/users', formData);
-
-        setMessage(response.data.message);
-
-        await loadBrokers();
+    const handleEdit = (broker) => {
+        setEditingBroker(broker);
 
         setFormData({
-        name: '',
-        email: '',
-        password: ''
+            name: broker.name,
+            email: broker.email,
+            password: ''
         });
 
-    } catch (err) {
-        setError(
-        err.response?.data?.error ||
-        'Erro ao cadastrar corretor.'
-        );
-    }
+        setMessage('');
+        setError('');
+    };
+
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+
+        setFormData((current) => ({
+            ...current,
+            [name]: value
+        }));
+    };
+
+        const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        setMessage('');
+        setError('');
+
+        try {
+            let response;
+
+            if (editingBroker) {
+                response = await api.put(
+                    `/users/${editingBroker.id}`,
+                    formData
+                );
+            } else {
+                response = await api.post('/users', formData);
+            }
+
+            setMessage(response.data.message);
+
+            await loadBrokers();
+
+            setEditingBroker(null);
+
+            setFormData({
+                name: '',
+                email: '',
+                password: ''
+            });
+
+        } catch (err) {
+            setError(
+                err.response?.data?.error ||
+                'Erro ao salvar corretor.'
+            );
+        }
     };
 
     return (
-    <main className="app-shell">
-        <aside className="sidebar">
-        <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>Domus CRM</span>
-        </div>
+        <main className="app-shell">
+            <aside className="sidebar">
+                <div className="brand">
+                    <span className="brand-mark">D</span>
+                    <span>Domus CRM</span>
+                </div>
 
-        <nav className="side-nav">
-            <button onClick={() => navigate('/dashboard')}>
-            Dashboard
-            </button>
+                <nav className="side-nav">
+                    <button onClick={() => navigate('/dashboard')}>
+                        Dashboard
+                    </button>
 
-            <button onClick={() => navigate('/leads')}>
-            Leads
-            </button>
+                    <button onClick={() => navigate('/leads')}>
+                        Leads
+                    </button>
 
-            <button onClick={() => navigate('/leads/novo')}>
-            Novo lead
-            </button>
+                    <button onClick={() => navigate('/leads/novo')}>
+                        Novo lead
+                    </button>
 
-            <button className="active">
-            Corretores
-            </button>
-        </nav>
-        </aside>
+                    <button className="active">
+                        Corretores
+                    </button>
+                </nav>
+            </aside>
 
-        <section className="workspace">
-        <header className="workspace-header">
-            <div>
-            <span className="eyebrow">Equipe</span>
-            <h1>Corretores</h1>
-            <p>Gerencie os corretores da imobiliária.</p>
-            </div>
-        </header>
+            <section className="workspace">
+                <header className="workspace-header">
+                    <h1>Corretores</h1>
+                </header>
 
-        <section className="panel">
-            <h2>Cadastro de corretor</h2>
+                <section className="panel">
+                    <h2>
+                        {editingBroker ? 'Editar corretor' : 'Cadastro de corretor'}
+                    </h2>
 
-            {message && (
-            <div className="alert success">
-                {message}
-            </div>
-            )}
+                    {message && <div className="alert success">{message}</div>}
+                    {error && <div className="alert error">{error}</div>}
 
-            {error && (
-            <div className="alert error">
-                {error}
-            </div>
-            )}
+                    <form onSubmit={handleSubmit}>
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            required
+                            placeholder="Nome"
+                        />
 
-            <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '15px' }}>
-                <label>Nome</label>
+                        <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                            placeholder="Email"
+                        />
 
-                <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                />
-            </div>
+                        <input
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required={!editingBroker}
+                            placeholder="Senha"
+                        />
 
-            <div style={{ marginBottom: '15px' }}>
-                <label>E-mail</label>
+                        <button type="submit">
+                            {editingBroker ? 'Salvar alterações' : 'Cadastrar'}
+                        </button>
 
-                <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                />
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-                <label>Senha</label>
-
-                <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                />
-            </div>
-
-            <button
-                type="submit"
-                className="primary-button"
-            >
-                Cadastrar Corretor
-            </button>
-            </form>
-
-            <hr style={{ margin: '30px 0' }} />
-
-            <h2>Corretores cadastrados</h2>
-
-            {loading ? (
-            <p>Carregando...</p>
-            ) : brokers.length === 0 ? (
-            <p>Nenhum corretor cadastrado.</p>
-            ) : (
-            <table
-            style={{
-            width: '100%',
-            marginTop: '20px',
-            borderCollapse: 'collapse'
-        }}
-        >
-        <thead>
-            <tr>
-                <th style={{ padding: '10px', textAlign: 'left' }}>
-                    Nome
-                </th>
-
-                <th style={{ padding: '10px', textAlign: 'left' }}>
-                    E-mail
-                </th>
-
-                <th style={{ padding: '10px', textAlign: 'left' }}>
-                    Perfil
-                </th>
-
-                <th style={{ padding: '10px', textAlign: 'center' }}>
-                    Ações
-                </th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {brokers.map((broker) => (
-                <tr key={broker.id}>
-                    <td style={{ padding: '10px' }}>
-                        {broker.name}
-                    </td>
-
-                    <td style={{ padding: '10px' }}>
-                        {broker.email}
-                    </td>
-
-                    <td style={{ padding: '10px' }}>
-                        {broker.role}
-                    </td>
-
-                    <td
-                        style={{
-                            padding: '10px',
-                            textAlign: 'center'
-                        }}
-                    >
-                        {broker.role !== 'admin' && (
+                        {editingBroker && (
                             <button
-                                onClick={() =>
-                                    handleDelete(
-                                        broker.id,
-                                        broker.name
-                                    )
-                                }
-                                style={{
-                                    backgroundColor: '#dc3545',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    padding: '8px 14px',
-                                    cursor: 'pointer'
+                                type="button"
+                                onClick={() => {
+                                    setEditingBroker(null);
+                                    setFormData({
+                                        name: '',
+                                        email: '',
+                                        password: ''
+                                    });
                                 }}
                             >
-                                Excluir
+                                Cancelar
                             </button>
                         )}
-                    </td>
-                </tr>
-            ))}
-        </tbody>
-    </table>
-)}
+                    </form>
 
-        </section>
-        </section>
-    </main>
+                    <hr />
+
+                    <h2>Lista de corretores</h2>
+
+                    {loading ? (
+                        <p>Carregando...</p>
+                    ) : brokers.length === 0 ? (
+                        <p>Nenhum corretor cadastrado.</p>
+                    ) : (
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Perfil</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {brokers.map((broker) => (
+                                    <tr key={broker.id}>
+                                        <td>{broker.name}</td>
+                                        <td>{broker.email}</td>
+                                        <td>{broker.role}</td>
+
+                                        <td>
+                                            {broker.role !== 'admin' && (
+                                                <>
+                                                    <button onClick={() => handleEdit(broker)}>
+                                                        Editar
+                                                    </button>
+
+                                                    <button onClick={() => handleDelete(broker.id, broker.name)}>
+                                                        Excluir
+                                                    </button>
+                                                </>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </section>
+            </section>
+        </main>
     );
 }
 
