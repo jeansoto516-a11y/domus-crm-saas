@@ -19,8 +19,10 @@ function Brokers() {
     // corretor em edição
     const [editingBroker, setEditingBroker] = useState(null);
 
-    // carrega corretores
+    // carregar corretores
     const loadBrokers = async () => {
+        setLoading(true);
+
         try {
             const response = await api.get('/users');
             setBrokers(response.data);
@@ -49,6 +51,8 @@ function Brokers() {
             setError('');
 
             loadBrokers();
+
+            setTimeout(() => setMessage(''), 3000);
 
         } catch (err) {
             setError(
@@ -90,9 +94,16 @@ function Brokers() {
             let response;
 
             if (editingBroker) {
+                const dataToSend = { ...formData };
+
+                // não envia senha vazia
+                if (!dataToSend.password) {
+                    delete dataToSend.password;
+                }
+
                 response = await api.put(
                     `/users/${editingBroker.id}`,
-                    formData
+                    dataToSend
                 );
             } else {
                 response = await api.post('/users', formData);
@@ -109,6 +120,8 @@ function Brokers() {
                 email: '',
                 password: ''
             });
+
+            setTimeout(() => setMessage(''), 3000);
 
         } catch (err) {
             setError(
@@ -151,6 +164,7 @@ function Brokers() {
                 </header>
 
                 <section className="panel">
+
                     <h2>
                         {editingBroker ? 'Editar corretor' : 'Cadastro de corretor'}
                     </h2>
@@ -236,11 +250,16 @@ function Brokers() {
                                         <td>
                                             {broker.role !== 'admin' && (
                                                 <>
-                                                    <button onClick={() => handleEdit(broker)}>
+                                                    <button
+                                                        onClick={() => handleEdit(broker)}
+                                                        style={{ marginRight: '8px' }}
+                                                    >
                                                         Editar
                                                     </button>
 
-                                                    <button onClick={() => handleDelete(broker.id, broker.name)}>
+                                                    <button
+                                                        onClick={() => handleDelete(broker.id, broker.name)}
+                                                    >
                                                         Excluir
                                                     </button>
                                                 </>
@@ -251,6 +270,7 @@ function Brokers() {
                             </tbody>
                         </table>
                     )}
+
                 </section>
             </section>
         </main>
