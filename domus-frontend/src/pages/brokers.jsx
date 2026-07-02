@@ -16,7 +16,6 @@ function Brokers() {
     const [brokers, setBrokers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // corretor em edição
     const [editingBroker, setEditingBroker] = useState(null);
 
     // carregar corretores
@@ -36,6 +35,15 @@ function Brokers() {
     useEffect(() => {
         loadBrokers();
     }, []);
+
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+
+        setFormData((current) => ({
+            ...current,
+            [name]: value
+        }));
+    };
 
         const handleDelete = async (id, name) => {
         const confirmDelete = window.confirm(
@@ -75,16 +83,7 @@ function Brokers() {
         setError('');
     };
 
-    const handleChange = (event) => {
-        const { name, value } = event.target;
-
-        setFormData((current) => ({
-            ...current,
-            [name]: value
-        }));
-    };
-
-        const handleSubmit = async (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
         setMessage('');
@@ -96,7 +95,6 @@ function Brokers() {
             if (editingBroker) {
                 const dataToSend = { ...formData };
 
-                // não envia senha vazia
                 if (!dataToSend.password) {
                     delete dataToSend.password;
                 }
@@ -131,7 +129,7 @@ function Brokers() {
         }
     };
 
-    return (
+        return (
         <main className="app-shell">
             <aside className="sidebar">
                 <div className="brand">
