@@ -357,35 +357,24 @@ exports.getDashboard = async (req, res) => {
                 morna: 0,
                 quente: 0
             }
-
-            //Preenche os totais por status
-            statusResult.rows.forEach((item) => {
-                dashboard.por_status[item.status] = Number(item.total);
-            });
-
-            //Preenche os totais por temperatura
-            temperatureResult.rows.forEach((item) => {
-                dashboard.por_temperatura[item.temperature] = Number(item.total);
-            });
-
         };
 
-        statusResult.rows.forEach((item) => {
+            statusResult.rows.forEach((item) => {
             dashboard.por_status[item.status] = Number(item.total);
-        });
+});
 
-        temperatureResult.rows.forEach((item) => {
+            temperatureResult.rows.forEach((item) => {
             dashboard.por_temperatura[item.temperature] = Number(item.total);
-        });
+});
 
         const totalLeads = dashboard.total;
 
-        dashboard.conversao =
+            dashboard.conversao =
             totalLeads > 0
-                ? (
-                    (dashboard.por_status.fechado / totalLeads) * 100
-                    ).toFixed(2) + '%'
-                : '0%';
+            ? (
+            (dashboard.por_status.fechado / totalLeads) * 100
+        ).toFixed(2) + '%'
+        : '0%';
 
         return res.json(dashboard);
 
