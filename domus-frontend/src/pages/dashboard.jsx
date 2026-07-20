@@ -152,6 +152,38 @@ function Dashboard() {
             </section>
 
             <section className="panel">
+
+              <div className="panel-header">
+                <div>
+                <h2>Temperatura dos Leads</h2>
+                <p>Classificação dos leads pelo Lead Scoring.</p>
+                </div>
+              </div>
+              
+              <section classNAme="metrics-grid">
+                
+                <article classNAme="metric-grid">
+                  <span>Fria</span>
+                  <strong>{byTemperature.fria || 0}</strong>
+                  <p>Leads frios.</p>
+                </article>
+                
+                <article className="metric-card">
+                <span>Morna</span>
+                <strong>{byTemperature.morna || 0}</strong>
+                <p>Leads mornos.</p>
+                </article>
+                
+                <article className="metric-card">
+                <span>Quente</span>
+                <strong>{byTemperature.quente || 0}</strong>
+                <p>Leads quentes.</p>
+                </article>
+              
+              </section>
+            </section>
+
+            <section className="panel">
               <div className="panel-header">
                 <div>
                   <h2>Funil de vendas</h2>
