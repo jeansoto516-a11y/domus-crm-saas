@@ -68,6 +68,7 @@ function Dashboard() {
   const total = data?.total || 0;
   const conversion = data?.conversao || '0%';
   const byStatus = data?.por_status || {};
+  const byTemperature = data?.por_temperatura || {};
 
   return (
     <main className="app-shell">
@@ -133,6 +134,21 @@ function Dashboard() {
                 <strong>{(byStatus.visita || 0) + (byStatus.proposta || 0)}</strong>
                 <p>Oportunidades em visita ou proposta.</p>
               </article>
+              <article className="metric-card">
+                <span>Novos</span>
+                <strong>{byStatus.novo || 0}</strong>
+                <p>Leads aguardando primeiro contato.</p>
+                </article>
+                <article className="metric-card">
+                  <span>Contato</span>
+                  <strong>{byStatus.contato || 0}</strong>
+                  <p>Leads em atendimento</p>
+                </article>
+                <article className="metric-card">
+                  <span>Visitas</span>
+                  <strong>{byStatus.visita || 0}</strong>
+                  <p>Leads em visitas</p>
+                </article>
             </section>
 
             <section className="panel">
