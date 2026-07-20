@@ -160,9 +160,9 @@ function Dashboard() {
                 </div>
               </div>
               
-              <section classNAme="metrics-grid">
+              <section className="metrics-card">
                 
-                <article classNAme="metric-grid">
+                <article className="metric-card">
                   <span>Fria</span>
                   <strong>{byTemperature.fria || 0}</strong>
                   <p>Leads frios.</p>
