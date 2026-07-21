@@ -164,13 +164,13 @@ function Dashboard() {
                 
                 <article className="metric-card">
                   <span>Fria</span>
-                  <strong>{byTemperature.fria || 0}</strong>
+                  <strong>{byTemperature.frio || 0}</strong>
                   <p>Leads frios.</p>
                 </article>
                 
                 <article className="metric-card">
                 <span>Morna</span>
-                <strong>{byTemperature.morna || 0}</strong>
+                <strong>{byTemperature.morno || 0}</strong>
                 <p>Leads mornos.</p>
                 </article>
                 

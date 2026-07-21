@@ -353,7 +353,7 @@ exports.getDashboard = async (req, res) => {
             },
 
             por_temperatura: {
-                fria: 0,
+                frio: 0,
                 morna: 0,
                 quente: 0
             }
