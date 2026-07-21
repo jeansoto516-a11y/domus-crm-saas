@@ -389,3 +389,43 @@ exports.getDashboard = async (req, res) => {
     }
 
 };
+
+/**
+ *  EXCLUIR LEAD
+ */
+
+exports.deleteLead = async (req, res) => {
+    const { id } = req.params;
+    const values = [];
+    let where = buildLeadScope(req, values);
+    values.push(id);
+    
+    try {
+
+        const result = await pool.query(
+            `
+            DELETE FROM leads
+            ${where}
+            AND id = $${values.length}
+            RETURNING id
+            `,
+            values
+        );
+
+        if (result.rows.legth === 0) {
+            return res.status(404).jason({
+                error: "Lead não encontrado."
+            });
+        }
+
+        return res.json({
+            message: "Lead excluido com sucesso."
+        });
+
+    } catch (err){
+        console.error("Erro ao excluir lead:", err);
+        return res.status(500).json({
+            error: "Erro ao excluir lead"
+        });
+    }
+};
