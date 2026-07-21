@@ -412,8 +412,8 @@ exports.deleteLead = async (req, res) => {
             values
         );
 
-        if (result.rows.legth === 0) {
-            return res.status(404).jason({
+        if (result.rows.length === 0) {
+            return res.status(404).json({
                 error: "Lead não encontrado."
             });
         }
