@@ -29,10 +29,10 @@ exports.register = async (req, res) => {
     trialEnd.setDate(trialEnd.getDate() + 14);
 
     const companyResult = await client.query(
-      `INSERT INTO companies (name, trial_ends_at, subscription_status)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [company_name, trialEnd, 'trial']
+      `INSERT INTO companies (name, trial_ends_at, subscription_status, email)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *`,
+      [company_name, trialEnd, 'trial', email]
     );
 
     const hashedPassword = await bcrypt.hash(password, 10);
