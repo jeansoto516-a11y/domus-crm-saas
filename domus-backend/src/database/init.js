@@ -41,6 +41,10 @@ async function createTables() {
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS temperature TEXT DEFAULT 'frio';
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS payment_id TEXT;
+      ALTER TABLE companies ADD COLUMN IF NOT EXISTS email TEXT;
+      ALTER TABLE companies ADD COLUMN IF NOT EXISTS payment_method TEXT;
+      ALTER TABLE companies ADD COLUMN IF NOT EXISTS preapproval_id text;
+      ALTER TABLE companies ADD COLUMN IF NOT EXISTS next_charge_date TIMESTAMP;
 
       CREATE INDEX IF NOT EXISTS idx_leads_company_created_at ON leads(company_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_leads_company_status ON leads(company_id, status);
