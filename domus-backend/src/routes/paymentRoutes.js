@@ -9,4 +9,4 @@ router.post('/checkout/pix', authMiddleware, paymentController.createPixCharge);
 router.post('/webhook', paymentController.webhook);
 router.post('/conduz/webhook', paymentController.webhook);
 
-module.export = router;
+module.exports = router;
