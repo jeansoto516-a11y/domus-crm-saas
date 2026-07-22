@@ -1,97 +1,224 @@
-const { MercadoPagoConfig, Preference } = require('mercadopago');
 const axios = require('axios');
 const pool = require('../config/db');
 
-function getMercadoPagoClient() {
-  if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) {
-    return null;
-  }
+const PLAN_PRICE = 59.90;
 
-  return new MercadoPagoConfig({
-    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN
-  });
+function getAccessToken() {
+  return process.env.MERCADO_PAGO_ACCESS_TOKEN;
 }
 
-exports.createPayment = async (req, res) => {
-  const client = getMercadoPagoClient();
+/**
+ * Criar assinatura recorrente via cartao de credito
+ * Espera receber "card_token_id" gerado no frontend
+ */
+exports.createCardSubscription = async (req, res) => {
+  const accessToken = getAccessToken();
 
-  if (!client) {
+  if (!accessToken) {
+    return res.status(500).json({ error: 'Mercado Pago nao configurado.' });
+  }
+
+  const { card_token_id } = req.body;
+
+  if (!card_token_id) {
+    return res.status(400).json({ error: 'card_token_id e obrigatorio.' });
+  }
+
+  try {
+    const companyId = req.user.company_id;
+
+    const companyResult = await pool.query(
+      `SELECT email, trial_ends_at FROM companies WHERE id = $1`,
+      [companyId]
+    );
+
+    if (companyResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Imobiliaria nao encontrada.' });
+    }
+
+    const company = companyResult.rows[0];
+    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+
+    const now = new Date();
+    const trialEndsAt = company.trial_ends_at ? new Date(company.trial_ends_at) : now;
+    const startDate = trialEndsAt > now ? trialEndsAt : now;
+
+    const response = await axios.post(
+      'https://api.mercadopago.com/preapproval',
+      {
+        reason: 'Domus CRM - Assinatura Mensal',
+        external_reference: String(companyId),
+        payer_email: company.email,
+        card_token_id,
+        back_url: `${appUrl}/dashboard`,
+        status: 'authorized',
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: PLAN_PRICE,
+          currency_id: 'BRL',
+          start_date: startDate.toISOString()
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const preapproval = response.data;
+
+    await pool.query(
+      `UPDATE companies
+      SET preapproval_id = $2, payment_method = 'card', next_charge_date = $3
+      WHERE id = $1`,
+      [companyId, preapproval.id, startDate]
+    );
+
+    return res.json({
+      message: 'Assinatura criada com sucesso.',
+      preapproval_id: preapproval.id,
+      status: preapproval.status
+    });
+
+  } catch (error) {
+    console.error('Erro ao criar assinatura de cartao:', error.response?.data || error.message);
+    return res.status(500).json({ error: 'Erro ao criar assinatura de cartao.' });
+  }
+};
+
+/**
+ * Gerar cobranca Pix (pagamento unico, repetido todo ciclo)
+ */
+exports.createPixCharge = async (req, res) => {
+  const accessToken = getAccessToken();
+
+  if (!accessToken) {
     return res.status(500).json({ error: 'Mercado Pago nao configurado.' });
   }
 
   try {
-    const preference = new Preference(client);
-    const appUrl = process.env.APP_URL || 'http://localhost:5173';
-    const apiUrl = process.env.API_URL || 'http://localhost:3000';
+    const companyId = req.user.company_id;
 
-    const response = await preference.create({
-      body: {
-        items: [
-          {
-            title: 'Domus CRM - Assinatura Mensal',
-            quantity: 1,
-            currency_id: 'BRL',
-            unit_price: 79.9
-          }
-        ],
-        back_urls: {
-          success: `${appUrl}/dashboard`,
-          failure: `${appUrl}/dashboard`,
-          pending: `${appUrl}/dashboard`
-        },
-        notification_url: `${apiUrl}/payments/webhook`,
-        metadata: {
-          company_id: req.user.company_id
+    const companyResult = await pool.query(
+      `SELECT email FROM companies WHERE id = $1`,
+      [companyId]
+    );
+
+    if (companyResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Imobiliaria nao encontrada.' });
+    }
+
+    const company = companyResult.rows[0];
+
+    const response = await axios.post(
+      'https://api.mercadopago.com/v1/payments',
+      {
+        transaction_amount: PLAN_PRICE,
+        description: 'Domus CRM - Assinatura Mensal',
+        payment_method_id: 'pix',
+        external_reference: String(companyId),
+        payer: {
+          email: company.email
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         }
       }
+    );
+
+    const payment = response.data;
+    const qr = payment.point_of_interaction?.transaction_data;
+
+    await pool.query(
+      `UPDATE companies
+      SET payment_method = 'pix', payment_id = $2
+      WHERE id = $1`,
+      [companyId, String(payment.id)]
+    );
+
+    return res.json({
+      payment_id: payment.id,
+      qr_code: qr?.qr_code,
+      qr_code_base64: qr?.qr_code_base64,
+      status: payment.status
     });
 
-    return res.json({ init_point: response.init_point });
   } catch (error) {
-    console.error('Erro ao criar pagamento:', error.response?.data || error.message);
-    return res.status(500).json({ error: 'Erro ao criar pagamento.' });
+    console.error('Erro ao gerar cobranca Pix:', error.response?.data || error.message);
+    return res.status(500).json({ error: 'Erro ao gerar cobranca Pix.' });
   }
 };
 
+/**
+ * Webhook - escuta pagamentos avulsos (Pix) e mudancas de assinatura (cartao)
+ */
 exports.webhook = async (req, res) => {
-  if (!process.env.MERCADO_PAGO_ACCESS_TOKEN) {
+  const accessToken = getAccessToken();
+
+  if (!accessToken) {
     return res.sendStatus(200);
   }
 
   try {
     const { type, data } = req.body;
 
-    if (type !== 'payment' || !data?.id) {
-      return res.sendStatus(200);
-    }
+    if (type === 'payment' && data?.id) {
+      const response = await axios.get(
+        `https://api.mercadopago.com/v1/payments/${data.id}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
 
-    const response = await axios.get(
-      `https://api.mercadopago.com/v1/payments/${data.id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.MERCADO_PAGO_ACCESS_TOKEN}`
-        }
+      const payment = response.data;
+      const companyId = payment.external_reference;
+
+      if (payment.status === 'approved' && companyId) {
+        const nextCharge = new Date();
+        nextCharge.setDate(nextCharge.getDate() + 30);
+
+        await pool.query(
+          `UPDATE companies
+          SET subscription_status = 'active', payment_id = $2, next_charge_date = $3
+          WHERE id = $1`,
+          [companyId, String(data.id), nextCharge]
+        );
       }
-    );
 
-    const payment = response.data;
-
-    if (payment.status !== 'approved') {
       return res.sendStatus(200);
     }
 
-    const companyId = payment.metadata?.company_id;
+    if (type === 'subscription_preapproval' && data?.id) {
+      const response = await axios.get(
+        `https://api.mercadopago.com/preapproval/${data.id}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
 
-    if (!companyId) {
-      return res.sendStatus(200);
+      const preapproval = response.data;
+      const companyId = preapproval.external_reference;
+
+      if (!companyId) {
+        return res.sendStatus(200);
+      }
+
+      if (preapproval.status === 'authorized') {
+        await pool.query(
+          `UPDATE companies SET subscription_status = 'active' WHERE id = $1`,
+          [companyId]
+        );
+      }
+
+      if (preapproval.status === 'cancelled' || preapproval.status === 'paused') {
+        await pool.query(
+          `UPDATE companies SET subscription_status = 'canceled' WHERE id = $1`,
+          [companyId]
+        );
+      }
     }
-
-    await pool.query(
-      `UPDATE companies
-       SET subscription_status = 'active', payment_id = $2
-       WHERE id = $1 AND (payment_id IS NULL OR payment_id <> $2)`,
-      [companyId, String(data.id)]
-    );
 
     return res.sendStatus(200);
   } catch (error) {
@@ -99,3 +226,8 @@ exports.webhook = async (req, res) => {
     return res.sendStatus(500);
   }
 };
+
+
+
+
+

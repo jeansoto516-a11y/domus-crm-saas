@@ -38,8 +38,8 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const userResult = await client.query(
       `INSERT INTO users (name, email, password, role, company_id)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, email, role, company_id, created_at`,
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, name, email, role, company_id, created_at`,
       [name, email, hashedPassword, role, companyResult.rows[0].id]
     );
 
