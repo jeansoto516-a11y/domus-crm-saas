@@ -7,6 +7,7 @@ import Dashboard from './pages/dashboard';
 import CreateLead from './pages/createlead';
 import Leads from './pages/leads';
 import Brokers from './pages/brokers';
+import Checkout from './pages/checkout';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -63,8 +64,17 @@ function App() {
               <Brokers />
             </PrivateRoute>
           }
+          />
 
+          <Route
+          path="/checkout"
+          element={
+            <PrivateRoute>
+              <Checkout />
+            </PrivateRoute>
+          }
         />
+
         <Route
           path="/leads/novo"
           element={
