@@ -99,11 +99,13 @@ exports.createPixCharge = async (req, res) => {
     return res.status(500).json({ error: 'Mercado Pago nao configurado.' });
   }
 
+  const { payer_name, payer_cpf } = req.body;
+
   try {
     const companyId = req.user.company_id;
 
     const companyResult = await pool.query(
-      `SELECT email FROM companies WHERE id = $1`,
+      `SELECT email, payer_name, payer_cpf FROM companies WHERE id = $1`,
       [companyId]
     );
 
@@ -113,6 +115,18 @@ exports.createPixCharge = async (req, res) => {
 
     const company = companyResult.rows[0];
 
+    const finalName = payer_name || company.payer_name;
+    const finalCpf = payer_cpf || company.payer_cpf;
+
+    if (!finalName || !finalCpf) {
+      return res.status(400).json({ error: 'Informe nome completo e CPF para gerar o Pix.' });
+    }
+
+    const cpfDigits = finalCpf.replace(/\D/g, '');
+    const nameParts = finalName.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ') || firstName;
+
     const response = await axios.post(
       'https://api.mercadopago.com/v1/payments',
       {
@@ -121,7 +135,13 @@ exports.createPixCharge = async (req, res) => {
         payment_method_id: 'pix',
         external_reference: String(companyId),
         payer: {
-          email: company.email
+          email: company.email,
+          first_name: firstName,
+          last_name: lastName,
+          identification: {
+            type: 'CPF',
+            number: cpfDigits
+          }
         }
       },
       {
@@ -137,9 +157,9 @@ exports.createPixCharge = async (req, res) => {
 
     await pool.query(
       `UPDATE companies
-      SET payment_method = 'pix', payment_id = $2
+      SET payment_method = 'pix', payment_id = $2, payer_name = $3, payer_cpf = $4
       WHERE id = $1`,
-      [companyId, String(payment.id)]
+      [companyId, String(payment.id), finalName, cpfDigits]
     );
 
     return res.json({
@@ -154,7 +174,6 @@ exports.createPixCharge = async (req, res) => {
     return res.status(500).json({ error: 'Erro ao gerar cobranca Pix.' });
   }
 };
-
 /**
  * Webhook - escuta pagamentos avulsos (Pix) e mudancas de assinatura (cartao)
  */

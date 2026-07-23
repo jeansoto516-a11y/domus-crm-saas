@@ -11,6 +11,8 @@ function Checkout() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [pixData, setPixData] = useState(null);
+    const [payerName, setPayerName] = useState('');
+    const [payerCpf, setPayerCpf] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -43,19 +45,27 @@ function Checkout() {
     };
 
     const handleGeneratePix = async () => {
+    if (!payerName || !payerCpf) {
+        setError('Preencha nome completo e CPF para gerar o Pix.');
+        return;
+    }
+
     setLoading(true);
     setError('');
     setPixData(null);
 
     try {
-        const response = await api.post('/payments/checkout/pix');
+        const response = await api.post('/payments/checkout/pix', {
+        payer_name: payerName,
+        payer_cpf: payerCpf
+        });
         setPixData(response.data);
     } catch (err) {
         setError(err.response?.data?.error || 'Nao foi possivel gerar o Pix.');
     } finally {
         setLoading(false);
     }
-    };
+};
 
     const copyPixCode = () => {
     if (pixData?.qr_code) {
@@ -114,13 +124,35 @@ function Checkout() {
             </button>
 
             {!pixData && (
+                <div className="metric-card">
+                <label>
+                    Nome completo
+                    <input
+                    type="text"
+                    value={payerName}
+                    onChange={(e) => setPayerName(e.target.value)}
+                    placeholder="Nome completo do responsavel"
+                    />
+                </label>
+
+                <label>
+                    CPF
+                    <input
+                    type="text"
+                    value={payerCpf}
+                    onChange={(e) => setPayerCpf(e.target.value)}
+                    placeholder="Somente numeros"
+                    />
+                </label>
+
                 <button
-                className="primary-button"
-                onClick={handleGeneratePix}
-                disabled={loading}
+                    className="primary-button"
+                    onClick={handleGeneratePix}
+                    disabled={loading}
                 >
-                {loading ? 'Gerando...' : 'Gerar QR Code Pix'}
+                    {loading ? 'Gerando...' : 'Gerar QR Code Pix'}
                 </button>
+                </div>
             )}
 
             {pixData && (
