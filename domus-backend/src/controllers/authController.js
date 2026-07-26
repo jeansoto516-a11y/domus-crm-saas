@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
+const crypto = require('crypto');
+const { sendMail } = require('../services/mailService');
 
 exports.register = async (req, res) => {
   const { name, email, password, company_name } = req.body;
