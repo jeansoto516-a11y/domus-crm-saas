@@ -111,7 +111,13 @@ exports.login = async (req, res) => {
       user
     });
 
-    /**
+  } catch (err) {
+    console.error('Erro no login:', err);
+    return res.status(500).json({ error: 'Erro no login.' });
+  }
+};
+
+/**
  * Solicitar recuperacao de senha
  */
 exports.forgotPassword = async (req, res) => {
@@ -212,11 +218,5 @@ exports.resetPassword = async (req, res) => {
   } catch (error) {
     console.error('Erro ao redefinir senha:', error);
     return res.status(500).json({ error: 'Erro ao redefinir senha.' });
-  }
-};
-
-  } catch (err) {
-    console.error('Erro no login:', err);
-    return res.status(500).json({ error: 'Erro no login.' });
   }
 };
