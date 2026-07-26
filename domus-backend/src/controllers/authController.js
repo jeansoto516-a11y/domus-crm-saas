@@ -110,6 +110,111 @@ exports.login = async (req, res) => {
       token,
       user
     });
+
+    /**
+ * Solicitar recuperacao de senha
+ */
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Informe o e-mail.' });
+  }
+
+  try {
+    const userResult = await pool.query(
+      `SELECT id, name FROM users WHERE email = $1`,
+      [email]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.json({
+        message: 'Se este e-mail existir em nossa base, um link de recuperacao foi enviado.'
+      });
+    }
+
+    const user = userResult.rows[0];
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    await pool.query(
+      `UPDATE users SET reset_token_hash = $1, reset_token_expires = $2 WHERE id = $3`,
+      [tokenHash, expires, user.id]
+    );
+
+    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+    const resetLink = `${appUrl}/redefinir-senha?token=${rawToken}&email=${encodeURIComponent(email)}`;
+
+    await sendMail({
+      to: email,
+      subject: 'Recuperacao de senha - Domus',
+      html: `
+        <p>Ola, ${user.name}.</p>
+        <p>Recebemos uma solicitacao para redefinir sua senha no Domus.</p>
+        <p><a href="${resetLink}">Clique aqui para criar uma nova senha</a></p>
+        <p>Este link expira em 1 hora. Se voce nao solicitou isso, ignore este e-mail.</p>
+      `
+    });
+
+    return res.json({
+      message: 'Se este e-mail existir em nossa base, um link de recuperacao foi enviado.'
+    });
+
+  } catch (error) {
+    console.error('Erro ao solicitar recuperacao de senha:', error);
+    return res.status(500).json({ error: 'Erro ao processar solicitacao.' });
+  }
+};
+
+/**
+ * Redefinir senha usando o token recebido por e-mail
+ */
+exports.resetPassword = async (req, res) => {
+  const { email, token, new_password } = req.body;
+
+  if (!email || !token || !new_password) {
+    return res.status(400).json({ error: 'Dados incompletos.' });
+  }
+
+  if (new_password.length < 6) {
+    return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.' });
+  }
+
+  try {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const userResult = await pool.query(
+      `SELECT id, reset_token_expires FROM users WHERE email = $1 AND reset_token_hash = $2`,
+      [email, tokenHash]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(400).json({ error: 'Link invalido ou ja utilizado.' });
+    }
+
+    const user = userResult.rows[0];
+
+    if (new Date() > new Date(user.reset_token_expires)) {
+      return res.status(400).json({ error: 'Link expirado. Solicite uma nova recuperacao de senha.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    await pool.query(
+      `UPDATE users SET password = $1, reset_token_hash = NULL, reset_token_expires = NULL WHERE id = $2`,
+      [hashedPassword, user.id]
+    );
+
+    return res.json({ message: 'Senha redefinida com sucesso.' });
+
+  } catch (error) {
+    console.error('Erro ao redefinir senha:', error);
+    return res.status(500).json({ error: 'Erro ao redefinir senha.' });
+  }
+};
+
   } catch (err) {
     console.error('Erro no login:', err);
     return res.status(500).json({ error: 'Erro no login.' });

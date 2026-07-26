@@ -5,8 +5,12 @@ const authController = require('../controllers/authController');
 // cadastro
 router.post('/register', authController.register);
 
-// login (COLOCA AQUI)
+// login
 router.post('/login', authController.login);
+
+// recuperacao de senha
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
 
 module.exports = router;
 
