@@ -8,6 +8,8 @@ import CreateLead from './pages/createlead';
 import Leads from './pages/leads';
 import Brokers from './pages/brokers';
 import Checkout from './pages/checkout';
+import ForgotPassword from './pages/forgotpassword';
+import ResetPassword from './pages/resetpassword';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -29,6 +31,22 @@ function App() {
           element={
             <PublicRoute>
               <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/esqueci-senha"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/redefinir-senha"
+          element={
+            <PublicRoute>
+              <ResetPassword />
             </PublicRoute>
           }
         />
