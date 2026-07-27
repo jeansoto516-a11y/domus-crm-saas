@@ -81,6 +81,10 @@ function Login() {
         </form>
 
         <p className="auth-footer">
+          <Link to="/esqueci-senha">Esqueci minha senha</Link>
+        </p>
+
+        <p className="auth-footer">
           Ainda nao tem conta? <Link to="/register">Comece o teste gratis</Link>
         </p>
       </section>
