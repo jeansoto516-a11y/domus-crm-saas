@@ -244,7 +244,48 @@ exports.webhook = async (req, res) => {
     console.error('Erro no webhook:', error.response?.data || error.message);
     return res.sendStatus(500);
   }
-};
+
+  /** Retorna o status da assinatura  */
+
+    exports.getSubscriptionStatus = async (req, res) => {
+    try {
+      const companyId = req.user.company_id;
+
+      const result = await pool.query(
+        `SELECT subscription_status, trial_ends_at FROM companies WHERE id = $1`,
+        [companyId]
+      );
+
+      if (result.rows.length === 0){
+        return res.status(404).json({ error: 'Imobiliaria nao encontrada.'});
+      }
+
+      const company = result.rows[0];
+      let daysLeft = null;
+
+      if (company.subscription_status === 'trial' && company.trial_ends_at) {
+        const now = new Date();
+        const trialEndsAt = new Date(company.trial_ends_at);
+        const diffMs = trialEndsAt - now;
+        daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      }
+
+      return res.json({
+        subscription_status: company.subscription_status,
+        trial_ends_at: company.trial_ends_at,
+        days_left: daysLeft
+      });
+
+    } catch (error) {
+        console.error('Erro ao buscar status da assinatura:', error);
+      return res.status(500).json({ error: 'Erro ao buscar status da assinatura.' });
+      }
+    };
+    
+  }
+  
+
+
 
 
 
