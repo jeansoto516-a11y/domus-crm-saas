@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const pool = require('../config/db');
+const { sendMail } = require('../services/mailService');
 
 /**
  * Listar corretores da empresa
@@ -103,6 +104,22 @@ exports.createBroker = async (req, res) => {
                 req.user.company_id
             ]
         );
+
+   const appUrl = process.env.APP_URL || 'http://localhost:5173';
+
+        await sendMail({
+            to: email,
+            subject: 'Bem-vindo ao Domus',
+            html: `
+                <p>Ola, ${name}.</p>
+                <p>Voce foi cadastrado como corretor no Domus CRM.</p>
+                <p>Acesse com os dados abaixo:</p>
+                <p><strong>E-mail:</strong> ${email}<br/>
+                <strong>Senha:</strong> ${password}</p>
+                <p><a href="${appUrl}/login">Clique aqui para acessar o Domus</a></p>
+                <p>Recomendamos alterar sua senha apos o primeiro acesso.</p>
+            `
+        });
 
         return res.status(201).json({
             message: 'Corretor criado com sucesso.',
