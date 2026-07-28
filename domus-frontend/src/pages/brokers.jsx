@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import TrialBanner from '../components/TrialBanner';
 
 function Brokers() {
     const navigate = useNavigate();
@@ -160,6 +161,8 @@ function Brokers() {
                 <header className="workspace-header">
                     <h1>Corretores</h1>
                 </header>
+
+                <TrialBanner />
 
                 <section className="panel">
 

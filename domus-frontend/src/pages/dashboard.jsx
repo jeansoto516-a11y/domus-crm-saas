@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import TrialBanner from '../components/TrialBanner';
 
 const statusLabels = {
   novo: 'Novos',
@@ -97,6 +98,8 @@ function Dashboard() {
             Novo lead
           </button>
         </header>
+
+        <TrialBanner />
 
         <section className="filters-bar">
           <label>

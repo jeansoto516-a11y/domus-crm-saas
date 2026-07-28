@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import TrialBanner from '../components/TrialBanner';
 
 function CreateLead() {
   const [form, setForm] = useState({
@@ -74,6 +75,8 @@ function CreateLead() {
             Ver leads
           </button>
         </header>
+
+        <TrialBanner />
 
         <section className="panel narrow">
           <form className="form-card clean" onSubmit={handleCreate}>

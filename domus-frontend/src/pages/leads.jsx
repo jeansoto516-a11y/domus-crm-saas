@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import TrialBanner from '../components/TrialBanner';
 
 const flow = ['novo', 'contato', 'visita', 'proposta', 'fechado'];
 
@@ -116,6 +117,8 @@ function Leads() {
             Novo lead
           </button>
         </header>
+
+        <TrialBanner />
 
         <section className="summary-strip">
           <article><span>Total</span><strong>{totals.total}</strong></article>
