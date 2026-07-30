@@ -10,6 +10,7 @@ import Brokers from './pages/brokers';
 import Checkout from './pages/checkout';
 import ForgotPassword from './pages/forgotpassword';
 import ResetPassword from './pages/resetpassword';
+import Profile from './pages/profile';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -89,6 +90,15 @@ function App() {
           element={
             <PrivateRoute>
               <Checkout />
+            </PrivateRoute>
+          }
+        />
+
+          <Route
+          path="/perfil"
+          element={
+            <PrivateRoute>
+              <Profile />
             </PrivateRoute>
           }
         />
