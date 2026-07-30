@@ -344,3 +344,109 @@ exports.updateBroker = async (req, res) => {
     }
 
 };
+
+/**
+ * Ver meus dados (usuario logado)
+ */
+exports.getMe = async (req, res) => {
+    try {
+        const userResult = await pool.query(
+            `SELECT id, name, email, role, company_id FROM users WHERE id = $1`,
+            [req.user.id]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuario nao encontrado.' });
+        }
+
+        const user = userResult.rows[0];
+
+        const companyResult = await pool.query(
+            `SELECT id, name FROM companies WHERE id = $1`,
+            [user.company_id]
+        );
+
+        return res.json({
+            user,
+            company: companyResult.rows[0] || null
+        });
+
+    } catch (err) {
+        console.error('Erro ao buscar perfil:', err);
+        return res.status(500).json({ error: 'Erro ao buscar perfil.' });
+    }
+};
+
+/**
+ * Atualizar meus dados (nome e, opcionalmente, senha)
+ */
+exports.updateMe = async (req, res) => {
+    const { name, current_password, new_password } = req.body;
+
+    try {
+        if (new_password) {
+            if (!current_password) {
+                return res.status(400).json({ error: 'Informe a senha atual para definir uma nova senha.' });
+            }
+
+            const userResult = await pool.query(
+                `SELECT password FROM users WHERE id = $1`,
+                [req.user.id]
+            );
+
+            const validPassword = await bcrypt.compare(current_password, userResult.rows[0].password);
+
+            if (!validPassword) {
+                return res.status(400).json({ error: 'Senha atual incorreta.' });
+            }
+
+            if (new_password.length < 6) {
+                return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
+            }
+
+            const hashedPassword = await bcrypt.hash(new_password, 10);
+
+            await pool.query(
+                `UPDATE users SET password = $1 WHERE id = $2`,
+                [hashedPassword, req.user.id]
+            );
+        }
+
+        if (name) {
+            await pool.query(
+                `UPDATE users SET name = $1 WHERE id = $2`,
+                [name, req.user.id]
+            );
+        }
+
+        return res.json({ message: 'Perfil atualizado com sucesso.' });
+
+    } catch (err) {
+        console.error('Erro ao atualizar perfil:', err);
+        return res.status(500).json({ error: 'Erro ao atualizar perfil.' });
+    }
+};
+
+/**
+ * Atualizar nome da imobiliaria (somente admin)
+ */
+exports.updateCompany = async (req, res) => {
+    const { name } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ error: 'Informe o nome da imobiliaria.' });
+    }
+
+    try {
+        await pool.query(
+            `UPDATE companies SET name = $1 WHERE id = $2`,
+            [name, req.user.company_id]
+        );
+
+        return res.json({ message: 'Imobiliaria atualizada com sucesso.' });
+
+    } catch (err) {
+        console.error('Erro ao atualizar imobiliaria:', err);
+        return res.status(500).json({ error: 'Erro ao atualizar imobiliaria.' });
+    }
+};

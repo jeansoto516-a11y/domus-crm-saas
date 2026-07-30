@@ -3,7 +3,27 @@ const router = express.Router();
 
 const authMiddleware = require('../middlewares/authMiddleware');
 const userController = require('../controllers/userController');
+const adminMiddleware = require('../middlewares/adminMiddleware');
 const checkSubscription = require('../middlewares/checkSubscription');
+
+router.get(
+    '/me',
+    authMiddleware,
+    userController.getMe
+);
+
+router.put(
+    '/me',
+    authMiddleware,
+    userController.updateMe
+);
+
+router.put(
+    '/company',
+    authMiddleware,
+    adminMiddleware,
+    userController.updateCompany
+);
 
 router.get(
     '/',
