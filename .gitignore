@@ -36,5 +36,4 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-# Local migration backups
-.git-backup-domus-backend/
+.git-backup-*
