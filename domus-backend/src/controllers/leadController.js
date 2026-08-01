@@ -18,13 +18,13 @@ function normalizeStatus(status) {
 
 function buildLeadScope(req, values) {
 
-    let where = `WHERE company_id = $${values.length + 1}`;
+    let where = `WHERE leads.company_id = $${values.length + 1}`;
 
     values.push(req.user.company_id);
 
     if (req.user.role !== 'admin') {
 
-        where += ` AND user_id = $${values.length + 1}`;
+        where += ` AND leads.user_id = $${values.length + 1}`;
 
         values.push(req.user.id);
 
@@ -33,7 +33,6 @@ function buildLeadScope(req, values) {
     return where;
 
 }
-
 function addDateFilters(where, values, query) {
 
     const {

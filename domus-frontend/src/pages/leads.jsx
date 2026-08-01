@@ -113,6 +113,32 @@ function Leads() {
             <h1>Leads</h1>
             <p>Priorize contatos quentes e mova oportunidades pelo funil.</p>
           </div>
+
+          <a
+            className="secondary-button"
+            href={`${import.meta.env.VITE_API_URL}/leads/export`}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => {
+              e.preventDefault();
+              const token = localStorage.getItem('token');
+              fetch(`${import.meta.env.VITE_API_URL}/leads/export`, {
+                headers: { Authorization: `Bearer ${token}` }
+              })
+                .then((res) => res.blob())
+                .then((blob) => {
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = 'leads-domus.csv';
+                  link.click();
+                  window.URL.revokeObjectURL(url);
+                });
+            }}
+          >
+            Exportar CSV
+          </a>
+
           <button className="primary-button" onClick={() => navigate('/leads/novo')}>
             Novo lead
           </button>
