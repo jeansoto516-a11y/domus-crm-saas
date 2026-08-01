@@ -429,3 +429,93 @@ exports.deleteLead = async (req, res) => {
         });
     }
 };
+
+/**
+ * Exportar leads em CSV
+ */
+exports.exportLeads = async (req, res) => {
+
+    const values = [];
+    let where = buildLeadScope(req, values);
+
+    where = addDateFilters(where, values, req.query);
+
+    try {
+
+        const result = await pool.query(
+            `
+            SELECT
+                leads.id,
+                leads.name,
+                leads.email,
+                leads.phone,
+                leads.status,
+                leads.score,
+                leads.temperature,
+                leads.created_at,
+                users.name AS corretor
+            FROM leads
+            LEFT JOIN users ON users.id = leads.user_id
+            ${where}
+            ORDER BY leads.created_at DESC, leads.id DESC
+            `,
+            values
+        );
+
+        const headers = [
+            'ID',
+            'Nome',
+            'Email',
+            'Telefone',
+            'Status',
+            'Score',
+            'Temperatura',
+            'Corretor',
+            'Cadastrado em'
+        ];
+
+        function escapeCsv(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+
+            const text = String(value);
+
+            if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+                return `"${text.replace(/"/g, '""')}"`;
+            }
+
+            return text;
+        }
+
+        const rows = result.rows.map((lead) => [
+            lead.id,
+            lead.name,
+            lead.email,
+            lead.phone,
+            lead.status,
+            lead.score,
+            lead.temperature,
+            lead.corretor || '',
+            new Date(lead.created_at).toLocaleString('pt-BR')
+        ].map(escapeCsv).join(','));
+
+        const csv = [headers.join(','), ...rows].join('\n');
+        const csvWithBom = '\uFEFF' + csv;
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="leads-domus.csv"');
+
+        return res.send(csvWithBom);
+
+    } catch (err) {
+
+        console.error('Erro ao exportar leads:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao exportar leads.'
+        });
+
+    }
+
+};
