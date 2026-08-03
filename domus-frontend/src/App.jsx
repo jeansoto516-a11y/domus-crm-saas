@@ -11,6 +11,7 @@ import Checkout from './pages/checkout';
 import ForgotPassword from './pages/forgotpassword';
 import ResetPassword from './pages/resetpassword';
 import Profile from './pages/profile';
+import AdminPanel from './pages/adminpanel';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
