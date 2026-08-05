@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 
 function AdminPanel() {
@@ -73,6 +74,9 @@ function AdminPanel() {
             <h1>Imobiliarias cadastradas</h1>
             <p>{companies.length} imobiliaria(s) no total.</p>
             </div>
+            <Link className="secondary-button" to="/dashboard">
+            Voltar ao dashboard
+            </Link>
         </header>
 
         {error && <div className="alert error">{error}</div>}
