@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
+
+const user = JSON.parse(localStorage.getItem('user') || 'null');
 
 const statusLabels = {
   novo: 'Novos',
@@ -94,6 +96,11 @@ function Dashboard() {
             <h1>Dashboard</h1>
             <p>{user.name ? `Ola, ${user.name}.` : 'Acompanhe a saude do funil.'}</p>
           </div>
+          {user?.role === 'super_admin' && (
+            <Link className="secondary-button" to="/admin">
+              Painel do sistema
+            </Link>
+          )}
           <button className="primary-button" onClick={() => navigate('/leads/novo')}>
             Novo lead
           </button>
