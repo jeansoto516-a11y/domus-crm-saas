@@ -49,6 +49,7 @@ async function createTables() {
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS payer_name TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_hash TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP;
 
       CREATE INDEX IF NOT EXISTS idx_leads_company_created_at ON leads(company_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_leads_company_status ON leads(company_id, status);

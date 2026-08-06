@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import TermsModal from '../components/TermsModal';
 
 function Register() {
   const [form, setForm] = useState({
@@ -12,6 +13,7 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const navigate = useNavigate();
 
   const updateField = (event) => {
@@ -19,7 +21,20 @@ function Register() {
     setForm((current) => ({ ...current, [name]: value }));
   };
 
-  const handleRegister = async (event) => {
+  const submitRegistration = async () => {
+    try {
+      setLoading(true);
+      await api.post('/auth/register', { ...form, role: 'admin', accepted_terms: true });
+      setSuccess('Conta criada. Redirecionando para o login...');
+      setTimeout(() => navigate('/login'), 900);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Nao foi possivel criar sua conta agora.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = (event) => {
     event.preventDefault();
     setError('');
     setSuccess('');
@@ -34,16 +49,7 @@ function Register() {
       return;
     }
 
-    try {
-      setLoading(true);
-      await api.post('/auth/register', { ...form, role: 'admin' });
-      setSuccess('Conta criada. Redirecionando para o login...');
-      setTimeout(() => navigate('/login'), 900);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Nao foi possivel criar sua conta agora.');
-    } finally {
-      setLoading(false);
-    }
+    setShowTermsModal(true);
   };
 
   return (
@@ -113,6 +119,16 @@ function Register() {
             {loading ? 'Criando conta...' : 'Criar conta e iniciar teste'}
           </button>
         </form>
+
+        {showTermsModal && (
+          <TermsModal
+            onClose={() => setShowTermsModal(false)}
+            onAccept={() => {
+              setShowTermsModal(false);
+              submitRegistration();
+            }}
+          />
+        )}
 
         <p className="auth-footer">
           Ja tem conta? <Link to="/login">Entrar no Domus</Link>

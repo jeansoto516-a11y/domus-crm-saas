@@ -5,11 +5,15 @@ const crypto = require('crypto');
 const { sendMail } = require('../services/mailService');
 
 exports.register = async (req, res) => {
-  const { name, email, password, company_name } = req.body;
+  const { name, email, password, company_name, accepted_terms } = req.body;
   const role = req.body.role === 'admin' ? 'admin' : 'user';
 
   if (!name || !email || !password || !company_name) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatorios.' });
+  }
+
+  if (!accepted_terms) {
+    return res.status(400).json({ error: 'E necessario aceitar os Termos de Uso e a Politica de Privacidade para se cadastrar.' });
   }
 
   if (password.length < 6) {
@@ -39,8 +43,8 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const userResult = await client.query(
-      `INSERT INTO users (name, email, password, role, company_id)
-        VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (name, email, password, role, company_id, terms_accepted_at)
+        VALUES ($1, $2, $3, $4, $5, NOW())
         RETURNING id, name, email, role, company_id, created_at`,
       [name, email, hashedPassword, role, companyResult.rows[0].id]
     );
