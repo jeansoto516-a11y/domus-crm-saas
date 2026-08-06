@@ -12,6 +12,8 @@ import ForgotPassword from './pages/forgotpassword';
 import ResetPassword from './pages/resetpassword';
 import Profile from './pages/profile';
 import AdminPanel from './pages/adminpanel';
+import Termos from './pages/termos';
+import Privacidade from './pages/privacidade';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -28,6 +30,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/termos" element={<Termos />} />
+        <Route path="/privacidade" element={<Privacidade />} />
         <Route
           path="/login"
           element={
