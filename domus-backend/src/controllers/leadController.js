@@ -142,6 +142,11 @@ exports.createLead = async (req, res) => {
             ]
         );
 
+        await pool.query(
+            `INSERT INTO lead_history (lead_id, user_id, type, content) VALUES ($1, $2, 'status', 'Lead cadastrado no sistema')`,
+            [result.rows[0].id, req.user.id]
+        );
+
         return res.status(201).json(result.rows[0]);
 
     } catch (err) {
@@ -518,6 +523,109 @@ exports.exportLeads = async (req, res) => {
 
         return res.status(500).json({
             error: 'Erro ao exportar leads.'
+        });
+
+    }
+
+};
+
+/**
+ * Listar historico de um lead
+ */
+exports.getLeadHistory = async (req, res) => {
+
+    const { id } = req.params;
+    const values = [];
+    let where = buildLeadScope(req, values);
+    values.push(id);
+
+    try {
+
+        const leadCheck = await pool.query(
+            `SELECT id FROM leads ${where} AND id = $${values.length}`,
+            values
+        );
+
+        if (leadCheck.rows.length === 0) {
+            return res.status(404).json({
+                error: 'Lead nao encontrado.'
+            });
+        }
+
+        const result = await pool.query(
+            `
+            SELECT
+                lead_history.id,
+                lead_history.type,
+                lead_history.content,
+                lead_history.created_at,
+                users.name AS autor
+            FROM lead_history
+            LEFT JOIN users ON users.id = lead_history.user_id
+            WHERE lead_history.lead_id = $1
+            ORDER BY lead_history.created_at DESC
+            `,
+            [id]
+        );
+
+        return res.json(result.rows);
+
+    } catch (err) {
+
+        console.error('Erro ao buscar historico do lead:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar historico do lead.'
+        });
+
+    }
+
+};
+
+/**
+ * Adicionar anotacao manual no lead
+ */
+exports.addLeadNote = async (req, res) => {
+
+    const { id } = req.params;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+        return res.status(400).json({
+            error: 'Escreva algo para adicionar a anotacao.'
+        });
+    }
+
+    const values = [];
+    let where = buildLeadScope(req, values);
+    values.push(id);
+
+    try {
+
+        const leadCheck = await pool.query(
+            `SELECT id FROM leads ${where} AND id = $${values.length}`,
+            values
+        );
+
+        if (leadCheck.rows.length === 0) {
+            return res.status(404).json({
+                error: 'Lead nao encontrado.'
+            });
+        }
+
+        const result = await pool.query(
+            `INSERT INTO lead_history (lead_id, user_id, type, content) VALUES ($1, $2, 'nota', $3) RETURNING *`,
+            [id, req.user.id, content.trim()]
+        );
+
+        return res.status(201).json(result.rows[0]);
+
+    } catch (err) {
+
+        console.error('Erro ao adicionar anotacao:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao adicionar anotacao.'
         });
 
     }

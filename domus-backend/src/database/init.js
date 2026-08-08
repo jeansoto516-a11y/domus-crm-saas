@@ -37,6 +37,15 @@ async function createTables() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS lead_history (
+        id SERIAL PRIMARY KEY,
+        lead_id INTEGER REFERENCES leads(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id),
+        type TEXT DEFAULT 'nota',
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0;
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS temperature TEXT DEFAULT 'frio';
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
@@ -56,6 +65,7 @@ async function createTables() {
       CREATE INDEX IF NOT EXISTS idx_leads_company_created_at ON leads(company_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_leads_company_status ON leads(company_id, status);
       CREATE INDEX IF NOT EXISTS idx_users_company_id ON users(company_id);
+      CREATE INDEX IF NOT EXISTS idx_lead_history_lead_id ON lead_history(lead_id);
     `);
 
     console.log('Tabelas criadas ou atualizadas com sucesso.');
