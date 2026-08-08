@@ -277,6 +277,11 @@ exports.updateLead = async (req, res) => {
             ]
         );
 
+        await pool.query(
+            `INSERT INTO lead_history (lead_id, user_id, type, content) VALUES ($1, $2, 'status', $3)`,
+            [id, req.user.id, `Status alterado para: ${status}`]
+        );
+
         return res.json(result.rows[0]);
 
     } catch (err) {

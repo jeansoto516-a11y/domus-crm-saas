@@ -37,3 +37,4 @@ pnpm-debug.log*
 *.sw?
 
 .git-backup-*
+domus-backend/backups/
