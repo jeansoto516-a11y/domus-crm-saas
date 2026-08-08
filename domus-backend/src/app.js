@@ -4,6 +4,8 @@ const cors = require('cors');
 const express = require('express');
 const pool = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
+const cron = require('node-cron');
+const { checkTrialReminders } = require('./services/trialReminderService');
 
 const authRoutes = require('./routes/authRoutes');
 const leadRoutes = require('./routes/leadroutes');
@@ -47,6 +49,11 @@ pool.query('SELECT 1')
   .then(() => {
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Servidor Domus rodando na porta ${PORT}`);
+    });
+
+    cron.schedule('0 9 * * *', () => {
+      console.log('Rodando verificacao diaria de trials...');
+      checkTrialReminders();
     });
   })
   .catch((err) => {
