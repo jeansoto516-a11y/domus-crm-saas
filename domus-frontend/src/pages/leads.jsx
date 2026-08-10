@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
@@ -24,6 +24,10 @@ function Leads() {
   const [filters, setFilters] = useState({ status: '', startDate: '', endDate: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedLeadId, setExpandedLeadId] = useState(null);
+  const [historyByLead, setHistoryByLead] = useState({});
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [noteText, setNoteText] = useState('');
   const navigate = useNavigate();
 
   const totals = useMemo(() => {
@@ -91,6 +95,44 @@ function Leads() {
     }
   };
 
+  const loadHistory = async (leadId) => {
+    try {
+      setHistoryLoading(true);
+      const { data } = await api.get(`/leads/${leadId}/history`);
+      setHistoryByLead((current) => ({ ...current, [leadId]: data }));
+    } catch (err) {
+      setError(err.response?.data?.error || 'Nao foi possivel carregar o historico.');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const toggleHistory = (leadId) => {
+    if (expandedLeadId === leadId) {
+      setExpandedLeadId(null);
+      return;
+    }
+
+    setExpandedLeadId(leadId);
+    setNoteText('');
+
+    if (!historyByLead[leadId]) {
+      loadHistory(leadId);
+    }
+  };
+
+  const submitNote = async (leadId) => {
+    if (!noteText.trim()) return;
+
+    try {
+      await api.post(`/leads/${leadId}/history`, { content: noteText });
+      setNoteText('');
+      loadHistory(leadId);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Nao foi possivel adicionar a anotacao.');
+    }
+  };
+
   return (
     <main className="app-shell">
       <aside className="sidebar">
@@ -114,8 +156,8 @@ function Leads() {
             <p>Priorize contatos quentes e mova oportunidades pelo funil.</p>
           </div>
 
-          <a
-            className="secondary-button"
+          
+            <a className="secondary-button"
             href={`${import.meta.env.VITE_API_URL}/leads/export`}
             target="_blank"
             rel="noreferrer"
@@ -204,7 +246,8 @@ function Leads() {
                   {leads.map((lead) => {
                     const currentIndex = flow.indexOf(lead.status);
                     return (
-                      <tr key={lead.id}>
+                      <React.Fragment key={lead.id}>
+                      <tr onClick={() => toggleHistory(lead.id)} style={{ cursor: 'pointer' }}>
                         <td>
                           <strong>{lead.name}</strong>
                           <span>{new Date(lead.created_at).toLocaleDateString('pt-BR')}</span>
@@ -225,20 +268,68 @@ function Leads() {
                             <button
                               className="small-button"
                               disabled={currentIndex <= 0}
-                              onClick={() => changeStatus(lead, -1)}
+                              onClick={(e) => { e.stopPropagation(); changeStatus(lead, -1); }}
                             >
                               Voltar
                             </button>
                             <button
                               className="small-button"
                               disabled={currentIndex >= flow.length - 1}
-                              onClick={() => changeStatus(lead, 1)}
+                              onClick={(e) => { e.stopPropagation(); changeStatus(lead, 1); }}
                             >
                               Avancar
                             </button>
                           </div>
                         </td>
                       </tr>
+
+                      {expandedLeadId === lead.id && (
+                        <tr>
+                          <td colSpan={6} style={{ background: '#F9FAFB' }}>
+                            <div style={{ padding: '12px 16px' }}>
+                              <strong>Historico do lead</strong>
+
+                              {historyLoading && !historyByLead[lead.id] ? (
+                                <p>Carregando historico...</p>
+                              ) : (
+                                <ul style={{ listStyle: 'none', padding: 0, margin: '10px 0' }}>
+                                  {(historyByLead[lead.id] || []).length === 0 && (
+                                    <li style={{ color: '#6B7280' }}>Nenhum registro ainda.</li>
+                                  )}
+                                  {(historyByLead[lead.id] || []).map((item) => (
+                                    <li key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #E5E7EB' }}>
+                                      <div style={{ fontSize: 13, color: '#1F2937' }}>
+                                        {item.type === 'status' ? '🔄 ' : '📝 '}
+                                        {item.content}
+                                      </div>
+                                      <div style={{ fontSize: 11, color: '#6B7280' }}>
+                                        {item.autor || 'Sistema'} - {new Date(item.created_at).toLocaleString('pt-BR')}
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+
+                              <div style={{ display: 'flex', gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="text"
+                                  placeholder="Adicionar anotacao..."
+                                  value={noteText}
+                                  onChange={(e) => setNoteText(e.target.value)}
+                                  style={{ flex: 1 }}
+                                />
+                                <button
+                                  className="secondary-button"
+                                  onClick={() => submitNote(lead.id)}
+                                >
+                                  Adicionar
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
