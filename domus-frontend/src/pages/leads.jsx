@@ -121,7 +121,20 @@ function Leads() {
     }
   };
 
-  const submitNote = async (leadId) => {
+  const openWhatsApp = (lead) => {
+    if (!lead.phone) return;
+
+    const digits = lead.phone.replace(/\D/g, '');
+    const phoneWithCountry = digits.startsWith('55') ? digits : `55${digits}`;
+    const message = encodeURIComponent(
+      `Ola ${lead.name}, aqui e da imobiliaria! Tudo bem? Vi seu interesse e gostaria de conversar sobre o imovel.`
+    );
+
+    window.open(`https://wa.me/${phoneWithCountry}?text=${message}`, '_blank');
+  };
+    
+    
+    const submitNote = async (leadId) => {
     if (!noteText.trim()) return;
 
     try {
@@ -279,6 +292,15 @@ function Leads() {
                             >
                               Avancar
                             </button>
+                            {lead.phone && (
+                              <button
+                                className="small-button"
+                                style={{ background: '#25D366', color: '#fff', borderColor: '#25D366' }}
+                                onClick={(e) => { e.stopPropagation(); openWhatsApp(lead); }}
+                              >
+                                WhatsApp
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -342,4 +364,4 @@ function Leads() {
   );
 }
 
-export default Leads;
+export default Leads; 
