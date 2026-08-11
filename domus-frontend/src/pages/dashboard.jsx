@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
 
-const user = JSON.parse(localStorage.getItem('user') || 'null');
+
 
 const statusLabels = {
   novo: 'Novos',
@@ -33,6 +33,12 @@ function Dashboard() {
     localStorage.removeItem('user');
     navigate('/login');
   }, [navigate]);
+
+  useEffect(() => {
+    if (user?.role === 'super_admin') {
+      navigate('/admin');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     let active = true;
