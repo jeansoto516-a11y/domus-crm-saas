@@ -11,6 +11,7 @@ const authRoutes = require('./routes/authRoutes');
 const leadRoutes = require('./routes/leadroutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const adminPanelRoutes = require('./routes/adminPanelRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +21,7 @@ app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 app.use('/users', userRoutes);
 app.use('/admin', adminPanelRoutes);
+app.use('/messages', messageRoutes);
 
 app.get('/', (req, res) => {
   res.json({
