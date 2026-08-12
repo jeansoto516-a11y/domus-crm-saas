@@ -5,6 +5,11 @@ const pool = require('../config/db');
  */
 exports.getMyMessages = async (req, res) => {
     try {
+        await pool.query(
+            `UPDATE messages SET read_at = NOW() WHERE company_id = $1 AND sender_role = 'admin' AND read_at IS NULL`,
+            [req.user.company_id]
+        );
+
         const result = await pool.query(
             `
             SELECT
@@ -60,6 +65,11 @@ exports.getCompanyMessages = async (req, res) => {
     const { companyId } = req.params;
 
     try {
+        await pool.query(
+            `UPDATE messages SET read_at = NOW() WHERE company_id = $1 AND sender_role = 'company' AND read_at IS NULL`,
+            [companyId]
+        );
+
         const result = await pool.query(
             `
             SELECT
@@ -106,5 +116,50 @@ exports.sendCompanyMessage = async (req, res) => {
     } catch (err) {
         console.error('Erro ao enviar mensagem:', err);
         return res.status(500).json({ error: 'Erro ao enviar mensagem.' });
+    }
+};
+
+/**
+ * Lado da imobiliaria: contar mensagens nao lidas do Domus
+ */
+exports.getMyUnreadCount = async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT COUNT(*) AS total FROM messages WHERE company_id = $1 AND sender_role = 'admin' AND read_at IS NULL`,
+            [req.user.company_id]
+        );
+
+        return res.json({ unread: Number(result.rows[0].total) });
+
+    } catch (err) {
+        console.error('Erro ao contar mensagens:', err);
+        return res.status(500).json({ error: 'Erro ao contar mensagens.' });
+    }
+};
+
+/**
+ * Lado do super admin: contar mensagens nao lidas por imobiliaria
+ */
+exports.getUnreadCountsBySuperAdmin = async (req, res) => {
+    try {
+        const result = await pool.query(
+            `
+            SELECT company_id, COUNT(*) AS total
+            FROM messages
+            WHERE sender_role = 'company' AND read_at IS NULL
+            GROUP BY company_id
+            `
+        );
+
+        const counts = {};
+        result.rows.forEach((row) => {
+            counts[row.company_id] = Number(row.total);
+        });
+
+        return res.json(counts);
+
+    } catch (err) {
+        console.error('Erro ao contar mensagens:', err);
+        return res.status(500).json({ error: 'Erro ao contar mensagens.' });
     }
 };
