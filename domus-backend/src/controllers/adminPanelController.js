@@ -73,4 +73,52 @@ exports.updateCompanyStatus = async (req, res) => {
         console.error('Erro ao atualizar imobiliaria:', err);
         return res.status(500).json({ error: 'Erro ao atualizar imobiliaria.' });
     }
+
+};
+
+    /**
+ * Estatisticas gerais do sistema
+ */
+exports.getStats = async (req, res) => {
+    try {
+        const companiesResult = await pool.query(`
+            SELECT subscription_status, COUNT(*) AS total
+            FROM companies
+            GROUP BY subscription_status
+        `);
+
+        const totalLeadsResult = await pool.query(`SELECT COUNT(*) AS total FROM leads`);
+        const totalUsersResult = await pool.query(`SELECT COUNT(*) AS total FROM users WHERE role != 'super_admin'`);
+
+        const recentCompaniesResult = await pool.query(`
+            SELECT id, name, subscription_status, created_at
+            FROM companies
+            ORDER BY created_at DESC
+            LIMIT 5
+        `);
+
+        const stats = {
+            por_status: {
+                trial: 0,
+                active: 0,
+                canceled: 0
+            },
+            total_leads: Number(totalLeadsResult.rows[0].total),
+            total_usuarios: Number(totalUsersResult.rows[0].total),
+            recentes: recentCompaniesResult.rows
+        };
+
+        companiesResult.rows.forEach((item) => {
+            stats.por_status[item.subscription_status] = Number(item.total);
+        });
+
+        stats.total_imobiliarias = stats.por_status.trial + stats.por_status.active + stats.por_status.canceled;
+        stats.receita_estimada_mensal = (stats.por_status.active * 59.90).toFixed(2);
+
+        return res.json(stats);
+
+    } catch (err) {
+        console.error('Erro ao buscar estatisticas:', err);
+        return res.status(500).json({ error: 'Erro ao buscar estatisticas.' });
+    }
 };

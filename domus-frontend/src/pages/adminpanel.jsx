@@ -3,6 +3,7 @@ import api from '../services/api';
 
 function AdminPanel() {
     const [companies, setCompanies] = useState([]);
+    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
@@ -15,8 +16,15 @@ function AdminPanel() {
         .finally(() => setLoading(false));
     };
 
+    const loadStats = () => {
+    api.get('/admin/stats')
+        .then((response) => setStats(response.data))
+        .catch(() => {});
+    };
+
     useEffect(() => {
     loadCompanies();
+    loadStats();
     }, []);
 
     const handleActivate = async (id) => {
@@ -88,6 +96,39 @@ function AdminPanel() {
         {error && <div className="alert error">{error}</div>}
         {message && <div className="alert">{message}</div>}
 
+        {stats && (
+            <section className="summary-strip">
+            <article>
+                <span>Total de imobiliarias</span>
+                <strong>{stats.total_imobiliarias}</strong>
+            </article>
+            <article>
+                <span>Ativas (pagantes)</span>
+                <strong>{stats.por_status.active}</strong>
+            </article>
+            <article>
+                <span>Em trial</span>
+                <strong>{stats.por_status.trial}</strong>
+            </article>
+            <article>
+                <span>Canceladas</span>
+                <strong>{stats.por_status.canceled}</strong>
+            </article>
+            <article>
+                <span>Receita mensal estimada</span>
+                <strong>R$ {stats.receita_estimada_mensal}</strong>
+            </article>
+            <article>
+                <span>Total de leads no sistema</span>
+                <strong>{stats.total_leads}</strong>
+            </article>
+            <article>
+                <span>Total de usuarios</span>
+                <strong>{stats.total_usuarios}</strong>
+            </article>
+            </section>
+        )}
+
         <table className="data-table">
             <thead>
             <tr>
@@ -127,52 +168,6 @@ function AdminPanel() {
         </section>
     </main>
     );    
-
-    /**
- * Estatisticas gerais do sistema
- */
-exports.getStats = async (req, res) => {
-    try {
-        const companiesResult = await pool.query(`
-            SELECT subscription_status, COUNT(*) AS total
-            FROM companies
-            GROUP BY subscription_status
-        `);
-
-        const totalLeadsResult = await pool.query(`SELECT COUNT(*) AS total FROM leads`);
-        const totalUsersResult = await pool.query(`SELECT COUNT(*) AS total FROM users WHERE role != 'super_admin'`);
-
-        const recentCompaniesResult = await pool.query(`
-            SELECT id, name, subscription_status, created_at
-            FROM companies
-            ORDER BY created_at DESC
-            LIMIT 5
-        `);
-
-        const stats = {
-            por_status: {
-                trial: 0,
-                active: 0,
-                canceled: 0
-            },
-            total_leads: Number(totalLeadsResult.rows[0].total),
-            total_usuarios: Number(totalUsersResult.rows[0].total),
-            recentes: recentCompaniesResult.rows
-        };
-
-        companiesResult.rows.forEach((item) => {
-            stats.por_status[item.subscription_status] = Number(item.total);
-        });
-
-        stats.total_imobiliarias = stats.por_status.trial + stats.por_status.active + stats.por_status.canceled;
-        stats.receita_estimada_mensal = (stats.por_status.active * 59.90).toFixed(2);
-
-        return res.json(stats);
-
-    } catch (err) {
-        console.error('Erro ao buscar estatisticas:', err);
-        return res.status(500).json({ error: 'Erro ao buscar estatisticas.' });
-    }
-};
 }
+
 export default AdminPanel;
