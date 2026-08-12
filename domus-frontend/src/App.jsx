@@ -12,6 +12,8 @@ import ForgotPassword from './pages/forgotpassword';
 import ResetPassword from './pages/resetpassword';
 import Profile from './pages/profile';
 import AdminPanel from './pages/adminpanel';
+import Messages from './pages/messages';
+import AdminMessages from './pages/adminmessages';
 import Termos from './pages/termos';
 import Privacidade from './pages/privacidade';
 
@@ -104,6 +106,24 @@ function App() {
           element={
             <PrivateRoute>
               <Profile />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/mensagens"
+          element={
+            <PrivateRoute>
+              <Messages />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/mensagens/:companyId"
+          element={
+            <PrivateRoute>
+              <AdminMessages />
             </PrivateRoute>
           }
         />

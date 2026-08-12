@@ -154,6 +154,9 @@ function Brokers() {
                     <button className="active">
                         Corretores
                     </button>
+
+                    <button onClick={() => navigate('/mensagens')}>Mensagens</button>
+
                 </nav>
             </aside>
 

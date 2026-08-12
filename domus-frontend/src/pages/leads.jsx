@@ -154,9 +154,11 @@ function Leads() {
           <span>Domus CRM</span>
         </div>
         <nav className="side-nav">
-          <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-          <button className="active" onClick={() => navigate('/leads')}>Leads</button>
-          <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
+            <button onClick={() => navigate('/dashboard')}>Dashboard</button>
+            <button className="active" onClick={() => navigate('/leads')}>Leads</button>
+            <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
+            <button onClick={() => navigate('/brokers')}>Corretores</button>
+            <button onClick={() => navigate('/mensagens')}>Mensagens</button>
         </nav>
         <button className="ghost-button full" onClick={logout}>Sair</button>
       </aside>

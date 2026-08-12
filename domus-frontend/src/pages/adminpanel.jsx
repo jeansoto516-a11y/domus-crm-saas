@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 function AdminPanel() {
+    const navigate = useNavigate();
     const [companies, setCompanies] = useState([]);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
+    
 
     const loadCompanies = () => {
     setLoading(true);
@@ -160,6 +163,18 @@ function AdminPanel() {
                     <button className="secondary-button" onClick={() => handleCancel(company.id)}>
                     Cancelar
                     </button>
+
+                    <button className="secondary-button" onClick={() => handleCancel(company.id)}>
+                    Cancelar
+                    </button>{' '}
+                    
+                    <button
+                        className="secondary-button"
+                        onClick={() => navigate(`/admin/mensagens/${company.id}`, { state: { companyName: company.name } })}
+                    >
+                    Mensagens
+                    </button>
+
                 </td>
                 </tr>
             ))}
