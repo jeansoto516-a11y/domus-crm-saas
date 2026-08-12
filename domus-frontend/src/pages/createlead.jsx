@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
@@ -12,6 +12,7 @@ function CreateLead() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
 
   const logout = () => {
@@ -19,6 +20,18 @@ function CreateLead() {
     localStorage.removeItem('user');
     navigate('/login');
   };
+
+  useEffect(() => {
+    const checkUnread = () => {
+      api.get('/messages/unread-count')
+        .then((res) => setUnreadCount(res.data.unread))
+        .catch(() => {});
+    };
+
+    checkUnread();
+    const interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -61,7 +74,21 @@ function CreateLead() {
           <button onClick={() => navigate('/leads')}>Leads</button>
           <button className="active" onClick={() => navigate('/leads/novo')}>Novo lead</button>
           <button onClick={() => navigate('/brokers')}>Corretores</button>
-          <button onClick={() => navigate('/mensagens')}>Mensagens</button>
+          <button onClick={() => navigate('/mensagens')}>
+            Mensagens
+            {unreadCount > 0 && (
+              <span style={{
+                background: '#DC2626',
+                color: '#fff',
+                borderRadius: '999px',
+                fontSize: 11,
+                padding: '1px 7px',
+                marginLeft: 6
+              }}>
+                {unreadCount}
+              </span>
+            )}
+          </button>
         </nav>
         <button className="ghost-button full" onClick={logout}>Sair</button>
       </aside>

@@ -24,6 +24,7 @@ function Leads() {
   const [filters, setFilters] = useState({ status: '', startDate: '', endDate: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
   const [expandedLeadId, setExpandedLeadId] = useState(null);
   const [historyByLead, setHistoryByLead] = useState({});
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -61,6 +62,7 @@ function Leads() {
           logout();
           return;
         }
+
         if (active) {
           setError(err.response?.data?.error || 'Nao foi possivel buscar os leads.');
         }
@@ -75,6 +77,18 @@ function Leads() {
       active = false;
     };
   }, [filters, logout]);
+
+  useEffect(() => {
+    const checkUnread = () => {
+      api.get('/messages/unread-count')
+        .then((res) => setUnreadCount(res.data.unread))
+        .catch(() => {});
+    };
+
+    checkUnread();
+    const interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const updateFilter = (event) => {
     const { name, value } = event.target;
@@ -132,9 +146,8 @@ function Leads() {
 
     window.open(`https://wa.me/${phoneWithCountry}?text=${message}`, '_blank');
   };
-    
-    
-    const submitNote = async (leadId) => {
+
+  const submitNote = async (leadId) => {
     if (!noteText.trim()) return;
 
     try {
@@ -158,7 +171,21 @@ function Leads() {
             <button className="active" onClick={() => navigate('/leads')}>Leads</button>
             <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/mensagens')}>Mensagens</button>
+            <button onClick={() => navigate('/mensagens')}>
+              Mensagens
+              {unreadCount > 0 && (
+                <span style={{
+                  background: '#DC2626',
+                  color: '#fff',
+                  borderRadius: '999px',
+                  fontSize: 11,
+                  padding: '1px 7px',
+                  marginLeft: 6
+                }}>
+                  {unreadCount}
+                </span>
+              )}
+            </button>
         </nav>
         <button className="ghost-button full" onClick={logout}>Sair</button>
       </aside>
@@ -173,7 +200,7 @@ function Leads() {
 
           
             <a className="secondary-button"
-            href={`${import.meta.env.VITE_API_URL}/leads/export`}
+            href={`${import.meta.env.VITE_API_URL}/leads/export`}>
             target="_blank"
             rel="noreferrer"
             onClick={(e) => {
@@ -192,7 +219,7 @@ function Leads() {
                   window.URL.revokeObjectURL(url);
                 });
             }}
-          >
+          
             Exportar CSV
           </a>
 
@@ -366,4 +393,4 @@ function Leads() {
   );
 }
 
-export default Leads; 
+export default Leads;

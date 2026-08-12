@@ -7,6 +7,7 @@ function Messages() {
     const [text, setText] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [unreadCount, setUnreadCount] = useState(0);
     const bottomRef = useRef(null);
     const navigate = useNavigate();
 
@@ -30,6 +31,18 @@ function Messages() {
     useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    useEffect(() => {
+    const checkUnread = () => {
+        api.get('/messages/unread-count')
+            .then((res) => setUnreadCount(res.data.unread))
+            .catch(() => {});
+    };
+
+    checkUnread();
+    const interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+    }, []);
 
     const handleSend = async (e) => {
     e.preventDefault();
@@ -55,7 +68,21 @@ function Messages() {
             <button onClick={() => navigate('/dashboard')}>Dashboard</button>
             <button onClick={() => navigate('/leads')}>Leads</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button className="active" onClick={() => navigate('/mensagens')}>Mensagens</button>
+            <button className="active" onClick={() => navigate('/mensagens')}>
+                Mensagens
+                {unreadCount > 0 && (
+                    <span style={{
+                        background: '#DC2626',
+                        color: '#fff',
+                        borderRadius: '999px',
+                        fontSize: 11,
+                        padding: '1px 7px',
+                        marginLeft: 6
+                    }}>
+                        {unreadCount}
+                    </span>
+                )}
+            </button>
         </nav>
         </aside>
 

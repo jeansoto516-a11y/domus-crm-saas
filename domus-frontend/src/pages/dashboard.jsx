@@ -17,6 +17,7 @@ function Dashboard() {
   const [data, setData] = useState(null);
   const [filters, setFilters] = useState({ startDate: '', endDate: '' });
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -69,6 +70,18 @@ function Dashboard() {
     };
   }, [filters, logout]);
 
+  useEffect(() => {
+    const checkUnread = () => {
+      api.get('/messages/unread-count')
+        .then((res) => setUnreadCount(res.data.unread))
+        .catch(() => {});
+    };
+
+    checkUnread();
+    const interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const updateFilter = (event) => {
     const { name, value } = event.target;
     setFilters((current) => ({ ...current, [name]: value }));
@@ -91,7 +104,21 @@ function Dashboard() {
             <button onClick={() => navigate('/leads')}>Leads</button>
             <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/mensagens')}>Mensagens</button>
+            <button onClick={() => navigate('/mensagens')}>
+            Mensagens
+            {unreadCount > 0 && (
+              <span style={{
+                background: '#DC2626',
+                color: '#fff',
+                borderRadius: '999px',
+                fontSize: 11,
+                padding: '1px 7px',
+                marginLeft: 6
+              }}>
+                {unreadCount}
+              </span>
+            )}
+          </button>
         </nav>
         <button className="ghost-button full" onClick={logout}>Sair</button>
       </aside>

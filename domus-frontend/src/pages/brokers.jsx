@@ -16,6 +16,7 @@ function Brokers() {
     const [error, setError] = useState('');
     const [brokers, setBrokers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const [editingBroker, setEditingBroker] = useState(null);
 
@@ -35,6 +36,18 @@ function Brokers() {
 
     useEffect(() => {
         loadBrokers();
+    }, []);
+
+    useEffect(() => {
+        const checkUnread = () => {
+            api.get('/messages/unread-count')
+                .then((res) => setUnreadCount(res.data.unread))
+                .catch(() => {});
+        };
+
+        checkUnread();
+        const interval = setInterval(checkUnread, 10000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleChange = (event) => {
@@ -155,7 +168,21 @@ function Brokers() {
                         Corretores
                     </button>
 
-                    <button onClick={() => navigate('/mensagens')}>Mensagens</button>
+                    <button onClick={() => navigate('/mensagens')}>
+    Mensagens
+    {unreadCount > 0 && (
+        <span style={{
+            background: '#DC2626',
+            color: '#fff',
+            borderRadius: '999px',
+            fontSize: 11,
+            padding: '1px 7px',
+            marginLeft: 6
+        }}>
+            {unreadCount}
+        </span>
+    )}
+</button>
 
                 </nav>
             </aside>
