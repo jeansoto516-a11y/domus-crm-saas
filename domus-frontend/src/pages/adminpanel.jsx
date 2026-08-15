@@ -6,10 +6,11 @@ function AdminPanel() {
     const navigate = useNavigate();
     const [companies, setCompanies] = useState([]);
     const [stats, setStats] = useState(null);
+    const [unreadCounts, setUnreadCounts] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
-    
+
 
     const loadCompanies = () => {
     setLoading(true);
@@ -25,9 +26,18 @@ function AdminPanel() {
         .catch(() => {});
     };
 
+    const loadUnreadCounts = () => {
+    api.get('/messages/unread-counts')
+        .then((response) => setUnreadCounts(response.data))
+        .catch(() => {});
+    };
+
     useEffect(() => {
     loadCompanies();
     loadStats();
+    loadUnreadCounts();
+    const interval = setInterval(loadUnreadCounts, 10000);
+    return () => clearInterval(interval);
     }, []);
 
     const handleActivate = async (id) => {
@@ -162,19 +172,25 @@ function AdminPanel() {
                     </button>{' '}
                     <button className="secondary-button" onClick={() => handleCancel(company.id)}>
                     Cancelar
-                    </button>
-
-                    <button className="secondary-button" onClick={() => handleCancel(company.id)}>
-                    Cancelar
                     </button>{' '}
-                    
                     <button
                         className="secondary-button"
                         onClick={() => navigate(`/admin/mensagens/${company.id}`, { state: { companyName: company.name } })}
                     >
                     Mensagens
+                    {unreadCounts[company.id] > 0 && (
+                        <span style={{
+                            background: '#DC2626',
+                            color: '#fff',
+                            borderRadius: '999px',
+                            fontSize: 11,
+                            padding: '1px 7px',
+                            marginLeft: 6
+                        }}>
+                            {unreadCounts[company.id]}
+                        </span>
+                    )}
                     </button>
-
                 </td>
                 </tr>
             ))}
