@@ -631,3 +631,48 @@ exports.addLeadNote = async (req, res) => {
     }
 
 };
+
+
+/**
+ * Ranking de corretores (fechamentos no mes atual)
+ */
+exports.getBrokerRanking = async (req, res) => {
+
+    try {
+
+        const result = await pool.query(
+            `
+            SELECT
+                users.id,
+                users.name,
+                COUNT(*) FILTER (WHERE leads.status = 'fechado' AND date_trunc('month', leads.updated_at) = date_trunc('month', NOW())) AS fechados_mes,
+                COUNT(*) AS total_leads
+            FROM users
+            LEFT JOIN leads ON leads.user_id = users.id AND leads.company_id = users.company_id
+            WHERE users.company_id = $1 AND users.role = 'user'
+            GROUP BY users.id, users.name
+            ORDER BY fechados_mes DESC, total_leads DESC
+            `,
+            [req.user.company_id]
+        );
+
+        const ranking = result.rows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            fechados_mes: Number(row.fechados_mes),
+            total_leads: Number(row.total_leads)
+        }));
+
+        return res.json(ranking);
+
+    } catch (err) {
+
+        console.error('Erro ao buscar ranking:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar ranking.'
+        });
+
+    }
+
+};
