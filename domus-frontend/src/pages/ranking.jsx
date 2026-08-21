@@ -27,6 +27,7 @@ function Ranking() {
         <nav className="side-nav">
             <button onClick={() => navigate('/dashboard')}>Dashboard</button>
             <button onClick={() => navigate('/leads')}>Leads</button>
+            <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
             <button className="active" onClick={() => navigate('/ranking')}>Ranking</button>
             <button onClick={() => navigate('/mensagens')}>Mensagens</button>
