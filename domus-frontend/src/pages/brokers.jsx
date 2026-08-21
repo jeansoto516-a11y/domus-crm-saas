@@ -168,9 +168,9 @@ function Brokers() {
                         Corretores
                     </button>
 
-                    <button onClick={() => navigate('/mensagens')}>
-                        
                     <button onClick={() => navigate('/ranking')}>Ranking</button>
+                    
+                    <button onClick={() => navigate('/mensagens')}>
     Mensagens
     {unreadCount > 0 && (
         <span style={{

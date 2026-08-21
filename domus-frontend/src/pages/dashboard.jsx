@@ -104,8 +104,8 @@ function Dashboard() {
             <button onClick={() => navigate('/leads')}>Leads</button>
             <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/mensagens')}>
-            <button onClick={() => navigate('/ranking')}>Ranking</button>  
+            <button onClick={() => navigate('/ranking')}>Ranking</button>
+            <button onClick={() => navigate('/mensagens')}>  
             Mensagens
             {unreadCount > 0 && (
               <span style={{
