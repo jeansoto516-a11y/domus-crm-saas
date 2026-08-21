@@ -69,6 +69,7 @@ function Messages() {
             <button onClick={() => navigate('/leads')}>Leads</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
             <button className="active" onClick={() => navigate('/mensagens')}>
+            <button onClick={() => navigate('/ranking')}>Ranking</button>
                 Mensagens
                 {unreadCount > 0 && (
                     <span style={{

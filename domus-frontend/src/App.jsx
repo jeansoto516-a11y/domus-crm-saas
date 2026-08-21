@@ -16,6 +16,7 @@ import Messages from './pages/messages';
 import AdminMessages from './pages/adminmessages';
 import Termos from './pages/termos';
 import Privacidade from './pages/privacidade';
+import Ranking from './pages/ranking';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -71,6 +72,14 @@ function App() {
           element={
             <PrivateRoute>
               <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ranking"
+          element={
+            <PrivateRoute>
+              <Ranking />
             </PrivateRoute>
           }
         />
