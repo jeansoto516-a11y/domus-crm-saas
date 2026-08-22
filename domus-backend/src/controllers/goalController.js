@@ -202,3 +202,28 @@ exports.updateProgress = async (req, res) => {
         return res.status(500).json({ error: 'Erro ao atualizar progresso.' });
     }
 };
+
+
+/**
+ * Excluir uma meta (somente admin)
+ */
+exports.deleteGoal = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `DELETE FROM goals WHERE id = $1 AND company_id = $2 RETURNING id`,
+            [id, req.user.company_id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Meta nao encontrada.' });
+        }
+
+        return res.json({ message: 'Meta excluida com sucesso.' });
+
+    } catch (err) {
+        console.error('Erro ao excluir meta:', err);
+        return res.status(500).json({ error: 'Erro ao excluir meta.' });
+    }
+};

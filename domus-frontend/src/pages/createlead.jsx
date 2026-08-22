@@ -75,6 +75,7 @@ function CreateLead() {
           <button className="active" onClick={() => navigate('/leads/novo')}>Novo lead</button>
           <button onClick={() => navigate('/brokers')}>Corretores</button>
           <button onClick={() => navigate('/ranking')}>Ranking</button>
+          <button onClick={() => navigate('/metas')}>Metas</button>
           <button onClick={() => navigate('/mensagens')}>
             Mensagens
             {unreadCount > 0 && (

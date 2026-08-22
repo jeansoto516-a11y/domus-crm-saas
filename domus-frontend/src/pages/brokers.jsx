@@ -170,6 +170,8 @@ function Brokers() {
 
                     <button onClick={() => navigate('/ranking')}>Ranking</button>
                     
+                    <button onClick={() => navigate('/metas')}>Metas</button>
+
                     <button onClick={() => navigate('/mensagens')}>
     Mensagens
     {unreadCount > 0 && (

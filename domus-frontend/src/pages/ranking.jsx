@@ -30,6 +30,7 @@ function Ranking() {
             <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
             <button className="active" onClick={() => navigate('/ranking')}>Ranking</button>
+            <button onClick={() => navigate('/metas')}>Metas</button>
             <button onClick={() => navigate('/mensagens')}>Mensagens</button>
         </nav>
         </aside>

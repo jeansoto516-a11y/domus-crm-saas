@@ -17,6 +17,7 @@ import AdminMessages from './pages/adminmessages';
 import Termos from './pages/termos';
 import Privacidade from './pages/privacidade';
 import Ranking from './pages/ranking';
+import Goals from './pages/goals';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -83,6 +84,16 @@ function App() {
             </PrivateRoute>
           }
         />
+
+                  <Route
+          path="/metas"
+          element={
+            <PrivateRoute>
+              <Goals />
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/leads"
           element={
