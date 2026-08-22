@@ -100,6 +100,31 @@ exports.createLead = async (req, res) => {
 
     try {
 
+        let assignedUserId = req.user.id;
+
+        if (req.user.role === 'admin') {
+
+            const brokerResult = await pool.query(
+                `
+                SELECT
+                    users.id,
+                    COUNT(leads.id) FILTER (WHERE leads.status != 'fechado') AS leads_ativos
+                FROM users
+                LEFT JOIN leads ON leads.user_id = users.id AND leads.company_id = users.company_id
+                WHERE users.company_id = $1 AND users.role = 'user'
+                GROUP BY users.id
+                ORDER BY leads_ativos ASC
+                LIMIT 1
+                `,
+                [req.user.company_id]
+            );
+
+            if (brokerResult.rows.length > 0) {
+                assignedUserId = brokerResult.rows[0].id;
+            }
+
+        }
+
         const leadData = {
             name,
             email,
@@ -112,7 +137,7 @@ exports.createLead = async (req, res) => {
         const temperature = getTemperature(score);
 
         const result = await pool.query(
-            `
+                        `
             INSERT INTO leads
             (
                 name,
@@ -130,14 +155,14 @@ exports.createLead = async (req, res) => {
             )
             RETURNING *
             `,
-            [
+                        [
                 name,
                 email || null,
                 phone || null,
                 status,
                 score,
                 temperature,
-                req.user.id,
+                assignedUserId,
                 req.user.company_id
             ]
         );
