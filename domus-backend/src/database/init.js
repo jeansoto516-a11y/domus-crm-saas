@@ -58,6 +58,43 @@ async function createTables() {
 
       CREATE INDEX IF NOT EXISTS idx_messages_company_id ON messages(company_id, created_at);
 
+      
+      CREATE TABLE IF NOT EXISTS goal_topics (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        metric_type TEXT NOT NULL DEFAULT 'manual',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS goals (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        topic_id INTEGER REFERENCES goal_topics(id) ON DELETE CASCADE,
+        month DATE NOT NULL,
+        target_value NUMERIC NOT NULL DEFAULT 0,
+        achieved_value NUMERIC NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, topic_id, month)
+      );
+
+      INSERT INTO goal_topics (company_id, name, metric_type)
+      SELECT NULL, 'Leads captados', 'leads_captados'
+      WHERE NOT EXISTS (SELECT 1 FROM goal_topics WHERE metric_type = 'leads_captados' AND company_id IS NULL);
+
+      INSERT INTO goal_topics (company_id, name, metric_type)
+      SELECT NULL, 'Visitas realizadas', 'visitas'
+      WHERE NOT EXISTS (SELECT 1 FROM goal_topics WHERE metric_type = 'visitas' AND company_id IS NULL);
+
+      INSERT INTO goal_topics (company_id, name, metric_type)
+      SELECT NULL, 'Propostas enviadas', 'propostas'
+      WHERE NOT EXISTS (SELECT 1 FROM goal_topics WHERE metric_type = 'propostas' AND company_id IS NULL);
+
+      INSERT INTO goal_topics (company_id, name, metric_type)
+      SELECT NULL, 'Vendas fechadas', 'vendas'
+      WHERE NOT EXISTS (SELECT 1 FROM goal_topics WHERE metric_type = 'vendas' AND company_id IS NULL);
+
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0;
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS temperature TEXT DEFAULT 'frio';
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
