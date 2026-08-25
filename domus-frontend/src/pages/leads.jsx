@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
+import RemindersWidget from '../components/RemindersWidget';
 
 const flow = ['novo', 'contato', 'visita', 'proposta', 'fechado'];
 
@@ -391,6 +392,7 @@ function Leads() {
           )}
         </section>
       </section>
+      <RemindersWidget />
     </main>
   );
 }

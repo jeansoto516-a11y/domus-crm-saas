@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
+import RemindersWidget from '../components/RemindersWidget';
 
 function CreateLead() {
   const [form, setForm] = useState({
@@ -150,6 +151,7 @@ function CreateLead() {
           </form>
         </section>
       </section>
+      <RemindersWidget />
     </main>
   );
 }

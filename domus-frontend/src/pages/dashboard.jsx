@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
-
+import RemindersWidget from '../components/RemindersWidget';
 
 
 const statusLabels = {
@@ -260,6 +260,7 @@ function Dashboard() {
           </>
         )}
       </section>
+      <RemindersWidget />
     </main>
   );
 }

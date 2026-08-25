@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import RemindersWidget from '../components/RemindersWidget';
 
 function Ranking() {
     const [ranking, setRanking] = useState([]);
@@ -80,6 +81,7 @@ function Ranking() {
             )}
         </section>
         </section>
+        <RemindersWidget />
     </main>
     );
 }

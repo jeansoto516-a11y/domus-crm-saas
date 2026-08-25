@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import RemindersWidget from '../components/RemindersWidget';
 
 function Messages() {
     const [messages, setMessages] = useState([]);
@@ -151,6 +152,7 @@ function Messages() {
             </form>
         </section>
         </section>
+        <RemindersWidget />
     </main>
     );
 }

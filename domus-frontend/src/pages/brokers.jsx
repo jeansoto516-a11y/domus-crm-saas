@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
+import RemindersWidget from '../components/RemindersWidget';
 
 function Brokers() {
     const navigate = useNavigate();
@@ -308,6 +309,7 @@ function Brokers() {
 
                 </section>
             </section>
+            <RemindersWidget />
         </main>
     );
 }

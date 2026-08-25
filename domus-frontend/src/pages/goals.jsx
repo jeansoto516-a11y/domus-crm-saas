@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import RemindersWidget from '../components/RemindersWidget';
 
 function currentMonth() {
     const now = new Date();
@@ -256,6 +257,7 @@ function Goals() {
             )}
         </section>
         </section>
+        <RemindersWidget />
     </main>
     );
 }
