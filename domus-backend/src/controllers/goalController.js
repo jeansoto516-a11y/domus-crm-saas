@@ -58,20 +58,21 @@ async function calculateAchieved(goal) {
         return Number(r.rows[0].total);
     }
 
-    if (metric_type === 'visitas' || metric_type === 'propostas') {
-        const statusWord = metric_type === 'visitas' ? 'visita' : 'proposta';
+        if (metric_type === 'visitas' || metric_type === 'propostas') {
+        const statuses = metric_type === 'visitas'
+            ? ['visita', 'proposta', 'fechado']
+            : ['proposta', 'fechado'];
+
         const r = await pool.query(
             `
             SELECT COUNT(*) AS total
-            FROM lead_history
-            JOIN leads ON leads.id = lead_history.lead_id
-            WHERE lead_history.user_id = $1
-                AND leads.company_id = $2
-                AND lead_history.type = 'status'
-                AND lead_history.content = $3
-                AND date_trunc('month', lead_history.created_at) = date_trunc('month', $4::date)
+            FROM leads
+            WHERE user_id = $1
+                AND company_id = $2
+                AND status = ANY($3::text[])
+                AND date_trunc('month', updated_at) = date_trunc('month', $4::date)
             `,
-            [user_id, company_id, `Status alterado para: ${statusWord}`, month]
+            [user_id, company_id, statuses, month]
         );
         return Number(r.rows[0].total);
     }
@@ -186,14 +187,34 @@ exports.updateProgress = async (req, res) => {
     }
 
     try {
-        const result = await pool.query(
-            `UPDATE goals SET achieved_value = $1 WHERE id = $2 AND company_id = $3 RETURNING *`,
-            [achieved_value, id, req.user.company_id]
+        const goalCheck = await pool.query(
+            `
+            SELECT goals.*, goal_topics.metric_type
+            FROM goals
+            JOIN goal_topics ON goal_topics.id = goals.topic_id
+            WHERE goals.id = $1 AND goals.company_id = $2
+            `,
+            [id, req.user.company_id]
         );
 
-        if (result.rows.length === 0) {
+        if (goalCheck.rows.length === 0) {
             return res.status(404).json({ error: 'Meta nao encontrada.' });
         }
+
+        const goal = goalCheck.rows[0];
+
+        if (req.user.role !== 'admin' && goal.user_id !== req.user.id) {
+            return res.status(403).json({ error: 'Voce so pode atualizar suas proprias metas.' });
+        }
+
+        if (goal.metric_type !== 'manual') {
+            return res.status(400).json({ error: 'Esse topico e calculado automaticamente pelo sistema.' });
+        }
+
+        const result = await pool.query(
+            `UPDATE goals SET achieved_value = $1 WHERE id = $2 RETURNING *`,
+            [achieved_value, id]
+        );
 
         return res.json(result.rows[0]);
 
@@ -202,7 +223,6 @@ exports.updateProgress = async (req, res) => {
         return res.status(500).json({ error: 'Erro ao atualizar progresso.' });
     }
 };
-
 
 /**
  * Excluir uma meta (somente admin)

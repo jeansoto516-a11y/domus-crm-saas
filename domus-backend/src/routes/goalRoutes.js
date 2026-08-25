@@ -11,7 +11,7 @@ router.post('/topics', authMiddleware, checkSubscription, adminMiddleware, goalC
 
 router.get('/', authMiddleware, checkSubscription, goalController.getGoals);
 router.post('/', authMiddleware, checkSubscription, adminMiddleware, goalController.setGoal);
-router.put('/:id/progress', authMiddleware, checkSubscription, adminMiddleware, goalController.updateProgress);
+router.put('/:id/progress', authMiddleware, checkSubscription, goalController.updateProgress);
 router.delete('/:id', authMiddleware, checkSubscription, adminMiddleware, goalController.deleteGoal);
 
 module.exports = router;

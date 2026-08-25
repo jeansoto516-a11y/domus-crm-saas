@@ -200,7 +200,7 @@ function Goals() {
                     <th>Progresso</th>
                     <th>Meta</th>
                     <th>%</th>
-                    {user.role === 'admin' && <th>Acoes</th>}
+                    <th>Acoes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -226,27 +226,27 @@ function Goals() {
                             </div>
                             <span style={{ fontSize: 11, color: '#6B7280' }}>{pct}%</span>
                         </td>
-                        {user.role === 'admin' && (
-                            <td>
-                            {goal.metric_type === 'manual' && (
-                                <button
+                                                <td>
+                            {goal.metric_type === 'manual' && (user.role === 'admin' || goal.user_id === user.id) && (
+                            <button
                                 className="small-button"
                                 onClick={() => {
-                                    const value = prompt('Novo valor alcancado:', goal.achieved_value);
-                                    if (value !== null) handleUpdateProgress(goal.id, Number(value));
+                                const value = prompt('Novo valor alcancado:', goal.achieved_value);
+                                if (value !== null) handleUpdateProgress(goal.id, Number(value));
                                 }}
-                                >
+                            >
                                 Atualizar
-                                </button>
+                            </button>
                             )}{' '}
+                            {user.role === 'admin' && (
                             <button
                                 className="small-button"
                                 onClick={() => handleDeleteGoal(goal.id)}
                             >
                                 Excluir
                             </button>
-                            </td>
-                        )}
+                            )}
+                        </td>
                         </tr>
                     );
                     })}

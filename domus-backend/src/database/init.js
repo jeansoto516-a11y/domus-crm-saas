@@ -95,6 +95,20 @@ async function createTables() {
       SELECT NULL, 'Vendas fechadas', 'vendas'
       WHERE NOT EXISTS (SELECT 1 FROM goal_topics WHERE metric_type = 'vendas' AND company_id IS NULL);
 
+      
+      CREATE TABLE IF NOT EXISTS reminders (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+        lead_id INTEGER REFERENCES leads(id) ON DELETE CASCADE,
+        note TEXT NOT NULL,
+        due_date DATE,
+        done BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_reminders_user ON reminders(user_id, done);
+
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0;
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS temperature TEXT DEFAULT 'frio';
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;

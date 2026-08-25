@@ -13,6 +13,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const adminPanelRoutes = require('./routes/adminPanelRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const goalRoutes = require('./routes/goalRoutes');
+const reminderRoutes = require('./routes/reminderRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,8 @@ app.use('/users', userRoutes);
 app.use('/admin', adminPanelRoutes);
 app.use('/messages', messageRoutes);
 app.use('/goals', goalRoutes);
+app.use('/reminders', reminderRoutes);
+
 
 app.get('/', (req, res) => {
   res.json({
