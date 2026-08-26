@@ -361,8 +361,8 @@ exports.getMe = async (req, res) => {
 
         const user = userResult.rows[0];
 
-        const companyResult = await pool.query(
-            `SELECT id, name FROM companies WHERE id = $1`,
+                const companyResult = await pool.query(
+            `SELECT id, name, public_slug FROM companies WHERE id = $1`,
             [user.company_id]
         );
 

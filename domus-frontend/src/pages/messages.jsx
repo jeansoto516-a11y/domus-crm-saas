@@ -72,6 +72,7 @@ function Messages() {
             <button onClick={() => navigate('/brokers')}>Corretores</button>
             <button onClick={() => navigate('/ranking')}>Ranking</button>
             <button onClick={() => navigate('/metas')}>Metas</button>
+            <button onClick={() => navigate('/perfil')}>Perfil</button>
             <button className="active" onClick={() => navigate('/mensagens')}>
                 Mensagens
                 {unreadCount > 0 && (

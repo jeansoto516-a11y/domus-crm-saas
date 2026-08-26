@@ -132,6 +132,32 @@ function Profile() {
             <section className="metric-card">
             <h2>Dados da imobiliaria</h2>
 
+                        {company?.public_slug && (
+                <div style={{ background: '#F3F4F6', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                <p style={{ fontSize: 13, margin: '0 0 8px', color: '#6B7280' }}>
+                    Link publico para captacao de leads (divulgue no seu site/Instagram):
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/f/${company.public_slug}`}
+                    style={{ flex: 1, fontSize: 13 }}
+                    />
+                    <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/f/${company.public_slug}`);
+                        alert('Link copiado!');
+                    }}
+                    >
+                    Copiar
+                    </button>
+                </div>
+                </div>
+            )}
+
             <form onSubmit={handleSaveCompany}>
                 <label>
                 Nome da imobiliaria

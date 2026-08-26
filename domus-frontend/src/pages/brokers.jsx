@@ -173,6 +173,8 @@ function Brokers() {
                     
                     <button onClick={() => navigate('/metas')}>Metas</button>
 
+                    <button onClick={() => navigate('/perfil')}>Perfil</button>
+
                     <button onClick={() => navigate('/mensagens')}>
     Mensagens
     {unreadCount > 0 && (

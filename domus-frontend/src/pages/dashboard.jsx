@@ -106,6 +106,7 @@ function Dashboard() {
             <button onClick={() => navigate('/brokers')}>Corretores</button>
             <button onClick={() => navigate('/ranking')}>Ranking</button>
             <button onClick={() => navigate('/metas')}>Metas</button>
+            <button onClick={() => navigate('/perfil')}>Perfil</button>
             <button onClick={() => navigate('/mensagens')}>  
             Mensagens
             {unreadCount > 0 && (
