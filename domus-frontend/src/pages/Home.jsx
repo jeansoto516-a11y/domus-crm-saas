@@ -3,22 +3,57 @@ import { Link, useNavigate } from 'react-router-dom';
 function Home() {
   const navigate = useNavigate();
 
-  const benefits = [
+  const features = [
     {
-      title: 'Organizacao comercial',
-      text: 'Centralize leads, contatos, visitas e propostas para que a equipe saiba exatamente o proximo passo.'
+      title: 'Distribuição automatica de leads',
+      text: 'Cada novo lead e direcionado automaticamente para o corretor com menos leads ativos no momento, sem esforco manual do gestor.'
     },
     {
-      title: 'Prioridade inteligente',
-      text: 'O score automatico ajuda corretores e gestores a focarem primeiro nas oportunidades com maior chance de fechamento.'
+      title: 'WhatsApp em um clique',
+      text: 'Abra a conversa com o lead direto do card, com mensagem ja pronta, sem precisar copiar numero.'
     },
     {
-      title: 'Gestao com clareza',
-      text: 'Acompanhe conversao, volume de leads e desempenho do funil em uma visao simples para decisoes rapidas.'
+      title: 'Metas e ranking da equipe',
+      text: 'Defina metas mensais por corretor e acompanhe quem mais converteu, com progresso calculado automaticamente pelo funil.'
+    },
+    {
+      title: 'Formulario publico de captacao',
+      text: 'Gere um link proprio para o site ou Instagram da imobiliaria. Cada lead cai direto no funil, ja pontuado e distribuido.'
+    },
+    {
+      title: 'Historico completo do lead',
+      text: 'Toda mudanca de etapa e cada anotacao ficam registradas numa linha do tempo, sem se perder em conversas soltas.'
+    },
+    {
+      title: 'Suporte direto pelo sistema',
+      text: 'Chat interno com a equipe Domus, sem precisar sair da plataforma para tirar duvidas.'
     }
   ];
 
   const steps = ['Captar', 'Atender', 'Agendar', 'Propor', 'Fechar'];
+
+  const faqs = [
+    {
+      question: 'Preciso de cartao de credito para testar?',
+      answer: 'Nao. O teste gratuito de 14 dias comeca assim que voce cria sua conta, sem pedir dados de pagamento.'
+    },
+    {
+      question: 'Como funciona a cobranca depois do teste?',
+      answer: 'A assinatura custa R$ 59,90 por mes, e pode ser paga por cartao de credito (recorrente automatico) ou Pix.'
+    },
+    {
+      question: 'Posso cancelar quando quiser?',
+      answer: 'Sim, o cancelamento pode ser feito a qualquer momento, sem multa ou burocracia.'
+    },
+    {
+      question: 'Os dados dos meus leads e clientes ficam seguros?',
+      answer: 'Sim. Seguimos praticas de protecao de dados alinhadas a LGPD, com senhas criptografadas e acesso controlado por permissao dentro da sua equipe.'
+    },
+    {
+      question: 'Os corretores tem acesso a tudo?',
+      answer: 'Nao. Cada corretor ve apenas os proprios leads. Somente o administrador da imobiliaria tem visao completa da operacao.'
+    }
+  ];
 
   return (
     <main className="site-shell institutional">
@@ -28,8 +63,9 @@ function Home() {
           <span>Domus</span>
         </Link>
         <div className="topbar-actions">
-          <a className="nav-link" href="#empresa">Empresa</a>
           <a className="nav-link" href="#sistema">Sistema</a>
+          <a className="nav-link" href="#precos">Precos</a>
+          <a className="nav-link" href="#faq">Duvidas</a>
           <button className="ghost-button" onClick={() => navigate('/login')}>
             Entrar
           </button>
@@ -44,13 +80,12 @@ function Home() {
           <span className="eyebrow">Tecnologia para imobiliarias modernas</span>
           <h1>Domus ajuda imobiliarias a vender melhor, atender mais rapido e crescer com controle.</h1>
           <p>
-            Somos uma empresa criada para simplificar a rotina comercial do mercado imobiliario.
-            Nosso sistema transforma leads espalhados em um processo organizado, mensuravel e pronto
-            para gerar mais visitas, propostas e fechamentos.
+            Leads espalhados em WhatsApp, planilhas e cadernos viram um processo unico, organizado
+            e mensuravel. Do primeiro contato ao fechamento, sem perder oportunidade no caminho.
           </p>
           <div className="hero-actions">
             <button className="primary-button large" onClick={() => navigate('/register')}>
-              Iniciar teste gratis
+              Iniciar teste gratis de 14 dias
             </button>
             <button className="secondary-button large" onClick={() => navigate('/login')}>
               Acessar plataforma
@@ -68,11 +103,11 @@ function Home() {
           <div className="showcase-stats">
             <article>
               <strong>14 dias</strong>
-              <span>para testar gratis</span>
+              <span>de teste gratis, sem cartao</span>
             </article>
             <article>
-              <strong>5 etapas</strong>
-              <span>no funil comercial</span>
+              <strong>R$ 59,90</strong>
+              <span>por mes apos o teste</span>
             </article>
             <article>
               <strong>100%</strong>
@@ -82,35 +117,22 @@ function Home() {
         </div>
       </section>
 
-      <section className="about-section" id="empresa">
-        <div>
-          <span className="eyebrow">Sobre a Domus</span>
-          <h2>Uma empresa feita para dar mais previsibilidade ao mercado imobiliario.</h2>
-        </div>
-        <p>
-          A Domus nasceu com o objetivo de ajudar imobiliarias a sairem de planilhas, conversas
-          perdidas e controles manuais. Acreditamos que uma boa venda imobiliaria depende de
-          relacionamento, velocidade e acompanhamento. Por isso criamos uma plataforma enxuta,
-          profissional e facil de usar no dia a dia.
-        </p>
-      </section>
-
       <section className="system-section" id="sistema">
         <div className="section-heading">
-          <span className="eyebrow">Objetivo do sistema</span>
-          <h2>Transformar atendimento em processo comercial.</h2>
+          <span className="eyebrow">O que o Domus faz por voce</span>
+          <h2>Recursos pensados para o dia a dia da sua imobiliaria.</h2>
           <p>
-            O Domus organiza cada oportunidade desde o primeiro contato ate o fechamento,
-            dando visibilidade para gestores e foco para corretores.
+            Nao e so um cadastro de leads. E um sistema completo para captar, distribuir,
+            acompanhar e converter, com sua equipe toda na mesma pagina.
           </p>
         </div>
 
         <div className="benefit-grid">
-          {benefits.map((benefit) => (
-            <article key={benefit.title}>
+          {features.map((feature) => (
+            <article key={feature.title}>
               <span className="checkmark">✓</span>
-              <h3>{benefit.title}</h3>
-              <p>{benefit.text}</p>
+              <h3>{feature.title}</h3>
+              <p>{feature.text}</p>
             </article>
           ))}
         </div>
@@ -131,16 +153,70 @@ function Home() {
         </div>
       </section>
 
+      <section className="pricing-section" id="precos">
+        <div className="section-heading">
+          <span className="eyebrow">Plano simples, sem pegadinha</span>
+          <h2>Um plano unico para toda a sua imobiliaria.</h2>
+        </div>
+
+        <div className="pricing-card">
+          <span className="eyebrow">Plano Domus</span>
+          <div className="pricing-value">
+            <strong>R$ 59,90</strong>
+            <span>/mes</span>
+          </div>
+          <p>Corretores ilimitados, leads ilimitados, todos os recursos inclusos.</p>
+          <ul>
+            <li>✓ 14 dias de teste gratis, sem cartao de credito</li>
+            <li>✓ Pagamento por cartao (recorrente automatico) ou Pix</li>
+            <li>✓ Cancele quando quiser, sem multa</li>
+            <li>✓ Suporte direto pelo chat do sistema</li>
+          </ul>
+          <button className="primary-button large" onClick={() => navigate('/register')}>
+            Comecar teste gratis
+          </button>
+        </div>
+      </section>
+
+      <section className="faq-section" id="faq">
+        <div className="section-heading">
+          <span className="eyebrow">Perguntas frequentes</span>
+          <h2>Duvidas comuns antes de comecar.</h2>
+        </div>
+
+        <div className="faq-list">
+          {faqs.map((item) => (
+            <details key={item.question} className="faq-item">
+              <summary>{item.question}</summary>
+              <p>{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       <section className="cta-section">
         <div>
           <span className="eyebrow">Pronto para vender com mais controle?</span>
           <h2>Comece a usar o Domus na sua imobiliaria.</h2>
-          <p>Cadastre sua empresa, teste gratis e veja seu funil comercial ganhar forma.</p>
+          <p>Cadastre sua empresa, teste gratis por 14 dias e veja seu funil comercial ganhar forma.</p>
         </div>
         <button className="primary-button large" onClick={() => navigate('/register')}>
           Criar conta gratis
         </button>
       </section>
+
+      <footer className="site-footer">
+        <div className="brand">
+          <span className="brand-mark">D</span>
+          <span>Domus</span>
+        </div>
+        <div className="footer-links">
+          <Link to="/termos">Termos de Uso</Link>
+          <Link to="/privacidade">Politica de Privacidade</Link>
+          <a href="#sistema">Sistema</a>
+          <a href="#precos">Precos</a>
+        </div>
+      </footer>
     </main>
   );
 }
