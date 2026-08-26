@@ -18,6 +18,7 @@ import Termos from './pages/termos';
 import Privacidade from './pages/privacidade';
 import Ranking from './pages/ranking';
 import Goals from './pages/goals';
+import PublicForm from './pages/publicform';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -33,9 +34,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/termos" element={<Termos />} />
-        <Route path="/privacidade" element={<Privacidade />} />
+          <Route path="/" element={<Home />} />
+            <Route path="/termos" element={<Termos />} />
+              <Route path="/privacidade" element={<Privacidade />} />
+                <Route path="/f/:slug" element={<PublicForm />} />
         <Route
           path="/login"
           element={

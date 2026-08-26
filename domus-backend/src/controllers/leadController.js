@@ -657,7 +657,6 @@ exports.addLeadNote = async (req, res) => {
 
 };
 
-
 /**
  * Ranking de corretores (fechamentos no mes atual)
  */
@@ -696,6 +695,115 @@ exports.getBrokerRanking = async (req, res) => {
 
         return res.status(500).json({
             error: 'Erro ao buscar ranking.'
+        });
+
+    }
+
+};
+
+/**
+ * Rota publica: buscar dados basicos da imobiliaria pelo slug (para exibir no formulario)
+ */
+exports.getPublicCompany = async (req, res) => {
+    const { slug } = req.params;
+
+    try {
+        const result = await pool.query(
+            `SELECT id, name FROM companies WHERE public_slug = $1`,
+            [slug]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Formulario nao encontrado.' });
+        }
+
+        return res.json(result.rows[0]);
+
+    } catch (err) {
+        console.error('Erro ao buscar imobiliaria publica:', err);
+        return res.status(500).json({ error: 'Erro ao buscar imobiliaria.' });
+    }
+};
+
+/**
+ * Rota publica: criar lead vindo do formulario embutivel
+ */
+exports.createPublicLead = async (req, res) => {
+    const { slug } = req.params;
+    const { name, email, phone } = req.body;
+
+    if (!name || (!email && !phone)) {
+        return res.status(400).json({
+            error: 'Informe nome e pelo menos um contato.'
+        });
+    }
+
+    try {
+
+        const companyResult = await pool.query(
+            `SELECT id FROM companies WHERE public_slug = $1`,
+            [slug]
+        );
+
+        if (companyResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Formulario nao encontrado.' });
+        }
+
+        const companyId = companyResult.rows[0].id;
+
+        const leadData = { name, email, phone, status: 'novo' };
+        const score = calculateScore(leadData);
+        const temperature = getTemperature(score);
+
+        let assignedUserId = null;
+
+        const brokerResult = await pool.query(
+            `
+            SELECT
+                users.id,
+                COUNT(leads.id) FILTER (WHERE leads.status != 'fechado') AS leads_ativos
+            FROM users
+            LEFT JOIN leads ON leads.user_id = users.id AND leads.company_id = users.company_id
+            WHERE users.company_id = $1 AND users.role = 'user'
+            GROUP BY users.id
+            ORDER BY leads_ativos ASC
+            LIMIT 1
+            `,
+            [companyId]
+        );
+
+        if (brokerResult.rows.length > 0) {
+            assignedUserId = brokerResult.rows[0].id;
+        } else {
+            const adminResult = await pool.query(
+                `SELECT id FROM users WHERE company_id = $1 AND role = 'admin' LIMIT 1`,
+                [companyId]
+            );
+            assignedUserId = adminResult.rows[0]?.id || null;
+        }
+
+        const result = await pool.query(
+            `
+            INSERT INTO leads (name, email, phone, status, score, temperature, user_id, company_id)
+            VALUES ($1, $2, $3, 'novo', $4, $5, $6, $7)
+            RETURNING id
+            `,
+            [name, email || null, phone || null, score, temperature, assignedUserId, companyId]
+        );
+
+        await pool.query(
+            `INSERT INTO lead_history (lead_id, user_id, type, content) VALUES ($1, $2, 'status', 'Lead cadastrado via formulario publico')`,
+            [result.rows[0].id, assignedUserId]
+        );
+
+        return res.status(201).json({ message: 'Recebemos seus dados! Em breve entraremos em contato.' });
+
+    } catch (err) {
+
+        console.error('Erro ao criar lead publico:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao enviar formulario.'
         });
 
     }

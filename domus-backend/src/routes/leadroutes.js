@@ -9,6 +9,8 @@ const router = express.Router();
 router.get('/dashboard', authMiddleware, checkSubscription, leadController.getDashboard);
 router.get('/export', authMiddleware, checkSubscription, leadController.exportLeads);
 router.get('/ranking', authMiddleware, checkSubscription, adminMiddleware, leadController.getBrokerRanking);
+router.get('/public/:slug', leadController.getPublicCompany);
+router.post('/public/:slug', leadController.createPublicLead);
 router.get('/:id/history', authMiddleware, checkSubscription, leadController.getLeadHistory);
 router.post('/:id/history', authMiddleware, checkSubscription, leadController.addLeadNote);
 router.post('/', authMiddleware, checkSubscription, leadController.createLead);
