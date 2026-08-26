@@ -31,14 +31,23 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Email ja cadastrado.' });
     }
 
-    const trialEnd = new Date();
+        const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 14);
 
+    const baseSlug = company_name
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const randomSuffix = Math.random().toString(36).slice(2, 7);
+    const publicSlug = `${baseSlug}-${randomSuffix}`;
+
     const companyResult = await client.query(
-      `INSERT INTO companies (name, trial_ends_at, subscription_status, email)
-        VALUES ($1, $2, $3, $4)
+      `INSERT INTO companies (name, trial_ends_at, subscription_status, email, public_slug)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *`,
-      [company_name, trialEnd, 'trial', email]
+      [company_name, trialEnd, 'trial', email, publicSlug]
     );
 
     const hashedPassword = await bcrypt.hash(password, 10);
