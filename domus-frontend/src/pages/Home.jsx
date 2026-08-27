@@ -10,19 +10,19 @@ function Home() {
     },
     {
       title: 'WhatsApp em um clique',
-      text: 'Abra a conversa com o lead direto do card, com mensagem ja pronta, sem precisar copiar numero.'
+      text: 'Abra a conversa com o lead direto do card, com mensagem ja pronta, sem precisar copiar número.'
     },
     {
       title: 'Metas e ranking da equipe',
       text: 'Defina metas mensais por corretor e acompanhe quem mais converteu, com progresso calculado automaticamente pelo funil.'
     },
     {
-      title: 'Formulario publico de captacao',
+      title: 'Formulario publico de captação',
       text: 'Gere um link proprio para o site ou Instagram da imobiliaria. Cada lead cai direto no funil, ja pontuado e distribuido.'
     },
     {
       title: 'Historico completo do lead',
-      text: 'Toda mudanca de etapa e cada anotacao ficam registradas numa linha do tempo, sem se perder em conversas soltas.'
+      text: 'Toda mudança de etapa e cada anotação ficam registradas numa linha do tempo, sem se perder em conversas soltas.'
     },
     {
       title: 'Suporte direto pelo sistema',
@@ -34,12 +34,12 @@ function Home() {
 
   const faqs = [
     {
-      question: 'Preciso de cartao de credito para testar?',
-      answer: 'Nao. O teste gratuito de 14 dias comeca assim que voce cria sua conta, sem pedir dados de pagamento.'
+      question: 'Preciso de cartão de crédito para testar?',
+      answer: 'Não. O teste gratuito de 14 dias começa assim que voce cria sua conta, sem pedir dados de pagamento.'
     },
     {
-      question: 'Como funciona a cobranca depois do teste?',
-      answer: 'A assinatura custa R$ 59,90 por mes, e pode ser paga por cartao de credito (recorrente automatico) ou Pix.'
+      question: 'Como funciona a cobrança depois do teste?',
+      answer: 'A assinatura custa R$ 59,90 por mes, e pode ser paga por cartão de credito (recorrente automatico) ou Pix.'
     },
     {
       question: 'Posso cancelar quando quiser?',
@@ -47,11 +47,11 @@ function Home() {
     },
     {
       question: 'Os dados dos meus leads e clientes ficam seguros?',
-      answer: 'Sim. Seguimos praticas de protecao de dados alinhadas a LGPD, com senhas criptografadas e acesso controlado por permissao dentro da sua equipe.'
+      answer: 'Sim. Seguimos praticas de proteção de dados alinhadas a LGPD, com senhas criptografadas e acesso controlado por permissão dentro da sua equipe.'
     },
     {
       question: 'Os corretores tem acesso a tudo?',
-      answer: 'Nao. Cada corretor ve apenas os proprios leads. Somente o administrador da imobiliaria tem visao completa da operacao.'
+      answer: 'Não. Cada corretor ve apenas os proprios leads. Somente o administrador da imobiliaria tem visão completa da operação.'
     }
   ];
 
@@ -64,13 +64,13 @@ function Home() {
         </Link>
         <div className="topbar-actions">
           <a className="nav-link" href="#sistema">Sistema</a>
-          <a className="nav-link" href="#precos">Precos</a>
-          <a className="nav-link" href="#faq">Duvidas</a>
+          <a className="nav-link" href="#precos">Preços</a>
+          <a className="nav-link" href="#faq">Dúvidas</a>
           <button className="ghost-button" onClick={() => navigate('/login')}>
             Entrar
           </button>
           <button className="primary-button" onClick={() => navigate('/register')}>
-            Comecar agora
+            Começar agora
           </button>
         </div>
       </nav>
@@ -80,12 +80,12 @@ function Home() {
           <span className="eyebrow">Tecnologia para imobiliarias modernas</span>
           <h1>Domus ajuda imobiliarias a vender melhor, atender mais rapido e crescer com controle.</h1>
           <p>
-            Leads espalhados em WhatsApp, planilhas e cadernos viram um processo unico, organizado
+            Leads espalhados em WhatsApp, planilhas e cadernos viram um processo único, organizado
             e mensuravel. Do primeiro contato ao fechamento, sem perder oportunidade no caminho.
           </p>
           <div className="hero-actions">
             <button className="primary-button large" onClick={() => navigate('/register')}>
-              Iniciar teste gratis de 14 dias
+              Iniciar teste grátis de 14 dias
             </button>
             <button className="secondary-button large" onClick={() => navigate('/login')}>
               Acessar plataforma
@@ -103,11 +103,11 @@ function Home() {
           <div className="showcase-stats">
             <article>
               <strong>14 dias</strong>
-              <span>de teste gratis, sem cartao</span>
+              <span>de teste grátis, sem cartão</span>
             </article>
             <article>
               <strong>R$ 59,90</strong>
-              <span>por mes apos o teste</span>
+              <span>por mês após o teste</span>
             </article>
             <article>
               <strong>100%</strong>
@@ -119,11 +119,11 @@ function Home() {
 
       <section className="system-section" id="sistema">
         <div className="section-heading">
-          <span className="eyebrow">O que o Domus faz por voce</span>
+          <span className="eyebrow">O que o Domus faz por você</span>
           <h2>Recursos pensados para o dia a dia da sua imobiliaria.</h2>
           <p>
-            Nao e so um cadastro de leads. E um sistema completo para captar, distribuir,
-            acompanhar e converter, com sua equipe toda na mesma pagina.
+            Não é só um cadastro de leads. E um sistema completo para captar, distribuir,
+            acompanhar e converter, com sua equipe toda na mesma página.
           </p>
         </div>
 
@@ -167,13 +167,13 @@ function Home() {
           </div>
           <p>Corretores ilimitados, leads ilimitados, todos os recursos inclusos.</p>
           <ul>
-            <li>✓ 14 dias de teste gratis, sem cartao de credito</li>
-            <li>✓ Pagamento por cartao (recorrente automatico) ou Pix</li>
+            <li>✓ 14 dias de teste grátis, sem cartão de crédito</li>
+            <li>✓ Pagamento por cartão (recorrente automático) ou Pix</li>
             <li>✓ Cancele quando quiser, sem multa</li>
             <li>✓ Suporte direto pelo chat do sistema</li>
           </ul>
           <button className="primary-button large" onClick={() => navigate('/register')}>
-            Comecar teste gratis
+            Começar teste grátis
           </button>
         </div>
       </section>
@@ -181,7 +181,7 @@ function Home() {
       <section className="faq-section" id="faq">
         <div className="section-heading">
           <span className="eyebrow">Perguntas frequentes</span>
-          <h2>Duvidas comuns antes de comecar.</h2>
+          <h2>Dúvidas comuns antes de começar.</h2>
         </div>
 
         <div className="faq-list">
@@ -198,10 +198,10 @@ function Home() {
         <div>
           <span className="eyebrow">Pronto para vender com mais controle?</span>
           <h2>Comece a usar o Domus na sua imobiliaria.</h2>
-          <p>Cadastre sua empresa, teste gratis por 14 dias e veja seu funil comercial ganhar forma.</p>
+          <p>Cadastre sua empresa, teste grátis por 14 dias e veja seu funil comercial ganhar forma.</p>
         </div>
         <button className="primary-button large" onClick={() => navigate('/register')}>
-          Criar conta gratis
+          Criar conta grátis
         </button>
       </section>
 
