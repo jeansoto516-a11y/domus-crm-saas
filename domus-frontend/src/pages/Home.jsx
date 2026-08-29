@@ -214,7 +214,7 @@ function Home() {
           <Link to="/termos">Termos de Uso</Link>
           <Link to="/privacidade">Politica de Privacidade</Link>
           <a href="#sistema">Sistema</a>
-          <a href="#precos">Precos</a>
+          <a href="#precos">Preços</a>
         </div>
       </footer>
     </main>

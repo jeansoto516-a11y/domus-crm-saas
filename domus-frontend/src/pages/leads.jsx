@@ -31,6 +31,7 @@ function Leads() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [noteText, setNoteText] = useState('');
   const navigate = useNavigate();
+  const [staleLeadIds, setStaleLeadIds] = useState(new Set());
 
   const totals = useMemo(() => {
     return leads.reduce(
@@ -78,6 +79,12 @@ function Leads() {
       active = false;
     };
   }, [filters, logout]);
+
+  useEffect(() => {
+    api.get('/leads/stale')
+      .then((res) => setStaleLeadIds(new Set(res.data.map((l) => l.id))))
+      .catch(() => {});
+  }, [leads]);
 
   useEffect(() => {
     const checkUnread = () => {
@@ -204,7 +211,7 @@ function Leads() {
 
           
             <a className="secondary-button"
-            href={`${import.meta.env.VITE_API_URL}/leads/export`}>
+            href={`${import.meta.env.VITE_API_URL}/leads/export`}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => {
@@ -223,7 +230,7 @@ function Leads() {
                   window.URL.revokeObjectURL(url);
                 });
             }}
-          
+          >
             Exportar CSV
           </a>
 
@@ -239,6 +246,7 @@ function Leads() {
           <article><span>Quentes</span><strong>{totals.quente}</strong></article>
           <article><span>Mornos</span><strong>{totals.morno}</strong></article>
           <article><span>Frios</span><strong>{totals.frio}</strong></article>
+          <article><span>Esfriando</span><strong>{staleLeadIds.size}</strong></article>
         </section>
 
         <section className="filters-bar">
@@ -293,11 +301,23 @@ function Leads() {
                     const currentIndex = flow.indexOf(lead.status);
                     return (
                       <React.Fragment key={lead.id}>
-                      <tr onClick={() => toggleHistory(lead.id)} style={{ cursor: 'pointer' }}>
+                        <tr
+                          onClick={() => toggleHistory(lead.id)}
+                          style={{
+                            cursor: 'pointer',
+                            background: staleLeadIds.has(lead.id) ? '#FFFBEB' : undefined
+                          }}
+                        >
                         <td>
                           <strong>{lead.name}</strong>
+                          {staleLeadIds.has(lead.id) && (
+                            <span style={{ display: 'block', color: '#B45309', fontSize: 11, fontWeight: 600 }}>
+                              ⚠️ Parado ha mais de 5 dias
+                            </span>
+                          )}
                           <span>{new Date(lead.created_at).toLocaleDateString('pt-BR')}</span>
                         </td>
+
                         <td>
                           <span>{lead.email || 'Sem email'}</span>
                           <span>{lead.phone || 'Sem telefone'}</span>

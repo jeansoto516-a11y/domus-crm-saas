@@ -809,3 +809,45 @@ exports.createPublicLead = async (req, res) => {
     }
 
 };
+
+
+/**
+ * Leads parados ha mais de 5 dias sem mudanca de status
+ */
+exports.getStaleLeads = async (req, res) => {
+
+    const values = [];
+    let where = buildLeadScope(req, values);
+
+    try {
+
+        const result = await pool.query(
+            `
+            SELECT
+                leads.id,
+                leads.name,
+                leads.status,
+                leads.updated_at,
+                EXTRACT(DAY FROM NOW() - leads.updated_at)::int AS dias_parado
+            FROM leads
+            ${where}
+            AND leads.status != 'fechado'
+            AND leads.updated_at < NOW() - INTERVAL '5 days'
+            ORDER BY leads.updated_at ASC
+            `,
+            values
+        );
+
+        return res.json(result.rows);
+
+    } catch (err) {
+
+        console.error('Erro ao buscar leads parados:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar leads parados.'
+        });
+
+    }
+
+};
