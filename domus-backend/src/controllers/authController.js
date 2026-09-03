@@ -105,12 +105,13 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Email ou senha invalidos.' });
     }
 
-    const token = jwt.sign(
+        const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
         role: user.role,
-        company_id: user.company_id
+        company_id: user.company_id,
+        access_scope: user.access_scope
       },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }

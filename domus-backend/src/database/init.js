@@ -109,6 +109,43 @@ async function createTables() {
 
       CREATE INDEX IF NOT EXISTS idx_reminders_user ON reminders(user_id, done);
 
+      CREATE TABLE IF NOT EXISTS rental_properties (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+        broker_id INTEGER REFERENCES users(id),
+        address TEXT NOT NULL,
+        tenant_name TEXT,
+        tenant_contact TEXT,
+        owner_name TEXT,
+        owner_contact TEXT,
+        rent_value NUMERIC NOT NULL,
+        due_day INTEGER NOT NULL DEFAULT 10,
+        contract_start DATE,
+        contract_end DATE,
+        admin_fee_percent NUMERIC NOT NULL DEFAULT 8,
+        broker_commission_percent NUMERIC NOT NULL DEFAULT 50,
+        status TEXT NOT NULL DEFAULT 'ativo',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS rental_payments (
+        id SERIAL PRIMARY KEY,
+        property_id INTEGER REFERENCES rental_properties(id) ON DELETE CASCADE,
+        reference_month DATE NOT NULL,
+        rent_value NUMERIC NOT NULL,
+        admin_fee_percent NUMERIC NOT NULL,
+        admin_fee_value NUMERIC NOT NULL,
+        broker_commission_percent NUMERIC NOT NULL,
+        broker_commission_value NUMERIC NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pendente',
+        paid_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(property_id, reference_month)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_rental_properties_company ON rental_properties(company_id);
+      CREATE INDEX IF NOT EXISTS idx_rental_payments_property ON rental_payments(property_id, reference_month);
+
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0;
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS temperature TEXT DEFAULT 'frio';
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
@@ -122,6 +159,7 @@ async function createTables() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_hash TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS access_scope TEXT DEFAULT 'vendas';
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS trial_reminder_3d_sent BOOLEAN DEFAULT false;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS trial_reminder_last_day_sent BOOLEAN DEFAULT false;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS public_slug TEXT UNIQUE;

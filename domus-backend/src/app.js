@@ -13,6 +13,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const adminPanelRoutes = require('./routes/adminPanelRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const goalRoutes = require('./routes/goalRoutes');
+const rentalRoutes = require('./routes/rentalRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
 
 const app = express();
@@ -25,6 +26,7 @@ app.use('/users', userRoutes);
 app.use('/admin', adminPanelRoutes);
 app.use('/messages', messageRoutes);
 app.use('/goals', goalRoutes);
+app.use('/rentals', rentalRoutes);
 app.use('/reminders', reminderRoutes);
 
 
