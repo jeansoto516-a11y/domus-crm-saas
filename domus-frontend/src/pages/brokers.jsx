@@ -10,7 +10,8 @@ function Brokers() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        password: ''
+        password: '',
+        access_scope: 'vendas'
     });
 
     const [message, setMessage] = useState('');
@@ -91,7 +92,8 @@ function Brokers() {
         setFormData({
             name: broker.name,
             email: broker.email,
-            password: ''
+            password: '',
+            access_scope: broker.access_scope || 'vendas'
         });
 
         setMessage('');
@@ -131,7 +133,8 @@ function Brokers() {
             setFormData({
                 name: '',
                 email: '',
-                password: ''
+                password: '',
+                access_scope: 'vendas'
             });
 
             setTimeout(() => setMessage(''), 3000);
@@ -238,6 +241,24 @@ function Brokers() {
                             placeholder="Senha"
                         />
 
+                        {editingBroker && (
+                            <div style={{ marginBottom: '12px' }}>
+                                <label htmlFor="access_scope" style={{ display: 'block', marginBottom: '4px' }}>
+                                    Acesso do corretor
+                                </label>
+                                <select
+                                    id="access_scope"
+                                    name="access_scope"
+                                    value={formData.access_scope}
+                                    onChange={handleChange}
+                                >
+                                    <option value="vendas">Somente Vendas</option>
+                                    <option value="aluguel">Somente Aluguéis</option>
+                                    <option value="ambos">Vendas e Aluguéis</option>
+                                </select>
+                            </div>
+                        )}
+
                         <button type="submit">
                             {editingBroker ? 'Salvar alterações' : 'Cadastrar'}
                         </button>
@@ -250,7 +271,8 @@ function Brokers() {
                                     setFormData({
                                         name: '',
                                         email: '',
-                                        password: ''
+                                        password: '',
+                                        access_scope: 'vendas'
                                     });
                                 }}
                             >
@@ -274,6 +296,7 @@ function Brokers() {
                                     <th>Nome</th>
                                     <th>Email</th>
                                     <th>Perfil</th>
+                                    <th>Acesso</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -284,6 +307,15 @@ function Brokers() {
                                         <td>{broker.name}</td>
                                         <td>{broker.email}</td>
                                         <td>{broker.role}</td>
+                                        <td>
+                                            {broker.role === 'admin'
+                                                ? '—'
+                                                : broker.access_scope === 'aluguel'
+                                                    ? 'Aluguéis'
+                                                    : broker.access_scope === 'ambos'
+                                                        ? 'Vendas e Aluguéis'
+                                                        : 'Vendas'}
+                                        </td>
 
                                         <td>
                                             {broker.role !== 'admin' && (

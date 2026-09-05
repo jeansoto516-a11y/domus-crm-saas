@@ -221,7 +221,7 @@ exports.deleteBroker = async (req, res) => {
 exports.updateBroker = async (req, res) => {
 
     const { id } = req.params;
-    const { name, email, password } = req.body;
+    const { name, email, password, access_scope } = req.body;
 
     if (req.user.role !== 'admin') {
         return res.status(403).json({
@@ -286,6 +286,8 @@ exports.updateBroker = async (req, res) => {
             });
         }
 
+                const scopeToSave = ['vendas', 'aluguel', 'ambos'].includes(access_scope) ? access_scope : 'vendas';
+
         if (password && password.trim() !== '') {
 
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -296,14 +298,16 @@ exports.updateBroker = async (req, res) => {
                 SET
                     name = $1,
                     email = $2,
-                    password = $3
-                WHERE id = $4
-                AND company_id = $5
+                    password = $3,
+                    access_scope = $4
+                WHERE id = $5
+                AND company_id = $6
                 `,
                 [
                     name,
                     email,
                     hashedPassword,
+                    scopeToSave,
                     id,
                     req.user.company_id
                 ]
@@ -316,13 +320,15 @@ exports.updateBroker = async (req, res) => {
                 UPDATE users
                 SET
                     name = $1,
-                    email = $2
-                WHERE id = $3
-                AND company_id = $4
+                    email = $2,
+                    access_scope = $3
+                WHERE id = $4
+                AND company_id = $5
                 `,
                 [
                     name,
                     email,
+                    scopeToSave,
                     id,
                     req.user.company_id
                 ]

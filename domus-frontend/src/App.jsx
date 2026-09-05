@@ -19,6 +19,7 @@ import Privacidade from './pages/privacidade';
 import Ranking from './pages/ranking';
 import Goals from './pages/goals';
 import PublicForm from './pages/publicform';
+import Rentals from './pages/rentals';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -167,6 +168,15 @@ function App() {
             </PrivateRoute>
           }
         />
+                <Route
+          path="/alugueis"
+          element={
+            <PrivateRoute>
+              <Rentals />
+            </PrivateRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
