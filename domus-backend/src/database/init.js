@@ -128,6 +128,15 @@ async function createTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+            CREATE TABLE IF NOT EXISTS rental_adjustments (
+        id SERIAL PRIMARY KEY,
+        property_id INTEGER REFERENCES rental_properties(id) ON DELETE CASCADE,
+        old_value NUMERIC NOT NULL,
+        new_value NUMERIC NOT NULL,
+        adjusted_by INTEGER REFERENCES users(id),
+        adjusted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       CREATE TABLE IF NOT EXISTS rental_payments (
         id SERIAL PRIMARY KEY,
         property_id INTEGER REFERENCES rental_properties(id) ON DELETE CASCADE,

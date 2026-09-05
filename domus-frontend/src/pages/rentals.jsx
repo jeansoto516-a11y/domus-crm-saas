@@ -51,12 +51,15 @@ function Rentals() {
     contract_end: ''
     });
 
-    const [editingProperty, setEditingProperty] = useState(null);
+        const [editingProperty, setEditingProperty] = useState(null);
     const [editData, setEditData] = useState({
     admin_fee_percent: '',
     broker_commission_percent: '',
     status: 'ativo'
     });
+
+    const [adjustingProperty, setAdjustingProperty] = useState(null);
+    const [newRentValue, setNewRentValue] = useState('');
 
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -160,6 +163,32 @@ function Rentals() {
 
     } catch (err) {
         setError(err.response?.data?.error || 'Erro ao atualizar imovel.');
+    }
+    };
+
+        const handleAdjustClick = (property) => {
+    setAdjustingProperty(property);
+    setNewRentValue(property.rent_value);
+    setMessage('');
+    setError('');
+    };
+
+    const handleAdjustSubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+        await api.post(`/rentals/properties/${adjustingProperty.id}/adjust-rent`, {
+        new_value: newRentValue
+        });
+
+        setMessage('Reajuste aplicado com sucesso.');
+        setAdjustingProperty(null);
+        loadProperties();
+
+        setTimeout(() => setMessage(''), 3000);
+
+    } catch (err) {
+        setError(err.response?.data?.error || 'Erro ao reajustar aluguel.');
     }
     };
 
@@ -319,6 +348,45 @@ function Rentals() {
             </form>
         </section>
 
+                {adjustingProperty && (
+            <section className="panel">
+            <h2>Reajustar aluguel: {adjustingProperty.address}</h2>
+
+            <form onSubmit={handleAdjustSubmit}>
+                <p>
+                Valor atual: {Number(adjustingProperty.rent_value).toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                })}
+                </p>
+
+                <label style={{ display: 'block', marginBottom: '4px' }}>
+                Novo valor do aluguel (R$)
+                </label>
+                <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={newRentValue}
+                onChange={(event) => setNewRentValue(event.target.value)}
+                required
+                />
+
+                <button type="submit" className="primary-button">
+                Confirmar reajuste
+                </button>
+
+                <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setAdjustingProperty(null)}
+                >
+                Cancelar
+                </button>
+            </form>
+            </section>
+        )}
+
         {editingProperty && (
             <section className="panel">
             <h2>Editar imovel: {editingProperty.address}</h2>
@@ -412,7 +480,7 @@ function Rentals() {
                     <th>Comissao %</th>
                     <th>Vencimento</th>
                     <th>Status</th>
-                    {isAdmin && <th>Acoes</th>}
+                    <th>Acoes</th>
                     </tr>
                 </thead>
 
@@ -445,24 +513,38 @@ function Rentals() {
                         </td>
                         <td><span className="status-pill">{statusLabels[property.status] || property.status}</span></td>
 
-                        {isAdmin && (
-                        <td>
+                                                                        <td>
                             <div className="row-actions">
                             <button
                                 className="small-button"
-                                onClick={() => handleEditClick(property)}
+                                onClick={() => navigate(`/alugueis/imoveis/${property.id}/historico`)}
                             >
-                                Editar
+                                Historico
                             </button>
-                            <button
-                                className="small-button"
-                                onClick={() => handleDelete(property.id, property.address)}
-                            >
-                                Excluir
-                            </button>
+                            {isAdmin && (
+                                <>
+                                <button
+                                    className="small-button"
+                                    onClick={() => handleAdjustClick(property)}
+                                >
+                                    Reajustar
+                                </button>
+                                <button
+                                    className="small-button"
+                                    onClick={() => handleEditClick(property)}
+                                >
+                                    Editar
+                                </button>
+                                <button
+                                    className="small-button"
+                                    onClick={() => handleDelete(property.id, property.address)}
+                                >
+                                    Excluir
+                                </button>
+                                </>
+                            )}
                             </div>
                         </td>
-                        )}
                     </tr>
                     );
                     })}

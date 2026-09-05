@@ -87,6 +87,82 @@ exports.createProperty = async (req, res) => {
 /**
  * Atualizar imovel (inclui as % de administracao e comissao - somente admin)
  */
+/**
+ * Reajustar o valor do aluguel (somente admin, a qualquer momento)
+ */
+exports.adjustRent = async (req, res) => {
+    const { id } = req.params;
+    const { new_value } = req.body;
+
+    const newValue = Number(new_value);
+
+    if (!newValue || newValue <= 0) {
+        return res.status(400).json({ error: 'Informe um novo valor de aluguel valido.' });
+    }
+
+    try {
+        const propertyResult = await pool.query(
+            `SELECT id, rent_value FROM rental_properties WHERE id = $1 AND company_id = $2`,
+            [id, req.user.company_id]
+        );
+
+        if (propertyResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Imovel nao encontrado.' });
+        }
+
+        const oldValue = Number(propertyResult.rows[0].rent_value);
+
+        await pool.query(
+            `
+            INSERT INTO rental_adjustments (property_id, old_value, new_value, adjusted_by)
+            VALUES ($1, $2, $3, $4)
+            `,
+            [id, oldValue, newValue, req.user.id]
+        );
+
+        const updateResult = await pool.query(
+            `UPDATE rental_properties SET rent_value = $1 WHERE id = $2 RETURNING *`,
+            [newValue, id]
+        );
+
+        return res.json({
+            message: 'Reajuste aplicado com sucesso.',
+            property: updateResult.rows[0]
+        });
+
+    } catch (err) {
+        console.error('Erro ao reajustar aluguel:', err);
+        return res.status(500).json({ error: 'Erro ao reajustar aluguel.' });
+    }
+};
+
+/**
+ * Historico de reajustes de um imovel
+ */
+exports.getAdjustments = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `
+            SELECT rental_adjustments.*, users.name AS adjusted_by_name
+            FROM rental_adjustments
+            JOIN rental_properties ON rental_properties.id = rental_adjustments.property_id
+            LEFT JOIN users ON users.id = rental_adjustments.adjusted_by
+            WHERE rental_adjustments.property_id = $1 AND rental_properties.company_id = $2
+            ORDER BY rental_adjustments.adjusted_at DESC
+            `,
+            [id, req.user.company_id]
+        );
+
+        return res.json(result.rows);
+
+    } catch (err) {
+        console.error('Erro ao buscar reajustes:', err);
+        return res.status(500).json({ error: 'Erro ao buscar reajustes.' });
+    }
+};
+
 exports.updateProperty = async (req, res) => {
     const { id } = req.params;
     const {
@@ -230,7 +306,7 @@ exports.generateMonthlyPayments = async (req, res) => {
  * Listar pagamentos mensais (com filtro opcional de mes)
  */
 exports.getPayments = async (req, res) => {
-    const { month } = req.query;
+    const { month, property_id } = req.query;
 
     try {
         let query = `
@@ -254,6 +330,11 @@ exports.getPayments = async (req, res) => {
         if (month) {
             query += ` AND rental_payments.reference_month = $${values.length + 1}`;
             values.push(month);
+        }
+
+        if (property_id) {
+            query += ` AND rental_payments.property_id = $${values.length + 1}`;
+            values.push(property_id);
         }
 
         query += ` ORDER BY rental_payments.reference_month DESC, rental_properties.address ASC`;

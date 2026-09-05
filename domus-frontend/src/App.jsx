@@ -22,6 +22,7 @@ import PublicForm from './pages/publicform';
 import Rentals from './pages/rentals';
 import RentalDashboard from './pages/rentaldashboard';
 import Rentalpayments from './pages/rentalpayments';
+import RentalPropertyHistory from './pages/rentalpropertyhistory';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -193,6 +194,15 @@ function App() {
           element={
             <PrivateRoute>
               <Rentalpayments />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/alugueis/imoveis/:id/historico"
+          element={
+            <PrivateRoute>
+              <RentalPropertyHistory />
             </PrivateRoute>
           }
         />
