@@ -304,3 +304,75 @@ exports.updatePaymentStatus = async (req, res) => {
         return res.status(500).json({ error: 'Erro ao atualizar status do pagamento.' });
     }
 };
+
+
+/**
+ * Dashboard do modulo de alugueis
+ */
+exports.getDashboard = async (req, res) => {
+    try {
+        const isAdmin = req.user.role === 'admin';
+
+        const scopeFilter = isAdmin ? '' : ' AND rental_properties.broker_id = $2';
+        const scopeValues = isAdmin ? [req.user.company_id] : [req.user.company_id, req.user.id];
+
+        const propertiesResult = await pool.query(
+            `
+            SELECT
+                COUNT(*) AS total_imoveis,
+                COUNT(*) FILTER (WHERE status = 'ativo') AS imoveis_ativos,
+                COALESCE(SUM(rent_value) FILTER (WHERE status = 'ativo'), 0) AS soma_alugueis
+            FROM rental_properties
+            WHERE company_id = $1
+            ${isAdmin ? '' : 'AND broker_id = $2'}
+            `,
+            scopeValues
+        );
+
+        const referenceMonth = new Date();
+        referenceMonth.setDate(1);
+        const monthStr = referenceMonth.toISOString().slice(0, 10);
+
+        const paymentsResult = await pool.query(
+            `
+            SELECT
+                rental_payments.status,
+                COUNT(*) AS total,
+                COALESCE(SUM(rental_payments.admin_fee_value), 0) AS soma_administracao,
+                COALESCE(SUM(rental_payments.broker_commission_value), 0) AS soma_comissao
+            FROM rental_payments
+            JOIN rental_properties ON rental_properties.id = rental_payments.property_id
+            WHERE rental_properties.company_id = $1
+            AND rental_payments.reference_month = $${isAdmin ? 2 : 3}
+            ${scopeFilter}
+            GROUP BY rental_payments.status
+            `,
+            isAdmin ? [req.user.company_id, monthStr] : [req.user.company_id, req.user.id, monthStr]
+        );
+
+        const dashboard = {
+            total_imoveis: Number(propertiesResult.rows[0].total_imoveis),
+            imoveis_ativos: Number(propertiesResult.rows[0].imoveis_ativos),
+            soma_alugueis: Number(propertiesResult.rows[0].soma_alugueis),
+            mes_atual: {
+                pendente: 0,
+                pago: 0,
+                atrasado: 0,
+                receita_administracao_mes: 0,
+                total_comissao_corretores_mes: 0
+            }
+        };
+
+        paymentsResult.rows.forEach((row) => {
+            dashboard.mes_atual[row.status] = Number(row.total);
+            dashboard.mes_atual.receita_administracao_mes += Number(row.soma_administracao);
+            dashboard.mes_atual.total_comissao_corretores_mes += Number(row.soma_comissao);
+        });
+
+        return res.json(dashboard);
+
+    } catch (err) {
+        console.error('Erro ao buscar dashboard de alugueis:', err);
+        return res.status(500).json({ error: 'Erro ao buscar dashboard de alugueis.' });
+    }
+};

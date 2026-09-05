@@ -8,7 +8,7 @@ const { sendMail } = require('../services/mailService');
 exports.getBrokers = async (req, res) => {
     try {
 
-        const result = await pool.query(
+                const result = await pool.query(
             `
             SELECT
                 id,
@@ -16,6 +16,7 @@ exports.getBrokers = async (req, res) => {
                 email,
                 role,
                 company_id,
+                access_scope,
                 created_at
             FROM users
             WHERE company_id = $1
