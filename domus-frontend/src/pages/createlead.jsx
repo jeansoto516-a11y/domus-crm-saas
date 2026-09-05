@@ -5,12 +5,14 @@ import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
 
 function CreateLead() {
-  const [form, setForm] = useState({
+    const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
-    status: 'novo'
+    status: 'novo',
+    lead_type: 'venda'
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
@@ -129,6 +131,14 @@ function CreateLead() {
             <label>
               Telefone
               <input name="phone" onChange={updateField} placeholder="(11) 99999-9999" value={form.phone} />
+            </label>
+
+                        <label>
+              Tipo de lead
+              <select name="lead_type" onChange={updateField} value={form.lead_type}>
+                <option value="venda">Venda</option>
+                <option value="aluguel">Aluguel</option>
+              </select>
             </label>
 
             <label>

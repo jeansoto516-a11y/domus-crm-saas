@@ -163,6 +163,8 @@ async function createTables() {
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS trial_reminder_3d_sent BOOLEAN DEFAULT false;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS trial_reminder_last_day_sent BOOLEAN DEFAULT false;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS public_slug TEXT UNIQUE;
+      ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_type TEXT DEFAULT 'venda';
+      
 
       CREATE INDEX IF NOT EXISTS idx_leads_company_created_at ON leads(company_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_leads_company_status ON leads(company_id, status);

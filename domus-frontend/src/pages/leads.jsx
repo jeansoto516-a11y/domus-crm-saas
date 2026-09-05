@@ -21,8 +21,8 @@ const temperatureLabels = {
 };
 
 function Leads() {
-  const [leads, setLeads] = useState([]);
-  const [filters, setFilters] = useState({ status: '', startDate: '', endDate: '' });
+    const [leads, setLeads] = useState([]);
+  const [filters, setFilters] = useState({ status: '', startDate: '', endDate: '', lead_type: 'venda' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
@@ -241,6 +241,21 @@ function Leads() {
         </header>
 
         <TrialBanner />
+
+                <div className="form-actions" style={{ marginBottom: '12px' }}>
+          <button
+            className={filters.lead_type === 'venda' ? 'primary-button' : 'secondary-button'}
+            onClick={() => setFilters((current) => ({ ...current, lead_type: 'venda' }))}
+          >
+            Vendas
+          </button>
+          <button
+            className={filters.lead_type === 'aluguel' ? 'primary-button' : 'secondary-button'}
+            onClick={() => setFilters((current) => ({ ...current, lead_type: 'aluguel' }))}
+          >
+            Aluguel
+          </button>
+        </div>
 
         <section className="summary-strip">
           <article><span>Total</span><strong>{totals.total}</strong></article>

@@ -82,6 +82,8 @@ exports.createLead = async (req, res) => {
 
     const status = normalizeStatus(req.body.status) || 'novo';
 
+    const leadType = (req.body.lead_type === 'aluguel') ? 'aluguel' : 'venda';
+
     if (!name || (!email && !phone)) {
 
         return res.status(400).json({
@@ -147,11 +149,12 @@ exports.createLead = async (req, res) => {
                 score,
                 temperature,
                 user_id,
-                company_id
+                company_id,
+                lead_type
             )
             VALUES
             (
-                $1,$2,$3,$4,$5,$6,$7,$8
+                $1,$2,$3,$4,$5,$6,$7,$8,$9
             )
             RETURNING *
             `,
@@ -163,7 +166,8 @@ exports.createLead = async (req, res) => {
                 score,
                 temperature,
                 assignedUserId,
-                req.user.company_id
+                req.user.company_id,
+                leadType
             ]
         );
 
@@ -193,6 +197,11 @@ exports.getLeads = async (req, res) => {
 
     const values = [];
     let where = buildLeadScope(req, values);
+
+    const leadType = (req.query.lead_type === 'aluguel') ? 'aluguel' : 'venda';
+
+    where += ` AND lead_type = $${values.length + 1}`;
+    values.push(leadType);
 
     const status = normalizeStatus(req.query.status);
 
