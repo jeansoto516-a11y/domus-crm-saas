@@ -160,6 +160,8 @@ function Brokers() {
                         Dashboard
                     </button>
 
+                    <button onClick={() => navigate('/alugueis')}>Alugueis</button>
+
                     <button onClick={() => navigate('/leads')}>
                         Leads
                     </button>

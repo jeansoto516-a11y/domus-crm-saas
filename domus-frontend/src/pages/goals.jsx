@@ -110,7 +110,9 @@ function Goals() {
         </div>
         <nav className="side-nav">
             <button onClick={() => navigate('/dashboard')}>Dashboard</button>
+            <button onClick={() => navigate('/alugueis')}>Alugueis</button>
             <button onClick={() => navigate('/leads')}>Leads</button>
+            <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
             <button onClick={() => navigate('/ranking')}>Ranking</button>
             <button className="active" onClick={() => navigate('/metas')}>Metas</button>

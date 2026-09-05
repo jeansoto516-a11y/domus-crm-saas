@@ -20,6 +20,7 @@ import Ranking from './pages/ranking';
 import Goals from './pages/goals';
 import PublicForm from './pages/publicform';
 import Rentals from './pages/rentals';
+import RentalDashboard from './pages/rentaldashboard';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -168,8 +169,17 @@ function App() {
             </PrivateRoute>
           }
         />
-                <Route
+                        <Route
           path="/alugueis"
+          element={
+            <PrivateRoute>
+              <RentalDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/alugueis/imoveis"
           element={
             <PrivateRoute>
               <Rentals />
