@@ -125,6 +125,9 @@ function RentalDashboard() {
             <button className="primary-button" onClick={() => navigate('/alugueis/imoveis')}>
             Ver imoveis
             </button>
+            <button className="secondary-button" onClick={() => navigate('/alugueis/pagamentos')}>
+            Ver pagamentos
+            </button>
         </header>
 
         <TrialBanner />
