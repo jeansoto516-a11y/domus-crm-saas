@@ -9,6 +9,30 @@ const statusLabels = {
     encerrado: 'Encerrado'
 };
 
+function getContractAlert(contractEnd) {
+    if (!contractEnd) return null;
+
+    const end = new Date(contractEnd);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return { label: 'Vencido', level: 'vencido', diffDays };
+    if (diffDays <= 30) return { label: `Vence em ${diffDays} dia(s)`, level: '30', diffDays };
+    if (diffDays <= 60) return { label: `Vence em ${diffDays} dia(s)`, level: '60', diffDays };
+    if (diffDays <= 90) return { label: `Vence em ${diffDays} dia(s)`, level: '90', diffDays };
+    return null;
+}
+
+function alertBackground(level) {
+    if (level === 'vencido' || level === '30') return '#FEF2F2';
+    if (level === '60') return '#FFF7ED';
+    if (level === '90') return '#FFFBEB';
+    return undefined;
+}
+
 function Rentals() {
     const navigate = useNavigate();
 
@@ -163,11 +187,11 @@ function Rentals() {
 
         <nav className="side-nav">
             <button onClick={() => navigate('/dashboard')}>Dashboard</button>
+            <button onClick={() => navigate('/alugueis')}>Alugueis</button>
             <button onClick={() => navigate('/leads')}>Leads</button>
             <button onClick={() => navigate('/brokers')}>Corretores</button>
             <button onClick={() => navigate('/ranking')}>Ranking</button>
             <button onClick={() => navigate('/metas')}>Metas</button>
-            <button onClick={() => navigate('/alugueis')}>Alugueis</button>
             <button onClick={() => navigate('/perfil')}>Perfil</button>
             <button onClick={() => navigate('/mensagens')}>
             Mensagens
@@ -352,6 +376,22 @@ function Rentals() {
         <section className="panel">
             <h2>Imoveis cadastrados</h2>
 
+            {(() => {
+                const expiringCount = properties.filter((p) => getContractAlert(p.contract_end)).length;
+                if (expiringCount === 0) return null;
+                return (
+                <div style={{
+                    background: '#FFFBEB',
+                    border: '1px solid #FDE68A',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    marginBottom: '12px'
+                }}>
+                    {expiringCount} contrato(s) vencendo nos proximos 90 dias.
+                </div>
+                );
+            })()}
+
             {loading ? (
             <div className="empty-state">Carregando imoveis...</div>
             ) : properties.length === 0 ? (
@@ -370,14 +410,18 @@ function Rentals() {
                     <th>Aluguel</th>
                     <th>Adm. %</th>
                     <th>Comissao %</th>
+                    <th>Vencimento</th>
                     <th>Status</th>
                     {isAdmin && <th>Acoes</th>}
                     </tr>
                 </thead>
 
                 <tbody>
-                    {properties.map((property) => (
-                    <tr key={property.id}>
+                    {properties.map((property) => {
+                    const alert = getContractAlert(property.contract_end);
+
+                    return (
+                    <tr key={property.id} style={{ background: alertBackground(alert?.level) }}>
                         <td>{property.address}</td>
                         <td>{property.tenant_name || 'Nao informado'}</td>
                         <td>{property.corretor || 'Nao informado'}</td>
@@ -389,6 +433,16 @@ function Rentals() {
                         </td>
                         <td>{property.admin_fee_percent}%</td>
                         <td>{property.broker_commission_percent}%</td>
+                        <td>
+                            {property.contract_end
+                            ? new Date(property.contract_end).toLocaleDateString('pt-BR')
+                            : 'Nao informado'}
+                            {alert && (
+                            <div style={{ fontSize: 12, marginTop: 2, fontWeight: 600 }}>
+                                {alert.label}
+                            </div>
+                            )}
+                        </td>
                         <td><span className="status-pill">{statusLabels[property.status] || property.status}</span></td>
 
                         {isAdmin && (
@@ -410,7 +464,8 @@ function Rentals() {
                         </td>
                         )}
                     </tr>
-                    ))}
+                    );
+                    })}
                 </tbody>
                 </table>
             </div>
