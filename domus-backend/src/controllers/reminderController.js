@@ -7,10 +7,19 @@ exports.getReminders = async (req, res) => {
     try {
         const result = await pool.query(
             `
-            SELECT id, note, due_date, done, lead_id, created_at
+            SELECT
+                reminders.id,
+                reminders.note,
+                reminders.due_date,
+                reminders.done,
+                reminders.lead_id,
+                reminders.rental_property_id,
+                reminders.created_at,
+                rental_properties.address AS rental_property_address
             FROM reminders
-            WHERE user_id = $1
-            ORDER BY done ASC, due_date ASC NULLS LAST, created_at DESC
+            LEFT JOIN rental_properties ON rental_properties.id = reminders.rental_property_id
+            WHERE reminders.user_id = $1
+            ORDER BY reminders.done ASC, reminders.due_date ASC NULLS LAST, reminders.created_at DESC
             `,
             [req.user.id]
         );
@@ -27,7 +36,7 @@ exports.getReminders = async (req, res) => {
  * Criar lembrete
  */
 exports.createReminder = async (req, res) => {
-    const { note, due_date, lead_id } = req.body;
+    const { note, due_date, lead_id, rental_property_id } = req.body;
 
     if (!note || !note.trim()) {
         return res.status(400).json({ error: 'Escreva o lembrete.' });
@@ -35,8 +44,8 @@ exports.createReminder = async (req, res) => {
 
     try {
         const result = await pool.query(
-            `INSERT INTO reminders (user_id, company_id, lead_id, note, due_date) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-            [req.user.id, req.user.company_id, lead_id || null, note.trim(), due_date || null]
+            `INSERT INTO reminders (user_id, company_id, lead_id, rental_property_id, note, due_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [req.user.id, req.user.company_id, lead_id || null, rental_property_id || null, note.trim(), due_date || null]
         );
 
         return res.status(201).json(result.rows[0]);

@@ -108,8 +108,13 @@ function RemindersWidget() {
             {pending.map((r) => (
                 <div key={r.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 8px' }}>
                 <input type="checkbox" checked={false} onChange={() => handleToggle(r)} style={{ marginTop: 3 }} />
-                <div style={{ flex: 1 }}>
+                                <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13 }}>{r.note}</div>
+                    {r.rental_property_address && (
+                    <div style={{ fontSize: 11, color: '#0F766E', fontWeight: 600 }}>
+                        🏠 {r.rental_property_address}
+                    </div>
+                    )}
                                         {r.due_date && (
                     <div style={{ fontSize: 11, color: '#6B7280' }}>
                         {new Date(r.due_date).toLocaleDateString('pt-BR')}

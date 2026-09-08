@@ -192,6 +192,23 @@ function Rentals() {
     }
     };
 
+        const handleCreateReminder = async (property) => {
+    const note = window.prompt(`Lembrete sobre o imovel "${property.address}":`);
+    if (!note || !note.trim()) return;
+
+    try {
+        await api.post('/reminders', {
+        note: note.trim(),
+        rental_property_id: property.id
+        });
+
+        setMessage('Lembrete criado com sucesso.');
+        setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+        setError(err.response?.data?.error || 'Erro ao criar lembrete.');
+    }
+    };
+
     const handleDelete = async (id, address) => {
     const confirmDelete = window.confirm(`Deseja realmente excluir o imovel "${address}"?`);
     if (!confirmDelete) return;
@@ -540,11 +557,17 @@ function Rentals() {
 
                                                                         <td>
                             <div className="row-actions">
-                            <button
+                                                        <button
                                 className="small-button"
                                 onClick={() => navigate(`/alugueis/imoveis/${property.id}/historico`)}
                             >
                                 Historico
+                            </button>
+                            <button
+                                className="small-button"
+                                onClick={() => handleCreateReminder(property)}
+                            >
+                                Lembrete
                             </button>
                             {isAdmin && (
                                 <>

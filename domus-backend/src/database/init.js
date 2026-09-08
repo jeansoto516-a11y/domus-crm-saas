@@ -107,7 +107,9 @@ async function createTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE INDEX IF NOT EXISTS idx_reminders_user ON reminders(user_id, done);
+            CREATE INDEX IF NOT EXISTS idx_reminders_user ON reminders(user_id, done);
+
+      ALTER TABLE reminders ADD COLUMN IF NOT EXISTS rental_property_id INTEGER REFERENCES rental_properties(id) ON DELETE CASCADE;
 
       CREATE TABLE IF NOT EXISTS rental_properties (
         id SERIAL PRIMARY KEY,
