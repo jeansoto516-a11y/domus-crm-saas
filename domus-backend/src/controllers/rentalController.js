@@ -88,6 +88,94 @@ exports.createProperty = async (req, res) => {
  * Atualizar imovel (inclui as % de administracao e comissao - somente admin)
  */
 /**
+ * Exportar imoveis alugados em CSV
+ */
+exports.exportRentals = async (req, res) => {
+    try {
+        let query = `
+            SELECT
+                rental_properties.*,
+                users.name AS corretor
+            FROM rental_properties
+            LEFT JOIN users ON users.id = rental_properties.broker_id
+            WHERE rental_properties.company_id = $1
+        `;
+        const values = [req.user.company_id];
+
+        if (req.user.role !== 'admin') {
+            query += ` AND rental_properties.broker_id = $2`;
+            values.push(req.user.id);
+        }
+
+        query += ` ORDER BY rental_properties.created_at DESC`;
+
+        const result = await pool.query(query, values);
+
+        const headers = [
+            'ID',
+            'Endereco',
+            'Inquilino',
+            'Contato inquilino',
+            'Proprietario',
+            'Contato proprietario',
+            'Corretor',
+            'Valor aluguel',
+            'Dia vencimento',
+            'Inicio contrato',
+            'Fim contrato',
+            'Adm %',
+            'Comissao %',
+            'Status',
+            'Cadastrado em'
+        ];
+
+        function escapeCsv(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+
+            const text = String(value);
+
+            if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+                return `"${text.replace(/"/g, '""')}"`;
+            }
+
+            return text;
+        }
+
+        const rows = result.rows.map((property) => [
+            property.id,
+            property.address,
+            property.tenant_name || '',
+            property.tenant_contact || '',
+            property.owner_name || '',
+            property.owner_contact || '',
+            property.corretor || '',
+            property.rent_value,
+            property.due_day,
+            property.contract_start ? new Date(property.contract_start).toLocaleDateString('pt-BR') : '',
+            property.contract_end ? new Date(property.contract_end).toLocaleDateString('pt-BR') : '',
+            property.admin_fee_percent,
+            property.broker_commission_percent,
+            property.status,
+            new Date(property.created_at).toLocaleString('pt-BR')
+        ].map(escapeCsv).join(','));
+
+        const csv = [headers.join(','), ...rows].join('\n');
+        const csvWithBom = '\uFEFF' + csv;
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="alugueis-domus.csv"');
+
+        return res.send(csvWithBom);
+
+    } catch (err) {
+        console.error('Erro ao exportar alugueis:', err);
+        return res.status(500).json({ error: 'Erro ao exportar alugueis.' });
+    }
+};
+
+/**
  * Reajustar o valor do aluguel (somente admin, a qualquer momento)
  */
 exports.adjustRent = async (req, res) => {

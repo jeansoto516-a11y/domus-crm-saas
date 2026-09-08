@@ -241,12 +241,37 @@ function Rentals() {
         </aside>
 
         <section className="workspace">
-        <header className="workspace-header">
+                <header className="workspace-header">
             <div>
             <span className="eyebrow">Gestao de imoveis</span>
             <h1>Alugueis</h1>
             <p>Cadastre e acompanhe os imoveis administrados pela imobiliaria.</p>
             </div>
+
+            
+            <a className="secondary-button"
+            href={`${import.meta.env.VITE_API_URL}/rentals/export`}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => {
+                e.preventDefault();
+                const token = localStorage.getItem('token');
+                fetch(`${import.meta.env.VITE_API_URL}/rentals/export`, {
+                headers: { Authorization: `Bearer ${token}` }
+                })
+                .then((res) => res.blob())
+                .then((blob) => {
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'alugueis-domus.csv';
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                });
+            }}
+            >
+            Exportar CSV
+            </a>
         </header>
 
         <TrialBanner />
