@@ -384,9 +384,8 @@ exports.generateMonthlyPayments = async (req, res) => {
             [req.user.company_id]
         );
 
-        const referenceMonth = new Date();
-        referenceMonth.setDate(1);
-        const monthStr = referenceMonth.toISOString().slice(0, 10);
+        const now = new Date();
+        const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
         let created = 0;
         let skipped = 0;
@@ -539,9 +538,8 @@ exports.getDashboard = async (req, res) => {
             scopeValues
         );
 
-        const referenceMonth = new Date();
-        referenceMonth.setDate(1);
-        const monthStr = referenceMonth.toISOString().slice(0, 10);
+        const now = new Date();
+        const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
         const paymentsResult = await pool.query(
             `
