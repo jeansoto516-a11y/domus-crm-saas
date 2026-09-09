@@ -23,6 +23,7 @@ import Rentals from './pages/rentals';
 import RentalDashboard from './pages/rentaldashboard';
 import Rentalpayments from './pages/rentalpayments';
 import RentalPropertyHistory from './pages/rentalpropertyhistory';
+import RentalRanking from './pages/rentalranking';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -198,11 +199,20 @@ function App() {
           }
         />
 
-        <Route
+                <Route
           path="/alugueis/imoveis/:id/historico"
           element={
             <PrivateRoute>
               <RentalPropertyHistory />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/alugueis/ranking"
+          element={
+            <PrivateRoute>
+              <RentalRanking />
             </PrivateRoute>
           }
         />

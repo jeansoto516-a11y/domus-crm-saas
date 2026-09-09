@@ -14,6 +14,7 @@ router.delete('/properties/:id', authMiddleware, checkSubscription, adminMiddlew
 router.post('/generate-month', authMiddleware, checkSubscription, adminMiddleware, rentalController.generateMonthlyPayments);
 router.get('/payments', authMiddleware, checkSubscription, rentalAccessMiddleware, rentalController.getPayments);
 router.put('/payments/:id/status', authMiddleware, checkSubscription, adminMiddleware, rentalController.updatePaymentStatus);
+router.get('/ranking', authMiddleware, checkSubscription, rentalAccessMiddleware, rentalController.getRentalRanking);
 router.get('/export', authMiddleware, checkSubscription, rentalAccessMiddleware, rentalController.exportRentals);
 router.post('/properties/:id/adjust-rent', authMiddleware, checkSubscription, adminMiddleware, rentalController.adjustRent);
 router.get('/properties/:id/adjustments', authMiddleware, checkSubscription, rentalAccessMiddleware, rentalController.getAdjustments);

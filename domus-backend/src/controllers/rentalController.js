@@ -88,6 +88,47 @@ exports.createProperty = async (req, res) => {
  * Atualizar imovel (inclui as % de administracao e comissao - somente admin)
  */
 /**
+ * Ranking de corretores por alugueis administrados
+ */
+exports.getRentalRanking = async (req, res) => {
+    try {
+        const result = await pool.query(
+            `
+            SELECT
+                users.id,
+                users.name,
+                COUNT(rental_properties.id) FILTER (WHERE rental_properties.status = 'ativo') AS imoveis_ativos,
+                COUNT(rental_properties.id) AS total_imoveis,
+                COALESCE(SUM(rental_payments.broker_commission_value) FILTER (
+                    WHERE date_trunc('month', rental_payments.reference_month) = date_trunc('month', NOW())
+                ), 0) AS comissao_mes
+            FROM users
+            LEFT JOIN rental_properties ON rental_properties.broker_id = users.id AND rental_properties.company_id = users.company_id
+            LEFT JOIN rental_payments ON rental_payments.property_id = rental_properties.id
+            WHERE users.company_id = $1 AND users.role = 'user'
+            GROUP BY users.id, users.name
+            ORDER BY imoveis_ativos DESC, comissao_mes DESC
+            `,
+            [req.user.company_id]
+        );
+
+        const ranking = result.rows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            imoveis_ativos: Number(row.imoveis_ativos),
+            total_imoveis: Number(row.total_imoveis),
+            comissao_mes: Number(row.comissao_mes)
+        }));
+
+        return res.json(ranking);
+
+    } catch (err) {
+        console.error('Erro ao buscar ranking de alugueis:', err);
+        return res.status(500).json({ error: 'Erro ao buscar ranking de alugueis.' });
+    }
+};
+
+/**
  * Exportar imoveis alugados em CSV
  */
 exports.exportRentals = async (req, res) => {
