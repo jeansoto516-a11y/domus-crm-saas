@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TermsModal from '../components/TermsModal';
+import '../styles/dark-theme.css';
 
 function Register() {
   const [form, setForm] = useState({
@@ -53,25 +54,27 @@ function Register() {
   };
 
   return (
-    <main className="auth-shell">
-      <section className="auth-panel wide">
-        <Link className="brand" to="/">
-          <span className="brand-mark">D</span>
-          <span>Domus CRM</span>
+    <main className="dd-shell dd-auth-shell">
+      <section className="dd-auth-panel wide">
+        <Link className="dd-auth-brand" to="/">
+          <span className="dd-brand-mark">D</span>
+          <span>Domus <span style={{ color: 'var(--dd-blue)' }}>CRM</span></span>
         </Link>
+
         <div>
-          <span className="eyebrow">Teste gratis por 14 dias</span>
-          <h1>Crie o espaco da sua imobiliaria.</h1>
-          <p>Em menos de um minuto voce ja pode cadastrar leads e acompanhar o funil.</p>
+          <span className="dd-auth-eyebrow">Teste gratis por 14 dias</span>
+          <h1 className="dd-auth-title">Crie o espaco da sua imobiliaria.</h1>
+          <p className="dd-auth-subtitle">Em menos de um minuto voce ja pode cadastrar leads e acompanhar o funil.</p>
         </div>
 
-        <form className="form-card two-columns" onSubmit={handleRegister}>
-          {error && <div className="alert error span-all">{error}</div>}
-          {success && <div className="alert success span-all">{success}</div>}
+        <form className="dd-form two-columns" onSubmit={handleRegister}>
+          {error && <div className="dd-alert-error dd-span-all">{error}</div>}
+          {success && <div className="dd-alert-success dd-span-all">{success}</div>}
 
-          <label>
+          <label className="dd-field">
             Imobiliaria
             <input
+              className="dd-input"
               autoComplete="organization"
               name="company_name"
               onChange={updateField}
@@ -80,9 +83,10 @@ function Register() {
             />
           </label>
 
-          <label>
+          <label className="dd-field">
             Seu nome
             <input
+              className="dd-input"
               autoComplete="name"
               name="name"
               onChange={updateField}
@@ -91,9 +95,10 @@ function Register() {
             />
           </label>
 
-          <label>
+          <label className="dd-field">
             Email
             <input
+              className="dd-input"
               autoComplete="email"
               name="email"
               onChange={updateField}
@@ -103,9 +108,10 @@ function Register() {
             />
           </label>
 
-          <label>
+          <label className="dd-field">
             Senha
             <input
+              className="dd-input"
               autoComplete="new-password"
               name="password"
               onChange={updateField}
@@ -115,7 +121,7 @@ function Register() {
             />
           </label>
 
-          <button className="primary-button full span-all" disabled={loading} type="submit">
+          <button className="dd-btn-primary full dd-span-all" disabled={loading} type="submit">
             {loading ? 'Criando conta...' : 'Criar conta e iniciar teste'}
           </button>
         </form>
@@ -130,7 +136,7 @@ function Register() {
           />
         )}
 
-        <p className="auth-footer">
+        <p className="dd-auth-footer">
           Ja tem conta? <Link to="/login">Entrar no Domus</Link>
         </p>
       </section>

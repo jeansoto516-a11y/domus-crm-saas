@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import '../styles/dark-theme.css';
 
 function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -36,24 +37,26 @@ function Login() {
   };
 
   return (
-    <main className="auth-shell">
-      <section className="auth-panel">
-        <Link className="brand" to="/">
-          <span className="brand-mark">D</span>
-          <span>Domus CRM</span>
+    <main className="dd-shell dd-auth-shell">
+      <section className="dd-auth-panel">
+        <Link className="dd-auth-brand" to="/">
+          <span className="dd-brand-mark">D</span>
+          <span>Domus <span style={{ color: 'var(--dd-blue)' }}>CRM</span></span>
         </Link>
+
         <div>
-          <span className="eyebrow">Acesso seguro</span>
-          <h1>Entre na sua central comercial.</h1>
-          <p>Continue acompanhando leads, visitas, propostas e fechamentos.</p>
+          <span className="dd-auth-eyebrow">Acesso seguro</span>
+          <h1 className="dd-auth-title">Entre na sua central comercial.</h1>
+          <p className="dd-auth-subtitle">Continue acompanhando leads, visitas, propostas e fechamentos.</p>
         </div>
 
-        <form className="form-card" onSubmit={handleLogin}>
-          {error && <div className="alert error">{error}</div>}
+        <form className="dd-form" onSubmit={handleLogin}>
+          {error && <div className="dd-alert-error">{error}</div>}
 
-          <label>
+          <label className="dd-field">
             Email
             <input
+              className="dd-input"
               autoComplete="email"
               name="email"
               onChange={updateField}
@@ -63,9 +66,10 @@ function Login() {
             />
           </label>
 
-          <label>
+          <label className="dd-field">
             Senha
             <input
+              className="dd-input"
               autoComplete="current-password"
               name="password"
               onChange={updateField}
@@ -75,16 +79,16 @@ function Login() {
             />
           </label>
 
-          <button className="primary-button full" disabled={loading} type="submit">
+          <button className="dd-btn-primary full" disabled={loading} type="submit">
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
-        <p className="auth-footer">
+        <p className="dd-auth-footer">
           <Link to="/esqueci-senha">Esqueci minha senha</Link>
         </p>
 
-        <p className="auth-footer">
+        <p className="dd-auth-footer">
           Ainda nao tem conta? <Link to="/register">Comece o teste gratis</Link>
         </p>
       </section>

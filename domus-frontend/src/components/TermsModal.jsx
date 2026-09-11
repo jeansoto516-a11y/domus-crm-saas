@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import './../styles/dark-theme.css';
 
 function TermsModal({ onAccept, onClose }) {
     const [scrolledToEnd, setScrolledToEnd] = useState(false);
@@ -16,46 +17,17 @@ function TermsModal({ onAccept, onClose }) {
     };
 
     return (
-    <div
-        style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-        }}
-    >
-        <div
-        style={{
-            background: '#fff',
-            borderRadius: 12,
-            width: '90%',
-            maxWidth: 640,
-            maxHeight: '85vh',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-        }}
-        >
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #E5E7EB' }}>
-            <h2 style={{ margin: 0 }}>Termos de Uso e Politica de Privacidade</h2>
-            <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: 13 }}>
-            Role o conteudo ate o final para poder aceitar.
-            </p>
+    <div className="dd-shell dd-modal-overlay">
+        <div className="dd-modal-box">
+        <div className="dd-modal-header">
+            <h2>Termos de Uso e Politica de Privacidade</h2>
+            <p>Role o conteudo ate o final para poder aceitar.</p>
         </div>
 
         <div
             ref={contentRef}
             onScroll={handleScroll}
-            style={{
-            padding: '20px 24px',
-            overflowY: 'auto',
-            lineHeight: 1.7,
-            fontSize: 14,
-            color: '#1F2937'
-            }}
+            className="dd-modal-body"
         >
             <h3>Termos de Uso</h3>
 
@@ -78,17 +50,17 @@ function TermsModal({ onAccept, onClose }) {
             <p><strong>6. Seus direitos.</strong> Voce pode solicitar acesso, correcao, eliminacao ou portabilidade dos seus dados a qualquer momento.</p>
             <p><strong>7. Retencao.</strong> Mantemos os dados enquanto a conta estiver ativa, e por um periodo adicional apos cancelamento quando exigido por lei.</p>
 
-            <p style={{ color: '#6B7280', fontSize: 12 }}>
+            <p style={{ color: 'var(--dd-muted)', fontSize: 12 }}>
             Versao completa disponivel em /termos e /privacidade a qualquer momento.
             </p>
         </div>
 
-        <div style={{ padding: '16px 24px', borderTop: '1px solid #E5E7EB', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button className="secondary-button" onClick={onClose}>
+        <div className="dd-modal-footer">
+            <button className="dd-btn-secondary" onClick={onClose}>
             Fechar
             </button>
             <button
-            className="primary-button"
+            className="dd-btn-primary"
             onClick={onAccept}
             disabled={!scrolledToEnd}
             >
