@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 function Brokers() {
     const navigate = useNavigate();
@@ -22,7 +24,6 @@ function Brokers() {
 
     const [editingBroker, setEditingBroker] = useState(null);
 
-    // carregar corretores
     const loadBrokers = async () => {
         setLoading(true);
 
@@ -61,7 +62,7 @@ function Brokers() {
         }));
     };
 
-        const handleDelete = async (id, name) => {
+    const handleDelete = async (id, name) => {
         const confirmDelete = window.confirm(
             `Deseja realmente excluir o corretor "${name}"?`
         );
@@ -147,109 +148,109 @@ function Brokers() {
         }
     };
 
-        return (
-        <main className="app-shell">
-            <aside className="sidebar">
-                <div className="brand">
-                    <span className="brand-mark">D</span>
-                    <span>Domus CRM</span>
+    return (
+        <main className="dd-shell app-shell">
+            <aside className="dd-sidebar">
+                <div className="dd-brand">
+                    <span className="dd-brand-mark">D</span>
+                    <span className="dd-brand-name">Domus <span>CRM</span></span>
                 </div>
 
-                <nav className="side-nav">
+                <nav className="dd-nav">
                     <button onClick={() => navigate('/dashboard')}>
-                        Dashboard
+                        <Icon name="calendar" /> Dashboard
                     </button>
-
-                    <button onClick={() => navigate('/alugueis')}>Alugueis</button>
-
+                    <button onClick={() => navigate('/alugueis')}>
+                        <Icon name="file" /> Alugueis
+                    </button>
                     <button onClick={() => navigate('/leads')}>
-                        Leads
+                        <Icon name="users" /> Leads
                     </button>
-
                     <button onClick={() => navigate('/leads/novo')}>
-                        Novo lead
+                        <Icon name="userPlus" /> Novo lead
                     </button>
-
                     <button className="active">
-                        Corretores
+                        <Icon name="users" /> Corretores
                     </button>
-
-                    <button onClick={() => navigate('/ranking')}>Ranking</button>
-                    
-                    <button onClick={() => navigate('/metas')}>Metas</button>
-
-                    <button onClick={() => navigate('/perfil')}>Perfil</button>
-
+                    <button onClick={() => navigate('/ranking')}>
+                        <Icon name="check" /> Ranking
+                    </button>
+                    <button onClick={() => navigate('/metas')}>
+                        <Icon name="filter" /> Metas
+                    </button>
+                    <button onClick={() => navigate('/perfil')}>
+                        <Icon name="users" /> Perfil
+                    </button>
                     <button onClick={() => navigate('/mensagens')}>
-    Mensagens
-    {unreadCount > 0 && (
-        <span style={{
-            background: '#DC2626',
-            color: '#fff',
-            borderRadius: '999px',
-            fontSize: 11,
-            padding: '1px 7px',
-            marginLeft: 6
-        }}>
-            {unreadCount}
-        </span>
-    )}
-</button>
-
+                        <Icon name="chat" /> Mensagens
+                        {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
+                    </button>
                 </nav>
             </aside>
 
-            <section className="workspace">
-                <header className="workspace-header">
-                    <h1>Corretores</h1>
+            <section className="dd-main">
+                <header className="dd-header">
+                    <div>
+                        <h1 className="dd-title">Corretores</h1>
+                        <p className="dd-subtitle">Cadastre corretores e defina o acesso de cada um.</p>
+                    </div>
                 </header>
 
                 <TrialBanner />
 
-                <section className="panel">
+                {message && <div style={{ background: 'rgba(13,148,136,0.12)', border: '1px solid rgba(13,148,136,0.4)', color: '#5EEAD4', padding: '12px 16px', borderRadius: 8, marginBottom: 16 }}>{message}</div>}
+                {error && <div className="dd-alert-error">{error}</div>}
 
-                    <h2>
+                <section className="dd-panel dd-panel-narrow">
+                    <h2 style={{ marginTop: 0 }}>
                         {editingBroker ? 'Editar corretor' : 'Cadastro de corretor'}
                     </h2>
 
-                    {message && <div className="alert success">{message}</div>}
-                    {error && <div className="alert error">{error}</div>}
+                    <form className="dd-form" onSubmit={handleSubmit}>
+                        <label className="dd-field">
+                            Nome
+                            <input
+                                className="dd-input"
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                                placeholder="Nome"
+                            />
+                        </label>
 
-                    <form onSubmit={handleSubmit}>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                            placeholder="Nome"
-                        />
+                        <label className="dd-field">
+                            Email
+                            <input
+                                className="dd-input"
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                placeholder="Email"
+                            />
+                        </label>
 
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                            placeholder="Email"
-                        />
-
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required={!editingBroker}
-                            placeholder="Senha"
-                        />
+                        <label className="dd-field">
+                            Senha
+                            <input
+                                className="dd-input"
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required={!editingBroker}
+                                placeholder="Senha"
+                            />
+                        </label>
 
                         {editingBroker && (
-                            <div style={{ marginBottom: '12px' }}>
-                                <label htmlFor="access_scope" style={{ display: 'block', marginBottom: '4px' }}>
-                                    Acesso do corretor
-                                </label>
+                            <label className="dd-field">
+                                Acesso do corretor
                                 <select
-                                    id="access_scope"
+                                    className="dd-select"
                                     name="access_scope"
                                     value={formData.access_scope}
                                     onChange={handleChange}
@@ -258,91 +259,95 @@ function Brokers() {
                                     <option value="aluguel">Somente Aluguéis</option>
                                     <option value="ambos">Vendas e Aluguéis</option>
                                 </select>
-                            </div>
+                            </label>
                         )}
 
-                        <button type="submit">
-                            {editingBroker ? 'Salvar alterações' : 'Cadastrar'}
-                        </button>
-
-                        {editingBroker && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setEditingBroker(null);
-                                    setFormData({
-                                        name: '',
-                                        email: '',
-                                        password: '',
-                                        access_scope: 'vendas'
-                                    });
-                                }}
-                            >
-                                Cancelar
+                        <div className="dd-form-actions">
+                            {editingBroker && (
+                                <button
+                                    className="dd-btn-secondary"
+                                    type="button"
+                                    onClick={() => {
+                                        setEditingBroker(null);
+                                        setFormData({
+                                            name: '',
+                                            email: '',
+                                            password: '',
+                                            access_scope: 'vendas'
+                                        });
+                                    }}
+                                >
+                                    Cancelar
+                                </button>
+                            )}
+                            <button className="dd-btn-primary" type="submit">
+                                {editingBroker ? 'Salvar alteracoes' : 'Cadastrar'}
                             </button>
-                        )}
+                        </div>
                     </form>
+                </section>
 
-                    <hr />
+                <section className="dd-panel">
+                    <h2 style={{ marginTop: 0 }}>Lista de corretores</h2>
 
-                    <h2>Lista de corretores</h2>
-
-                    {loading ? (
-                        <p>Carregando...</p>
-                    ) : brokers.length === 0 ? (
-                        <p>Nenhum corretor cadastrado.</p>
-                    ) : (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Email</th>
-                                    <th>Perfil</th>
-                                    <th>Acesso</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {brokers.map((broker) => (
-                                    <tr key={broker.id}>
-                                        <td>{broker.name}</td>
-                                        <td>{broker.email}</td>
-                                        <td>{broker.role}</td>
-                                        <td>
-                                            {broker.role === 'admin'
-                                                ? '—'
-                                                : broker.access_scope === 'aluguel'
-                                                    ? 'Aluguéis'
-                                                    : broker.access_scope === 'ambos'
-                                                        ? 'Vendas e Aluguéis'
-                                                        : 'Vendas'}
-                                        </td>
-
-                                        <td>
-                                            {broker.role !== 'admin' && (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleEdit(broker)}
-                                                        style={{ marginRight: '8px' }}
-                                                    >
-                                                        Editar
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => handleDelete(broker.id, broker.name)}
-                                                    >
-                                                        Excluir
-                                                    </button>
-                                                </>
-                                            )}
-                                        </td>
+                    <div className="dd-table-wrap">
+                        {loading ? (
+                            <div className="dd-empty">Carregando...</div>
+                        ) : brokers.length === 0 ? (
+                            <div className="dd-empty">Nenhum corretor cadastrado.</div>
+                        ) : (
+                            <table className="dd-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Perfil</th>
+                                        <th>Acesso</th>
+                                        <th>Acoes</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                                </thead>
 
+                                <tbody>
+                                    {brokers.map((broker) => (
+                                        <tr key={broker.id}>
+                                            <td><strong>{broker.name}</strong></td>
+                                            <td>{broker.email}</td>
+                                            <td><span className="dd-pill">{broker.role}</span></td>
+                                            <td>
+                                                {broker.role === 'admin'
+                                                    ? '—'
+                                                    : broker.access_scope === 'aluguel'
+                                                        ? 'Alugueis'
+                                                        : broker.access_scope === 'ambos'
+                                                            ? 'Vendas e Alugueis'
+                                                            : 'Vendas'}
+                                            </td>
+
+                                            <td>
+                                                {broker.role !== 'admin' && (
+                                                    <div className="dd-row-actions">
+                                                        <button
+                                                            className="dd-btn-small"
+                                                            onClick={() => handleEdit(broker)}
+                                                        >
+                                                            Editar
+                                                        </button>
+
+                                                        <button
+                                                            className="dd-btn-small"
+                                                            onClick={() => handleDelete(broker.id, broker.name)}
+                                                        >
+                                                            Excluir
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
                 </section>
             </section>
             <RemindersWidget />

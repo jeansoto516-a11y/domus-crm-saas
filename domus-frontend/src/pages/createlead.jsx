@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 function CreateLead() {
-    const [form, setForm] = useState({
+  const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
@@ -66,84 +68,88 @@ function CreateLead() {
   };
 
   return (
-    <main className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <span className="brand-mark">D</span>
-          <span>Domus CRM</span>
+    <main className="dd-shell app-shell">
+      <aside className="dd-sidebar">
+        <div className="dd-brand">
+          <span className="dd-brand-mark">D</span>
+          <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
-        <nav className="side-nav">
-          <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-          <button onClick={() => navigate('/alugueis')}>Alugueis</button>
-          <button onClick={() => navigate('/leads')}>Leads</button>
-          <button className="active" onClick={() => navigate('/leads/novo')}>Novo lead</button>
-          <button onClick={() => navigate('/brokers')}>Corretores</button>
-          <button onClick={() => navigate('/ranking')}>Ranking</button>
-          <button onClick={() => navigate('/metas')}>Metas</button>
-          <button onClick={() => navigate('/perfil')}>Perfil</button>
+        <nav className="dd-nav">
+          <button onClick={() => navigate('/dashboard')}>
+            <Icon name="calendar" /> Dashboard
+          </button>
+          <button onClick={() => navigate('/alugueis')}>
+            <Icon name="file" /> Alugueis
+          </button>
+          <button onClick={() => navigate('/leads')}>
+            <Icon name="users" /> Leads
+          </button>
+          <button className="active" onClick={() => navigate('/leads/novo')}>
+            <Icon name="userPlus" /> Novo lead
+          </button>
+          <button onClick={() => navigate('/brokers')}>
+            <Icon name="users" /> Corretores
+          </button>
+          <button onClick={() => navigate('/ranking')}>
+            <Icon name="check" /> Ranking
+          </button>
+          <button onClick={() => navigate('/metas')}>
+            <Icon name="filter" /> Metas
+          </button>
+          <button onClick={() => navigate('/perfil')}>
+            <Icon name="users" /> Perfil
+          </button>
           <button onClick={() => navigate('/mensagens')}>
-            Mensagens
-            {unreadCount > 0 && (
-              <span style={{
-                background: '#DC2626',
-                color: '#fff',
-                borderRadius: '999px',
-                fontSize: 11,
-                padding: '1px 7px',
-                marginLeft: 6
-              }}>
-                {unreadCount}
-              </span>
-            )}
+            <Icon name="chat" /> Mensagens
+            {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
           </button>
         </nav>
-        <button className="ghost-button full" onClick={logout}>Sair</button>
+        <button className="dd-logout" onClick={logout}>Sair</button>
       </aside>
 
-      <section className="workspace">
-        <header className="workspace-header">
+      <section className="dd-main">
+        <header className="dd-header">
           <div>
-            <span className="eyebrow">Captacao</span>
-            <h1>Novo lead</h1>
-            <p>Cadastre uma oportunidade e deixe o Domus calcular a prioridade.</p>
+            <h1 className="dd-title">Novo lead</h1>
+            <p className="dd-subtitle">Cadastre uma oportunidade e deixe o Domus calcular a prioridade.</p>
           </div>
-          <button className="secondary-button" onClick={() => navigate('/leads')}>
+          <button className="dd-btn-secondary" onClick={() => navigate('/leads')}>
             Ver leads
           </button>
         </header>
 
         <TrialBanner />
 
-        <section className="panel narrow">
-          <form className="form-card clean" onSubmit={handleCreate}>
-            {error && <div className="alert error">{error}</div>}
+        <section className="dd-panel dd-panel-narrow">
+          <form className="dd-form" onSubmit={handleCreate}>
+            {error && <div className="dd-alert-error">{error}</div>}
 
-            <label>
+            <label className="dd-field">
               Nome do lead
-              <input name="name" onChange={updateField} placeholder="Ex: Marina Oliveira" value={form.name} />
+              <input className="dd-input" name="name" onChange={updateField} placeholder="Ex: Marina Oliveira" value={form.name} />
             </label>
 
-            <label>
+            <label className="dd-field">
               Email
-              <input name="email" onChange={updateField} placeholder="lead@email.com" type="email" value={form.email} />
+              <input className="dd-input" name="email" onChange={updateField} placeholder="lead@email.com" type="email" value={form.email} />
             </label>
 
-            <label>
+            <label className="dd-field">
               Telefone
-              <input name="phone" onChange={updateField} placeholder="(11) 99999-9999" value={form.phone} />
+              <input className="dd-input" name="phone" onChange={updateField} placeholder="(11) 99999-9999" value={form.phone} />
             </label>
 
-                        <label>
+            <label className="dd-field">
               Tipo de lead
-              <select name="lead_type" onChange={updateField} value={form.lead_type}>
+              <select className="dd-select" name="lead_type" onChange={updateField} value={form.lead_type}>
                 <option value="venda">Venda</option>
                 <option value="aluguel">Aluguel</option>
               </select>
             </label>
 
-            <label>
+            <label className="dd-field">
               Etapa inicial
-              <select name="status" onChange={updateField} value={form.status}>
+              <select className="dd-select" name="status" onChange={updateField} value={form.status}>
                 <option value="novo">Novo</option>
                 <option value="contato">Contato</option>
                 <option value="visita">Visita</option>
@@ -152,11 +158,11 @@ function CreateLead() {
               </select>
             </label>
 
-            <div className="form-actions">
-              <button className="secondary-button" onClick={() => navigate('/leads')} type="button">
+            <div className="dd-form-actions">
+              <button className="dd-btn-secondary" onClick={() => navigate('/leads')} type="button">
                 Cancelar
               </button>
-              <button className="primary-button" disabled={loading} type="submit">
+              <button className="dd-btn-primary" disabled={loading} type="submit">
                 {loading ? 'Salvando...' : 'Salvar lead'}
               </button>
             </div>
