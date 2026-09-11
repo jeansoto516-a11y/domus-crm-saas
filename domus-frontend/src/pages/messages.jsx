@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 function Messages() {
     const [messages, setMessages] = useState([]);
@@ -59,79 +61,68 @@ function Messages() {
     };
 
     return (
-    <main className="app-shell">
-        <aside className="sidebar">
-            <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>Domus CRM</span>
+    <main className="dd-shell app-shell">
+        <aside className="dd-sidebar">
+            <div className="dd-brand">
+            <span className="dd-brand-mark">D</span>
+            <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
-        <nav className="side-nav">
-            <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-            <button onClick={() => navigate('/alugueis')}>Alugueis</button>
-            <button onClick={() => navigate('/leads')}>Leads</button>
-            <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
-            <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/ranking')}>Ranking</button>
-            <button onClick={() => navigate('/metas')}>Metas</button>
-            <button onClick={() => navigate('/perfil')}>Perfil</button>
+        <nav className="dd-nav">
+            <button onClick={() => navigate('/dashboard')}>
+                <Icon name="calendar" /> Dashboard
+            </button>
+            <button onClick={() => navigate('/alugueis')}>
+                <Icon name="file" /> Alugueis
+            </button>
+            <button onClick={() => navigate('/leads')}>
+                <Icon name="users" /> Leads
+            </button>
+            <button onClick={() => navigate('/leads/novo')}>
+                <Icon name="userPlus" /> Novo lead
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+                <Icon name="users" /> Corretores
+            </button>
+            <button onClick={() => navigate('/ranking')}>
+                <Icon name="check" /> Ranking
+            </button>
+            <button onClick={() => navigate('/metas')}>
+                <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+                <Icon name="users" /> Perfil
+            </button>
             <button className="active" onClick={() => navigate('/mensagens')}>
-                Mensagens
-                {unreadCount > 0 && (
-                    <span style={{
-                        background: '#DC2626',
-                        color: '#fff',
-                        borderRadius: '999px',
-                        fontSize: 11,
-                        padding: '1px 7px',
-                        marginLeft: 6
-                    }}>
-                        {unreadCount}
-                    </span>
-                )}
+                <Icon name="chat" /> Mensagens
+                {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
             </button>
         </nav>
         </aside>
 
-        <section className="workspace">
-        <header className="workspace-header">
+        <section className="dd-main">
+        <header className="dd-header">
             <div>
-            <span className="eyebrow">Suporte Domus</span>
-            <h1>Mensagens</h1>
-            <p>Fale diretamente com a equipe do Domus.</p>
+            <h1 className="dd-title">Mensagens</h1>
+            <p className="dd-subtitle">Fale diretamente com a equipe do Domus.</p>
             </div>
         </header>
 
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="dd-alert-error">{error}</div>}
 
-        <section
-            className="panel"
-            style={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '60vh',
-            padding: 16
-            }}
-        >
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <section className="dd-panel dd-chat-panel">
+            <div className="dd-chat-scroll">
             {loading ? (
-                <p>Carregando conversa...</p>
+                <p style={{ color: 'var(--dd-muted)' }}>Carregando conversa...</p>
             ) : messages.length === 0 ? (
-                <p style={{ color: '#6B7280' }}>Nenhuma mensagem ainda. Envie a primeira!</p>
+                <p style={{ color: 'var(--dd-muted)' }}>Nenhuma mensagem ainda. Envie a primeira!</p>
             ) : (
                 messages.map((msg) => (
                 <div
                     key={msg.id}
-                    style={{
-                    alignSelf: msg.sender_role === 'company' ? 'flex-end' : 'flex-start',
-                    background: msg.sender_role === 'company' ? '#0F766E' : '#F3F4F6',
-                    color: msg.sender_role === 'company' ? '#fff' : '#1F2937',
-                    borderRadius: 12,
-                    padding: '8px 12px',
-                    maxWidth: '70%'
-                    }}
+                    className={`dd-bubble ${msg.sender_role === 'company' ? 'mine' : 'theirs'}`}
                 >
-                    <div style={{ fontSize: 14 }}>{msg.content}</div>
-                    <div style={{ fontSize: 10, opacity: 0.7, marginTop: 4 }}>
+                    <div className="dd-bubble-text">{msg.content}</div>
+                    <div className="dd-bubble-meta">
                     {msg.sender_role === 'company' ? 'Voce' : 'Domus'} - {new Date(msg.created_at).toLocaleString('pt-BR')}
                     </div>
                 </div>
@@ -140,15 +131,16 @@ function Messages() {
             <div ref={bottomRef} />
             </div>
 
-            <form onSubmit={handleSend} style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <form onSubmit={handleSend} className="dd-chat-form">
             <input
+                className="dd-input"
                 type="text"
                 placeholder="Escreva sua mensagem..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 style={{ flex: 1 }}
             />
-            <button className="primary-button" type="submit">
+            <button className="dd-btn-primary" type="submit">
                 Enviar
             </button>
             </form>

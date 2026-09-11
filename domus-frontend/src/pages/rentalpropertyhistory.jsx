@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 const statusLabels = {
     pendente: 'Pendente',
@@ -47,7 +49,7 @@ function RentalPropertyHistory() {
     }
     };
 
-        const loadAdjustments = async () => {
+    const loadAdjustments = async () => {
     try {
         const response = await api.get(`/rentals/properties/${id}/adjustments`);
         setAdjustments(response.data);
@@ -80,125 +82,108 @@ function RentalPropertyHistory() {
     const address = payments[0]?.address || 'Imovel';
 
     return (
-    <main className="app-shell">
-        <aside className="sidebar">
-        <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>Domus CRM</span>
+    <main className="dd-shell app-shell">
+        <aside className="dd-sidebar">
+        <div className="dd-brand">
+            <span className="dd-brand-mark">D</span>
+            <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
 
-        <nav className="side-nav">
-            <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-            <button className="active" onClick={() => navigate('/alugueis')}>Alugueis</button>
-            <button onClick={() => navigate('/leads')}>Leads</button>
-            <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/ranking')}>Ranking</button>
-            <button onClick={() => navigate('/metas')}>Metas</button>
-            <button onClick={() => navigate('/perfil')}>Perfil</button>
+        <nav className="dd-nav">
+            <button onClick={() => navigate('/dashboard')}>
+                <Icon name="calendar" /> Dashboard
+            </button>
+            <button className="active" onClick={() => navigate('/alugueis')}>
+                <Icon name="file" /> Alugueis
+            </button>
+            <button onClick={() => navigate('/leads')}>
+                <Icon name="users" /> Leads
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+                <Icon name="users" /> Corretores
+            </button>
+            <button onClick={() => navigate('/ranking')}>
+                <Icon name="check" /> Ranking
+            </button>
+            <button onClick={() => navigate('/metas')}>
+                <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+                <Icon name="users" /> Perfil
+            </button>
             <button onClick={() => navigate('/mensagens')}>
-            Mensagens
-            {unreadCount > 0 && (
-                <span style={{
-                background: '#DC2626',
-                color: '#fff',
-                borderRadius: '999px',
-                fontSize: 11,
-                padding: '1px 7px',
-                marginLeft: 6
-                }}>
-                {unreadCount}
-                </span>
-            )}
+                <Icon name="chat" /> Mensagens
+                {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
             </button>
         </nav>
         </aside>
 
-        <section className="workspace">
-        <header className="workspace-header">
+        <section className="dd-main">
+        <header className="dd-header">
             <div>
-            <span className="eyebrow">Historico de pagamentos</span>
-            <h1>{address}</h1>
-            <p>Linha do tempo de todas as cobrancas geradas para este imovel.</p>
+            <h1 className="dd-title">{address}</h1>
+            <p className="dd-subtitle">Linha do tempo de todas as cobrancas geradas para este imovel.</p>
             </div>
 
-            <button className="secondary-button" onClick={() => navigate('/alugueis/imoveis')}>
+            <button className="dd-btn-secondary" onClick={() => navigate('/alugueis/imoveis')}>
             Voltar para imoveis
             </button>
         </header>
 
         <TrialBanner />
 
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="dd-alert-error">{error}</div>}
 
-        <section className="panel">
-            <h2>Linha do tempo</h2>
+        <section className="dd-panel">
+            <h2 style={{ marginTop: 0 }}>Linha do tempo</h2>
 
             {loading ? (
-            <div className="empty-state">Carregando historico...</div>
+            <div className="dd-empty">Carregando historico...</div>
             ) : payments.length === 0 ? (
-            <div className="empty-state">
+            <div className="dd-empty">
                 <h2>Nenhum pagamento gerado ainda</h2>
                 <p>Assim que as cobrancas mensais forem geradas, elas aparecem aqui.</p>
             </div>
             ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="dd-timeline-list">
                 {payments.map((payment) => (
-                <div
-                    key={payment.id}
-                    style={{
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '8px',
-                    padding: '12px 16px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '8px'
-                    }}
-                >
+                <div key={payment.id} className="dd-timeline-card">
                     <div>
                     <strong style={{ textTransform: 'capitalize' }}>
                         {formatMonth(payment.reference_month)}
                     </strong>
-                    <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6B7280' }}>
+                    <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--dd-muted)' }}>
                         Aluguel {formatCurrency(payment.rent_value)} · Administracao {formatCurrency(payment.admin_fee_value)} · Comissao {formatCurrency(payment.broker_commission_value)}
                     </p>
                     {payment.paid_at && (
-                        <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>
+                        <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--dd-muted)' }}>
                         Pago em {new Date(payment.paid_at).toLocaleDateString('pt-BR')}
                         </p>
                     )}
                     </div>
 
-                    <span className="status-pill">
+                    <span className="dd-pill">
                     {statusLabels[payment.status] || payment.status}
                     </span>
                 </div>
                 ))}
             </div>
             )}
-                </section>
+        </section>
 
-        <section className="panel">
-            <h2>Historico de reajustes</h2>
+        <section className="dd-panel">
+            <h2 style={{ marginTop: 0 }}>Historico de reajustes</h2>
 
             {adjustments.length === 0 ? (
-            <div className="empty-state">Nenhum reajuste registrado ainda.</div>
+            <div className="dd-empty">Nenhum reajuste registrado ainda.</div>
             ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="dd-timeline-list">
                 {adjustments.map((adjustment) => (
-                <div
-                    key={adjustment.id}
-                    style={{
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '8px',
-                    padding: '12px 16px'
-                    }}
-                >
+                <div key={adjustment.id} className="dd-timeline-card" style={{ display: 'block' }}>
                     <strong>
                     {formatCurrency(adjustment.old_value)} {'->'} {formatCurrency(adjustment.new_value)}
                     </strong>
-                    <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6B7280' }}>
+                    <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--dd-muted)' }}>
                     {new Date(adjustment.adjusted_at).toLocaleDateString('pt-BR')}
                     {adjustment.adjusted_by_name ? ` · por ${adjustment.adjusted_by_name}` : ''}
                     </p>

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 function currentMonth() {
     const now = new Date();
@@ -102,57 +104,76 @@ function Goals() {
     };
 
     return (
-    <main className="app-shell">
-        <aside className="sidebar">
-        <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>Domus CRM</span>
+    <main className="dd-shell app-shell">
+        <aside className="dd-sidebar">
+        <div className="dd-brand">
+            <span className="dd-brand-mark">D</span>
+            <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
-        <nav className="side-nav">
-            <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-            <button onClick={() => navigate('/alugueis')}>Alugueis</button>
-            <button onClick={() => navigate('/leads')}>Leads</button>
-            <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
-            <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/ranking')}>Ranking</button>
-            <button className="active" onClick={() => navigate('/metas')}>Metas</button>
-            <button onClick={() => navigate('/perfil')}>Perfil</button>
-            <button onClick={() => navigate('/mensagens')}>Mensagens</button>
+        <nav className="dd-nav">
+            <button onClick={() => navigate('/dashboard')}>
+                <Icon name="calendar" /> Dashboard
+            </button>
+            <button onClick={() => navigate('/alugueis')}>
+                <Icon name="file" /> Alugueis
+            </button>
+            <button onClick={() => navigate('/leads')}>
+                <Icon name="users" /> Leads
+            </button>
+            <button onClick={() => navigate('/leads/novo')}>
+                <Icon name="userPlus" /> Novo lead
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+                <Icon name="users" /> Corretores
+            </button>
+            <button onClick={() => navigate('/ranking')}>
+                <Icon name="check" /> Ranking
+            </button>
+            <button className="active" onClick={() => navigate('/metas')}>
+                <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+                <Icon name="users" /> Perfil
+            </button>
+            <button onClick={() => navigate('/mensagens')}>
+                <Icon name="chat" /> Mensagens
+            </button>
         </nav>
         </aside>
 
-        <section className="workspace">
-        <header className="workspace-header">
+        <section className="dd-main">
+        <header className="dd-header">
             <div>
-            <span className="eyebrow">Desempenho da equipe</span>
-            <h1>Metas mensais</h1>
-            <p>Acompanhe o progresso dos corretores no mes atual.</p>
+            <h1 className="dd-title">Metas mensais</h1>
+            <p className="dd-subtitle">Acompanhe o progresso dos corretores no mes atual.</p>
             </div>
         </header>
 
-        {error && <div className="alert error">{error}</div>}
-        {message && <div className="alert">{message}</div>}
+        {error && <div className="dd-alert-error">{error}</div>}
+        {message && <div style={{ background: 'rgba(13,148,136,0.12)', border: '1px solid rgba(13,148,136,0.4)', color: '#5EEAD4', padding: '12px 16px', borderRadius: 8, marginBottom: 16 }}>{message}</div>}
 
         {user.role === 'admin' && (
             <>
-            <section className="metric-card">
-                <h2>Criar topico personalizado</h2>
-                <form onSubmit={handleCreateTopic} style={{ display: 'flex', gap: 8 }}>
+            <section className="dd-panel">
+                <h2 style={{ marginTop: 0 }}>Criar topico personalizado</h2>
+                <form onSubmit={handleCreateTopic} className="dd-inline-form">
                 <input
+                    className="dd-input"
                     type="text"
                     placeholder="Ex: Ligacoes realizadas"
                     value={newTopicName}
                     onChange={(e) => setNewTopicName(e.target.value)}
                     style={{ flex: 1 }}
                 />
-                <button className="secondary-button" type="submit">Criar topico</button>
+                <button className="dd-btn-secondary" type="submit">Criar topico</button>
                 </form>
             </section>
 
-            <section className="metric-card">
-                <h2>Definir meta</h2>
-                <form onSubmit={handleSetGoal} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <section className="dd-panel">
+                <h2 style={{ marginTop: 0 }}>Definir meta</h2>
+                <form onSubmit={handleSetGoal} className="dd-inline-form">
                 <select
+                    className="dd-select"
                     value={form.user_id}
                     onChange={(e) => setForm((f) => ({ ...f, user_id: e.target.value }))}
                 >
@@ -163,6 +184,7 @@ function Goals() {
                 </select>
 
                 <select
+                    className="dd-select"
                     value={form.topic_id}
                     onChange={(e) => setForm((f) => ({ ...f, topic_id: e.target.value }))}
                 >
@@ -173,6 +195,7 @@ function Goals() {
                 </select>
 
                 <input
+                    className="dd-input"
                     type="number"
                     placeholder="Meta (numero)"
                     value={form.target_value}
@@ -180,23 +203,23 @@ function Goals() {
                     style={{ width: 120 }}
                 />
 
-                <button className="primary-button" type="submit">Salvar meta</button>
+                <button className="dd-btn-primary" type="submit">Salvar meta</button>
                 </form>
             </section>
             </>
         )}
 
-        <section className="panel">
+        <section className="dd-panel">
+            <div className="dd-table-wrap">
             {loading ? (
-            <div className="empty-state">Carregando metas...</div>
+                <div className="dd-empty">Carregando metas...</div>
             ) : goals.length === 0 ? (
-            <div className="empty-state">
+                <div className="dd-empty">
                 <h2>Nenhuma meta definida ainda</h2>
                 <p>{user.role === 'admin' ? 'Defina metas para seus corretores acima.' : 'Aguarde o administrador definir suas metas.'}</p>
-            </div>
+                </div>
             ) : (
-            <div className="table-wrap">
-                <table>
+                <table className="dd-table">
                 <thead>
                     <tr>
                     {user.role === 'admin' && <th>Corretor</th>}
@@ -220,44 +243,44 @@ function Goals() {
                         <td>{goal.achieved_value}</td>
                         <td>{goal.target_value}</td>
                         <td>
-                            <div style={{ background: '#E5E7EB', borderRadius: 999, height: 8, width: 100 }}>
-                            <div style={{
-                                background: pct >= 100 ? '#16A34A' : '#0F766E',
-                                width: `${pct}%`,
-                                height: 8,
-                                borderRadius: 999
+                            <div className="dd-progress-track">
+                            <div className="dd-progress-fill" style={{
+                                background: pct >= 100 ? '#16A34A' : '#2F6FED',
+                                width: `${pct}%`
                             }} />
                             </div>
-                            <span style={{ fontSize: 11, color: '#6B7280' }}>{pct}%</span>
+                            <span className="dd-progress-pct">{pct}%</span>
                         </td>
-                                                <td>
+                        <td>
+                            <div className="dd-row-actions">
                             {goal.metric_type === 'manual' && (user.role === 'admin' || goal.user_id === user.id) && (
-                            <button
-                                className="small-button"
+                                <button
+                                className="dd-btn-small"
                                 onClick={() => {
-                                const value = prompt('Novo valor alcancado:', goal.achieved_value);
-                                if (value !== null) handleUpdateProgress(goal.id, Number(value));
+                                    const value = prompt('Novo valor alcancado:', goal.achieved_value);
+                                    if (value !== null) handleUpdateProgress(goal.id, Number(value));
                                 }}
-                            >
+                                >
                                 Atualizar
-                            </button>
-                            )}{' '}
-                            {user.role === 'admin' && (
-                            <button
-                                className="small-button"
-                                onClick={() => handleDeleteGoal(goal.id)}
-                            >
-                                Excluir
-                            </button>
+                                </button>
                             )}
+                            {user.role === 'admin' && (
+                                <button
+                                className="dd-btn-small"
+                                onClick={() => handleDeleteGoal(goal.id)}
+                                >
+                                Excluir
+                                </button>
+                            )}
+                            </div>
                         </td>
                         </tr>
                     );
                     })}
                 </tbody>
                 </table>
-            </div>
             )}
+            </div>
         </section>
         </section>
         <RemindersWidget />

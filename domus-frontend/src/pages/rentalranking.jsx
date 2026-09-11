@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 function RentalRanking() {
     const navigate = useNavigate();
@@ -37,67 +39,72 @@ function RentalRanking() {
     Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     return (
-    <main className="app-shell">
-        <aside className="sidebar">
-        <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>Domus CRM</span>
+    <main className="dd-shell app-shell">
+        <aside className="dd-sidebar">
+        <div className="dd-brand">
+            <span className="dd-brand-mark">D</span>
+            <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
 
-        <nav className="side-nav">
-            <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-            <button onClick={() => navigate('/leads')}>Leads</button>
-            <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/ranking')}>Ranking</button>
-            <button onClick={() => navigate('/metas')}>Metas</button>
-            <button className="active" onClick={() => navigate('/alugueis')}>Alugueis</button>
-            <button onClick={() => navigate('/perfil')}>Perfil</button>
+        <nav className="dd-nav">
+            <button onClick={() => navigate('/dashboard')}>
+                <Icon name="calendar" /> Dashboard
+            </button>
+            <button className="active" onClick={() => navigate('/alugueis')}>
+                <Icon name="file" /> Alugueis
+            </button>
+            <button onClick={() => navigate('/leads')}>
+                <Icon name="users" /> Leads
+            </button>
+            <button onClick={() => navigate('/leads/novo')}>
+                <Icon name="userPlus" /> Novo lead
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+                <Icon name="users" /> Corretores
+            </button>
+            <button onClick={() => navigate('/ranking')}>
+                <Icon name="check" /> Ranking
+            </button>
+            <button onClick={() => navigate('/metas')}>
+                <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+                <Icon name="users" /> Perfil
+            </button>
             <button onClick={() => navigate('/mensagens')}>
-            Mensagens
-            {unreadCount > 0 && (
-                <span style={{
-                background: '#DC2626',
-                color: '#fff',
-                borderRadius: '999px',
-                fontSize: 11,
-                padding: '1px 7px',
-                marginLeft: 6
-                }}>
-                {unreadCount}
-                </span>
-            )}
+                <Icon name="chat" /> Mensagens
+                {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
             </button>
         </nav>
         </aside>
 
-        <section className="workspace">
-        <header className="workspace-header">
+        <section className="dd-main">
+        <header className="dd-header">
             <div>
-            <span className="eyebrow">Desempenho da equipe</span>
-            <h1>Ranking de alugueis</h1>
-            <p>Imoveis administrados e comissao do mes atual, por corretor.</p>
+            <h1 className="dd-title">Ranking de alugueis</h1>
+            <p className="dd-subtitle">Imoveis administrados e comissao do mes atual, por corretor.</p>
             </div>
 
-            <button className="secondary-button" onClick={() => navigate('/alugueis')}>
+            <button className="dd-btn-secondary" onClick={() => navigate('/alugueis')}>
             Ver dashboard
             </button>
         </header>
 
         <TrialBanner />
 
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="dd-alert-error">{error}</div>}
 
-        <section className="panel">
+        <section className="dd-panel">
+            <div className="dd-table-wrap">
             {loading ? (
-            <div className="empty-state">Carregando ranking...</div>
+                <div className="dd-empty">Carregando ranking...</div>
             ) : ranking.length === 0 ? (
-            <div className="empty-state">
+                <div className="dd-empty">
                 <h2>Nenhum corretor cadastrado</h2>
                 <p>Cadastre corretores para acompanhar o desempenho em alugueis.</p>
-            </div>
+                </div>
             ) : (
-            <div className="table-wrap">
-                <table>
+                <table className="dd-table">
                 <thead>
                     <tr>
                     <th>Posicao</th>
@@ -119,8 +126,8 @@ function RentalRanking() {
                     ))}
                 </tbody>
                 </table>
-            </div>
             )}
+            </div>
         </section>
         </section>
         <RemindersWidget />

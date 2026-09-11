@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 function Ranking() {
     const [ranking, setRanking] = useState([]);
@@ -19,47 +21,64 @@ function Ranking() {
     const medals = ['🥇', '🥈', '🥉'];
 
     return (
-    <main className="app-shell">
-        <aside className="sidebar">
-        <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>Domus CRM</span>
+    <main className="dd-shell app-shell">
+        <aside className="dd-sidebar">
+        <div className="dd-brand">
+            <span className="dd-brand-mark">D</span>
+            <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
-        <nav className="side-nav">
-            <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-            <button onClick={() => navigate('/alugueis')}>Alugueis</button>
-            <button onClick={() => navigate('/leads')}>Leads</button>
-            <button onClick={() => navigate('/leads/novo')}>Novo lead</button>
-            <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button className="active" onClick={() => navigate('/ranking')}>Ranking</button>
-            <button onClick={() => navigate('/metas')}>Metas</button>
-            <button onClick={() => navigate('/perfil')}>Perfil</button>
-            <button onClick={() => navigate('/mensagens')}>Mensagens</button>
+        <nav className="dd-nav">
+            <button onClick={() => navigate('/dashboard')}>
+                <Icon name="calendar" /> Dashboard
+            </button>
+            <button onClick={() => navigate('/alugueis')}>
+                <Icon name="file" /> Alugueis
+            </button>
+            <button onClick={() => navigate('/leads')}>
+                <Icon name="users" /> Leads
+            </button>
+            <button onClick={() => navigate('/leads/novo')}>
+                <Icon name="userPlus" /> Novo lead
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+                <Icon name="users" /> Corretores
+            </button>
+            <button className="active" onClick={() => navigate('/ranking')}>
+                <Icon name="check" /> Ranking
+            </button>
+            <button onClick={() => navigate('/metas')}>
+                <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+                <Icon name="users" /> Perfil
+            </button>
+            <button onClick={() => navigate('/mensagens')}>
+                <Icon name="chat" /> Mensagens
+            </button>
         </nav>
         </aside>
 
-        <section className="workspace">
-        <header className="workspace-header">
+        <section className="dd-main">
+        <header className="dd-header">
             <div>
-            <span className="eyebrow">Desempenho da equipe</span>
-            <h1>Ranking de corretores</h1>
-            <p>Fechamentos registrados no mes atual.</p>
+            <h1 className="dd-title">Ranking de corretores</h1>
+            <p className="dd-subtitle">Fechamentos registrados no mes atual.</p>
             </div>
         </header>
 
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="dd-alert-error">{error}</div>}
 
-        <section className="panel">
+        <section className="dd-panel">
+            <div className="dd-table-wrap">
             {loading ? (
-            <div className="empty-state">Carregando ranking...</div>
+                <div className="dd-empty">Carregando ranking...</div>
             ) : ranking.length === 0 ? (
-            <div className="empty-state">
+                <div className="dd-empty">
                 <h2>Nenhum corretor cadastrado</h2>
                 <p>Cadastre corretores para acompanhar o desempenho da equipe.</p>
-            </div>
+                </div>
             ) : (
-            <div className="table-wrap">
-                <table>
+                <table className="dd-table">
                 <thead>
                     <tr>
                     <th>Posicao</th>
@@ -79,8 +98,8 @@ function Ranking() {
                     ))}
                 </tbody>
                 </table>
-            </div>
             )}
+            </div>
         </section>
         </section>
         <RemindersWidget />

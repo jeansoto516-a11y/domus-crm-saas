@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 function RentalDashboard() {
     const [data, setData] = useState(null);
@@ -81,118 +83,127 @@ function RentalDashboard() {
     Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     return (
-    <main className="app-shell">
-        <aside className="sidebar">
-        <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>Domus CRM</span>
+    <main className="dd-shell app-shell">
+        <aside className="dd-sidebar">
+        <div className="dd-brand">
+            <span className="dd-brand-mark">D</span>
+            <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
-        <nav className="side-nav">
-            <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-            <button onClick={() => navigate('/alugueis')}>Alugueis</button>
-            <button onClick={() => navigate('/leads')}>Leads</button>
-            <button className="active" onClick={() => navigate('/leads/novo')}>Novo lead</button>
-            <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/ranking')}>Ranking</button>
-            <button onClick={() => navigate('/metas')}>Metas</button>
-            <button onClick={() => navigate('/perfil')}>Perfil</button>
+        <nav className="dd-nav">
+            <button onClick={() => navigate('/dashboard')}>
+                <Icon name="calendar" /> Dashboard
+            </button>
+            <button className="active" onClick={() => navigate('/alugueis')}>
+                <Icon name="file" /> Alugueis
+            </button>
+            <button onClick={() => navigate('/leads')}>
+                <Icon name="users" /> Leads
+            </button>
+            <button onClick={() => navigate('/leads/novo')}>
+                <Icon name="userPlus" /> Novo lead
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+                <Icon name="users" /> Corretores
+            </button>
+            <button onClick={() => navigate('/ranking')}>
+                <Icon name="check" /> Ranking
+            </button>
+            <button onClick={() => navigate('/metas')}>
+                <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+                <Icon name="users" /> Perfil
+            </button>
             <button onClick={() => navigate('/mensagens')}>
-            Mensagens
-            {unreadCount > 0 && (
-                <span style={{
-                background: '#DC2626',
-                color: '#fff',
-                borderRadius: '999px',
-                fontSize: 11,
-                padding: '1px 7px',
-                marginLeft: 6
-                }}>
-                {unreadCount}
-                </span>
-            )}
+                <Icon name="chat" /> Mensagens
+                {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
             </button>
         </nav>
-        <button className="ghost-button full" onClick={logout}>Sair</button>
+        <button className="dd-logout" onClick={logout}>Sair</button>
         </aside>
 
-        <section className="workspace">
-        <header className="workspace-header">
+        <section className="dd-main">
+        <header className="dd-header">
             <div>
-            <span className="eyebrow">Visao de alugueis</span>
-            <h1>Dashboard de Alugueis</h1>
-            <p>{user.name ? `Ola, ${user.name}.` : 'Acompanhe os imoveis administrados.'}</p>
+            <h1 className="dd-title">Dashboard de Alugueis</h1>
+            <p className="dd-subtitle">{user.name ? `Ola, ${user.name}.` : 'Acompanhe os imoveis administrados.'}</p>
             </div>
-            <button className="primary-button" onClick={() => navigate('/alugueis/imoveis')}>
-            Ver imoveis
-            </button>
-            <button className="secondary-button" onClick={() => navigate('/alugueis/pagamentos')}>
-            Ver pagamentos
-            </button>
-            <button className="secondary-button" onClick={() => navigate('/alugueis/ranking')}>
-            Ver ranking
-            </button>
+            <div className="dd-header-right">
+                <button className="dd-btn-primary" onClick={() => navigate('/alugueis/imoveis')}>
+                Ver imoveis
+                </button>
+                <button className="dd-btn-secondary" onClick={() => navigate('/alugueis/pagamentos')}>
+                Ver pagamentos
+                </button>
+                <button className="dd-btn-secondary" onClick={() => navigate('/alugueis/ranking')}>
+                Ver ranking
+                </button>
+            </div>
         </header>
 
         <TrialBanner />
 
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="dd-alert-error">{error}</div>}
 
         {loading ? (
-            <div className="empty-state">Carregando indicadores...</div>
+            <div className="dd-panel">Carregando indicadores...</div>
         ) : (
             <>
-            <section className="metrics-grid">
-                <article className="metric-card">
-                <span>Total de imoveis</span>
-                <strong>{totalImoveis}</strong>
-                <p>Imoveis cadastrados no sistema.</p>
+            <section className="dd-grid-3">
+                <article className="dd-card">
+                <span className="dd-card-label">Total de imoveis</span>
+                <strong className="dd-card-value">{totalImoveis}</strong>
+                <p className="dd-card-desc">Imoveis cadastrados no sistema.</p>
                 </article>
-                <article className="metric-card">
-                <span>Imoveis ativos</span>
-                <strong>{imoveisAtivos}</strong>
-                <p>Contratos em andamento.</p>
+                <article className="dd-card">
+                <span className="dd-card-label">Imoveis ativos</span>
+                <strong className="dd-card-value">{imoveisAtivos}</strong>
+                <p className="dd-card-desc">Contratos em andamento.</p>
                 </article>
-                <article className="metric-card">
-                <span>Soma dos alugueis</span>
-                <strong>{formatCurrency(somaAlugueis)}</strong>
-                <p>Valor total dos alugueis ativos.</p>
-                </article>
-                <article className="metric-card">
-                <span>Pendentes (mes)</span>
-                <strong>{mesAtual.pendente}</strong>
-                <p>Pagamentos ainda nao confirmados.</p>
-                </article>
-                <article className="metric-card">
-                <span>Pagos (mes)</span>
-                <strong>{mesAtual.pago}</strong>
-                <p>Pagamentos confirmados no mes.</p>
-                </article>
-                <article className="metric-card">
-                <span>Atrasados (mes)</span>
-                <strong>{mesAtual.atrasado}</strong>
-                <p>Pagamentos em atraso.</p>
+                <article className="dd-card">
+                <span className="dd-card-label">Soma dos alugueis</span>
+                <strong className="dd-card-value">{formatCurrency(somaAlugueis)}</strong>
+                <p className="dd-card-desc">Valor total dos alugueis ativos.</p>
                 </article>
             </section>
 
-            <section className="panel">
-                <div className="panel-header">
+            <section className="dd-grid-3">
+                <article className="dd-card">
+                <span className="dd-card-label">Pendentes (mes)</span>
+                <strong className="dd-card-value">{mesAtual.pendente}</strong>
+                <p className="dd-card-desc">Pagamentos ainda nao confirmados.</p>
+                </article>
+                <article className="dd-card">
+                <span className="dd-card-label">Pagos (mes)</span>
+                <strong className="dd-card-value">{mesAtual.pago}</strong>
+                <p className="dd-card-desc">Pagamentos confirmados no mes.</p>
+                </article>
+                <article className="dd-card">
+                <span className="dd-card-label">Atrasados (mes)</span>
+                <strong className="dd-card-value">{mesAtual.atrasado}</strong>
+                <p className="dd-card-desc">Pagamentos em atraso.</p>
+                </article>
+            </section>
+
+            <section className="dd-panel">
+                <div className="dd-panel-head">
                 <div>
                     <h2>Financeiro do mes</h2>
                     <p>Receita de administracao e comissoes geradas neste mes.</p>
                 </div>
                 </div>
 
-                <section className="metrics-card">
-                <article className="metric-card">
-                    <span>Receita de administracao</span>
-                    <strong>{formatCurrency(mesAtual.receita_administracao_mes)}</strong>
-                    <p>Ganho da imobiliaria no mes atual.</p>
+                <section className="dd-grid-3" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                <article className="dd-card">
+                    <span className="dd-card-label">Receita de administracao</span>
+                    <strong className="dd-card-value">{formatCurrency(mesAtual.receita_administracao_mes)}</strong>
+                    <p className="dd-card-desc">Ganho da imobiliaria no mes atual.</p>
                 </article>
 
-                <article className="metric-card">
-                    <span>Comissao dos corretores</span>
-                    <strong>{formatCurrency(mesAtual.total_comissao_corretores_mes)}</strong>
-                    <p>Total a pagar aos corretores no mes atual.</p>
+                <article className="dd-card">
+                    <span className="dd-card-label">Comissao dos corretores</span>
+                    <strong className="dd-card-value">{formatCurrency(mesAtual.total_comissao_corretores_mes)}</strong>
+                    <p className="dd-card-desc">Total a pagar aos corretores no mes atual.</p>
                 </article>
                 </section>
             </section>

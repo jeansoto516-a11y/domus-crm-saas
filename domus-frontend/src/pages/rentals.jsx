@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
+import Icon from '../components/Icon';
+import '../styles/dark-theme.css';
 
 const statusLabels = {
     ativo: 'Ativo',
@@ -27,9 +29,15 @@ function getContractAlert(contractEnd) {
 }
 
 function alertBackground(level) {
-    if (level === 'vencido' || level === '30') return '#FEF2F2';
-    if (level === '60') return '#FFF7ED';
-    if (level === '90') return '#FFFBEB';
+    if (level === 'vencido' || level === '30') return 'rgba(225, 29, 72, 0.1)';
+    if (level === '60') return 'rgba(217, 119, 6, 0.1)';
+    if (level === '90') return 'rgba(217, 119, 6, 0.06)';
+    return undefined;
+}
+
+function alertColor(level) {
+    if (level === 'vencido' || level === '30') return '#FCA5B1';
+    if (level === '60' || level === '90') return '#FBBF6D';
     return undefined;
 }
 
@@ -51,7 +59,7 @@ function Rentals() {
     contract_end: ''
     });
 
-        const [editingProperty, setEditingProperty] = useState(null);
+    const [editingProperty, setEditingProperty] = useState(null);
     const [editData, setEditData] = useState({
     admin_fee_percent: '',
     broker_commission_percent: '',
@@ -166,7 +174,7 @@ function Rentals() {
     }
     };
 
-        const handleAdjustClick = (property) => {
+    const handleAdjustClick = (property) => {
     setAdjustingProperty(property);
     setNewRentValue(property.rent_value);
     setMessage('');
@@ -192,7 +200,7 @@ function Rentals() {
     }
     };
 
-        const handleCreateReminder = async (property) => {
+    const handleCreateReminder = async (property) => {
     const note = window.prompt(`Lembrete sobre o imovel "${property.address}":`);
     if (!note || !note.trim()) return;
 
@@ -224,49 +232,51 @@ function Rentals() {
     };
 
     return (
-    <main className="app-shell">
-        <aside className="sidebar">
-        <div className="brand">
-            <span className="brand-mark">D</span>
-            <span>Domus CRM</span>
+    <main className="dd-shell app-shell">
+        <aside className="dd-sidebar">
+        <div className="dd-brand">
+            <span className="dd-brand-mark">D</span>
+            <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
 
-        <nav className="side-nav">
-            <button onClick={() => navigate('/dashboard')}>Dashboard</button>
-            <button onClick={() => navigate('/alugueis')}>Alugueis</button>
-            <button onClick={() => navigate('/leads')}>Leads</button>
-            <button onClick={() => navigate('/brokers')}>Corretores</button>
-            <button onClick={() => navigate('/ranking')}>Ranking</button>
-            <button onClick={() => navigate('/metas')}>Metas</button>
-            <button onClick={() => navigate('/perfil')}>Perfil</button>
+        <nav className="dd-nav">
+            <button onClick={() => navigate('/dashboard')}>
+                <Icon name="calendar" /> Dashboard
+            </button>
+            <button className="active" onClick={() => navigate('/alugueis')}>
+                <Icon name="file" /> Alugueis
+            </button>
+            <button onClick={() => navigate('/leads')}>
+                <Icon name="users" /> Leads
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+                <Icon name="users" /> Corretores
+            </button>
+            <button onClick={() => navigate('/ranking')}>
+                <Icon name="check" /> Ranking
+            </button>
+            <button onClick={() => navigate('/metas')}>
+                <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+                <Icon name="users" /> Perfil
+            </button>
             <button onClick={() => navigate('/mensagens')}>
-            Mensagens
-            {unreadCount > 0 && (
-                <span style={{
-                background: '#DC2626',
-                color: '#fff',
-                borderRadius: '999px',
-                fontSize: 11,
-                padding: '1px 7px',
-                marginLeft: 6
-                }}>
-                {unreadCount}
-                </span>
-            )}
+                <Icon name="chat" /> Mensagens
+                {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
             </button>
         </nav>
         </aside>
 
-        <section className="workspace">
-                <header className="workspace-header">
+        <section className="dd-main">
+        <header className="dd-header">
             <div>
-            <span className="eyebrow">Gestao de imoveis</span>
-            <h1>Alugueis</h1>
-            <p>Cadastre e acompanhe os imoveis administrados pela imobiliaria.</p>
+            <h1 className="dd-title">Imoveis alugados</h1>
+            <p className="dd-subtitle">Cadastre e acompanhe os imoveis administrados pela imobiliaria.</p>
             </div>
 
             
-            <a className="secondary-button"
+            <a className="dd-btn-secondary"
             href={`${import.meta.env.VITE_API_URL}/rentals/export`}
             target="_blank"
             rel="noreferrer"
@@ -287,319 +297,341 @@ function Rentals() {
                 });
             }}
             >
-            Exportar CSV
+            <Icon name="download" /> Exportar CSV
             </a>
         </header>
 
         <TrialBanner />
 
-        {message && <div className="alert success">{message}</div>}
-        {error && <div className="alert error">{error}</div>}
+        {message && <div className="dd-alert-success">{message}</div>}
+        {error && <div className="dd-alert-error">{error}</div>}
 
-        <section className="panel">
-            <h2>Cadastrar imovel alugado</h2>
+        <section className="dd-panel dd-panel-narrow">
+            <h2 style={{ marginTop: 0 }}>Cadastrar imovel alugado</h2>
 
-            <form onSubmit={handleSubmit}>
-            <input
+            <form className="dd-form" onSubmit={handleSubmit}>
+            <label className="dd-field">
+                Endereco do imovel
+                <input
+                className="dd-input"
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
                 required
-                placeholder="Endereco do imovel"
-            />
+                />
+            </label>
 
-            <input
+            <label className="dd-field">
+                Nome do inquilino
+                <input
+                className="dd-input"
                 type="text"
                 name="tenant_name"
                 value={formData.tenant_name}
                 onChange={handleChange}
-                placeholder="Nome do inquilino"
-            />
+                />
+            </label>
 
-            <input
+            <label className="dd-field">
+                Contato do inquilino
+                <input
+                className="dd-input"
                 type="text"
                 name="tenant_contact"
                 value={formData.tenant_contact}
                 onChange={handleChange}
-                placeholder="Contato do inquilino"
-            />
+                />
+            </label>
 
-            <input
+            <label className="dd-field">
+                Nome do proprietario
+                <input
+                className="dd-input"
                 type="text"
                 name="owner_name"
                 value={formData.owner_name}
                 onChange={handleChange}
-                placeholder="Nome do proprietario"
-            />
+                />
+            </label>
 
-            <input
+            <label className="dd-field">
+                Contato do proprietario
+                <input
+                className="dd-input"
                 type="text"
                 name="owner_contact"
                 value={formData.owner_contact}
                 onChange={handleChange}
-                placeholder="Contato do proprietario"
-            />
+                />
+            </label>
 
-            <input
+            <label className="dd-field">
+                Valor do aluguel (R$)
+                <input
+                className="dd-input"
                 type="number"
                 name="rent_value"
                 value={formData.rent_value}
                 onChange={handleChange}
                 required
-                placeholder="Valor do aluguel (R$)"
                 step="0.01"
                 min="0"
-            />
-
-            <label style={{ display: 'block', marginBottom: '4px' }}>
-                Dia de vencimento
+                />
             </label>
-            <input
+
+            <label className="dd-field">
+                Dia de vencimento
+                <input
+                className="dd-input"
                 type="number"
                 name="due_day"
                 value={formData.due_day}
                 onChange={handleChange}
                 min="1"
                 max="31"
-            />
-
-            <label style={{ display: 'block', marginBottom: '4px' }}>
-                Inicio do contrato
+                />
             </label>
-            <input
+
+            <label className="dd-field">
+                Inicio do contrato
+                <input
+                className="dd-input"
                 type="date"
                 name="contract_start"
                 value={formData.contract_start}
                 onChange={handleChange}
-            />
-
-            <label style={{ display: 'block', marginBottom: '4px' }}>
-                Fim do contrato
+                />
             </label>
-            <input
+
+            <label className="dd-field">
+                Fim do contrato
+                <input
+                className="dd-input"
                 type="date"
                 name="contract_end"
                 value={formData.contract_end}
                 onChange={handleChange}
-            />
+                />
+            </label>
 
-            <button type="submit" className="primary-button">
+            <div className="dd-form-actions" style={{ justifyContent: 'flex-start' }}>
+                <button type="submit" className="dd-btn-primary">
                 Cadastrar imovel
-            </button>
+                </button>
+            </div>
             </form>
         </section>
 
-                {adjustingProperty && (
-            <section className="panel">
-            <h2>Reajustar aluguel: {adjustingProperty.address}</h2>
+        {adjustingProperty && (
+            <section className="dd-panel dd-panel-narrow">
+            <h2 style={{ marginTop: 0 }}>Reajustar aluguel: {adjustingProperty.address}</h2>
 
-            <form onSubmit={handleAdjustSubmit}>
-                <p>
+            <form className="dd-form" onSubmit={handleAdjustSubmit}>
+                <p style={{ color: 'var(--dd-muted)', margin: 0 }}>
                 Valor atual: {Number(adjustingProperty.rent_value).toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
                 })}
                 </p>
 
-                <label style={{ display: 'block', marginBottom: '4px' }}>
+                <label className="dd-field">
                 Novo valor do aluguel (R$)
-                </label>
                 <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={newRentValue}
-                onChange={(event) => setNewRentValue(event.target.value)}
-                required
+                    className="dd-input"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newRentValue}
+                    onChange={(event) => setNewRentValue(event.target.value)}
+                    required
                 />
+                </label>
 
-                <button type="submit" className="primary-button">
-                Confirmar reajuste
-                </button>
-
+                <div className="dd-form-actions">
                 <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setAdjustingProperty(null)}
+                    type="button"
+                    className="dd-btn-secondary"
+                    onClick={() => setAdjustingProperty(null)}
                 >
-                Cancelar
+                    Cancelar
                 </button>
+                <button type="submit" className="dd-btn-primary">
+                    Confirmar reajuste
+                </button>
+                </div>
             </form>
             </section>
         )}
 
         {editingProperty && (
-            <section className="panel">
-            <h2>Editar imovel: {editingProperty.address}</h2>
+            <section className="dd-panel dd-panel-narrow">
+            <h2 style={{ marginTop: 0 }}>Editar imovel: {editingProperty.address}</h2>
 
-            <form onSubmit={handleEditSubmit}>
-                <label style={{ display: 'block', marginBottom: '4px' }}>
+            <form className="dd-form" onSubmit={handleEditSubmit}>
+                <label className="dd-field">
                 % de administracao (sobre o aluguel)
-                </label>
                 <input
-                type="number"
-                name="admin_fee_percent"
-                value={editData.admin_fee_percent}
-                onChange={handleEditChange}
-                step="0.01"
-                min="0"
-                max="100"
+                    className="dd-input"
+                    type="number"
+                    name="admin_fee_percent"
+                    value={editData.admin_fee_percent}
+                    onChange={handleEditChange}
+                    step="0.01"
+                    min="0"
+                    max="100"
                 />
+                </label>
 
-                <label style={{ display: 'block', marginBottom: '4px' }}>
+                <label className="dd-field">
                 % de comissao do corretor (sobre a administracao)
-                </label>
                 <input
-                type="number"
-                name="broker_commission_percent"
-                value={editData.broker_commission_percent}
-                onChange={handleEditChange}
-                step="0.01"
-                min="0"
-                max="100"
+                    className="dd-input"
+                    type="number"
+                    name="broker_commission_percent"
+                    value={editData.broker_commission_percent}
+                    onChange={handleEditChange}
+                    step="0.01"
+                    min="0"
+                    max="100"
                 />
-
-                <label style={{ display: 'block', marginBottom: '4px' }}>
-                Status
                 </label>
-                <select name="status" value={editData.status} onChange={handleEditChange}>
-                <option value="ativo">Ativo</option>
-                <option value="encerrado">Encerrado</option>
+
+                <label className="dd-field">
+                Status
+                <select className="dd-select" name="status" value={editData.status} onChange={handleEditChange}>
+                    <option value="ativo">Ativo</option>
+                    <option value="encerrado">Encerrado</option>
                 </select>
+                </label>
 
-                <button type="submit" className="primary-button">
-                Salvar alteracoes
-                </button>
-
+                <div className="dd-form-actions">
                 <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setEditingProperty(null)}
+                    type="button"
+                    className="dd-btn-secondary"
+                    onClick={() => setEditingProperty(null)}
                 >
-                Cancelar
+                    Cancelar
                 </button>
+                <button type="submit" className="dd-btn-primary">
+                    Salvar alteracoes
+                </button>
+                </div>
             </form>
             </section>
         )}
 
-        <section className="panel">
-            <h2>Imoveis cadastrados</h2>
+        <section className="dd-panel">
+            <h2 style={{ marginTop: 0 }}>Imoveis cadastrados</h2>
 
             {(() => {
                 const expiringCount = properties.filter((p) => getContractAlert(p.contract_end)).length;
                 if (expiringCount === 0) return null;
                 return (
-                <div style={{
-                    background: '#FFFBEB',
-                    border: '1px solid #FDE68A',
-                    borderRadius: '8px',
-                    padding: '10px 14px',
-                    marginBottom: '12px'
-                }}>
+                <div className="dd-banner-warning">
                     {expiringCount} contrato(s) vencendo nos proximos 90 dias.
                 </div>
                 );
             })()}
 
-            {loading ? (
-            <div className="empty-state">Carregando imoveis...</div>
-            ) : properties.length === 0 ? (
-            <div className="empty-state">
-                <h2>Nenhum imovel cadastrado</h2>
-                <p>Cadastre o primeiro imovel administrado acima.</p>
-            </div>
-            ) : (
-            <div className="table-wrap">
-                <table>
-                <thead>
+            <div className="dd-table-wrap">
+                {loading ? (
+                <div className="dd-empty">Carregando imoveis...</div>
+                ) : properties.length === 0 ? (
+                <div className="dd-empty">
+                    <h2>Nenhum imovel cadastrado</h2>
+                    <p>Cadastre o primeiro imovel administrado acima.</p>
+                </div>
+                ) : (
+                <table className="dd-table">
+                    <thead>
                     <tr>
-                    <th>Endereco</th>
-                    <th>Inquilino</th>
-                    <th>Corretor</th>
-                    <th>Aluguel</th>
-                    <th>Adm. %</th>
-                    <th>Comissao %</th>
-                    <th>Vencimento</th>
-                    <th>Status</th>
-                    <th>Acoes</th>
+                        <th>Endereco</th>
+                        <th>Inquilino</th>
+                        <th>Corretor</th>
+                        <th>Aluguel</th>
+                        <th>Adm. %</th>
+                        <th>Comissao %</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                        <th>Acoes</th>
                     </tr>
-                </thead>
+                    </thead>
 
-                <tbody>
+                    <tbody>
                     {properties.map((property) => {
-                    const alert = getContractAlert(property.contract_end);
+                        const alert = getContractAlert(property.contract_end);
 
-                    return (
-                    <tr key={property.id} style={{ background: alertBackground(alert?.level) }}>
-                        <td>{property.address}</td>
-                        <td>{property.tenant_name || 'Nao informado'}</td>
-                        <td>{property.corretor || 'Nao informado'}</td>
-                        <td>
-                        {Number(property.rent_value).toLocaleString('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                        })}
-                        </td>
-                        <td>{property.admin_fee_percent}%</td>
-                        <td>{property.broker_commission_percent}%</td>
-                        <td>
-                            {property.contract_end
-                            ? new Date(property.contract_end).toLocaleDateString('pt-BR')
-                            : 'Nao informado'}
-                            {alert && (
-                            <div style={{ fontSize: 12, marginTop: 2, fontWeight: 600 }}>
-                                {alert.label}
-                            </div>
-                            )}
-                        </td>
-                        <td><span className="status-pill">{statusLabels[property.status] || property.status}</span></td>
+                        return (
+                        <tr key={property.id} style={{ background: alertBackground(alert?.level) }}>
+                            <td>{property.address}</td>
+                            <td>{property.tenant_name || 'Nao informado'}</td>
+                            <td>{property.corretor || 'Nao informado'}</td>
+                            <td>
+                            {Number(property.rent_value).toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            })}
+                            </td>
+                            <td>{property.admin_fee_percent}%</td>
+                            <td>{property.broker_commission_percent}%</td>
+                            <td>
+                                {property.contract_end
+                                ? new Date(property.contract_end).toLocaleDateString('pt-BR')
+                                : 'Nao informado'}
+                                {alert && (
+                                <span className="dd-tag-inline" style={{ color: alertColor(alert.level) }}>
+                                    {alert.label}
+                                </span>
+                                )}
+                            </td>
+                            <td><span className="dd-pill">{statusLabels[property.status] || property.status}</span></td>
 
-                                                                        <td>
-                            <div className="row-actions">
-                                                        <button
-                                className="small-button"
-                                onClick={() => navigate(`/alugueis/imoveis/${property.id}/historico`)}
-                            >
-                                Historico
-                            </button>
-                            <button
-                                className="small-button"
-                                onClick={() => handleCreateReminder(property)}
-                            >
-                                Lembrete
-                            </button>
-                            {isAdmin && (
-                                <>
+                            <td>
+                                <div className="dd-row-actions">
                                 <button
-                                    className="small-button"
-                                    onClick={() => handleAdjustClick(property)}
+                                    className="dd-btn-small"
+                                    onClick={() => navigate(`/alugueis/imoveis/${property.id}/historico`)}
                                 >
-                                    Reajustar
+                                    Historico
                                 </button>
                                 <button
-                                    className="small-button"
-                                    onClick={() => handleEditClick(property)}
+                                    className="dd-btn-small"
+                                    onClick={() => handleCreateReminder(property)}
                                 >
-                                    Editar
+                                    Lembrete
                                 </button>
-                                <button
-                                    className="small-button"
-                                    onClick={() => handleDelete(property.id, property.address)}
-                                >
-                                    Excluir
-                                </button>
-                                </>
-                            )}
-                            </div>
-                        </td>
-                    </tr>
-                    );
+                                {isAdmin && (
+                                    <>
+                                    <button
+                                        className="dd-btn-small"
+                                        onClick={() => handleAdjustClick(property)}
+                                    >
+                                        Reajustar
+                                    </button>
+                                    <button
+                                        className="dd-btn-small"
+                                        onClick={() => handleEditClick(property)}
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        className="dd-btn-small"
+                                        onClick={() => handleDelete(property.id, property.address)}
+                                    >
+                                        Excluir
+                                    </button>
+                                    </>
+                                )}
+                                </div>
+                            </td>
+                        </tr>
+                        );
                     })}
-                </tbody>
+                    </tbody>
                 </table>
+                )}
             </div>
-            )}
         </section>
         </section>
         <RemindersWidget />
