@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-.dd-shell {
+:root {
   --dd-bg: #0A0F1E;
   --dd-panel: #111A2E;
   --dd-panel-2: #16213A;
@@ -12,7 +12,9 @@
   --dd-green: #16A34A;
   --dd-amber: #D97706;
   --dd-red: #E11D48;
+}
 
+.dd-shell {
   font-family: 'Inter', -apple-system, sans-serif;
   background: var(--dd-bg);
   color: var(--dd-text);
