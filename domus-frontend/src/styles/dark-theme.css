@@ -1053,6 +1053,7 @@
 }
 
 .dd-landing {
+  display: block;
   background: var(--dd-bg);
   color: var(--dd-text);
   font-family: 'Inter', -apple-system, sans-serif;
@@ -1408,6 +1409,148 @@
 @media (max-width: 560px) {
   .dd-benefit-grid,
   .dd-process-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dd-trustbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.dd-trustbar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--dd-muted);
+  background: var(--dd-panel);
+  border: 1px solid var(--dd-border);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.dd-mockup-frame {
+  background: var(--dd-panel);
+  border: 1px solid var(--dd-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.dd-mockup-chrome {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--dd-border);
+}
+
+.dd-mockup-chrome span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--dd-border);
+}
+
+.dd-mockup-body {
+  padding: 20px;
+}
+
+.dd-mockup-title {
+  font-size: 13px;
+  color: var(--dd-muted);
+  margin: 0 0 12px;
+}
+
+.dd-mockup-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dd-mockup-metrics .dd-card {
+  padding: 12px;
+}
+
+.dd-mockup-metrics .dd-card-label {
+  font-size: 11px;
+}
+
+.dd-mockup-metrics .dd-card-value {
+  font-size: 18px;
+  margin: 4px 0 0;
+}
+
+.dd-mockup-funnel {
+  display: flex;
+  gap: 3px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dd-mockup-funnel span {
+  flex: 1;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dd-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.dd-bento-card {
+  grid-column: span 2;
+  background: var(--dd-panel);
+  border: 1px solid var(--dd-border);
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.dd-bento-card.span-4 {
+  grid-column: span 4;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.dd-bento-card .dd-icon-badge {
+  margin-bottom: 12px;
+}
+
+.dd-bento-card h3 {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.dd-bento-card p {
+  font-size: 13px;
+  color: var(--dd-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .dd-bento-card {
+    grid-column: span 4;
+  }
+  .dd-bento-card.span-4 {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 700px) {
+  .dd-mockup-metrics {
     grid-template-columns: 1fr;
   }
 }

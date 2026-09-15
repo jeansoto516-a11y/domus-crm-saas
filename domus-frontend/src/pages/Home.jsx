@@ -1,31 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom';
+import Icon from '../components/Icon';
 import '../styles/dark-theme.css';
 
 function Home() {
   const navigate = useNavigate();
 
-  const salesFeatures = [
-    'Distribuição automática: cada lead novo vai direto para o corretor com menos leads ativos',
-    'Funil visual com scoring automático (frio, morno, quente)',
-    'WhatsApp em um clique, com mensagem já pronta',
-    'Formulário público de captação para seu site ou Instagram',
-    'Histórico completo do lead, com anotações da equipe',
-    'Metas mensais e ranking de corretores'
-  ];
-
-  const rentalFeatures = [
-    'Cadastro de imóveis administrados, com inquilino, proprietário e contrato',
-    'Cálculo automático de comissão e taxa de administração',
-    'Cobrança mensal gerada com um clique, com controle de pago/pendente/atrasado',
-    'Alerta de contrato vencendo (30, 60 e 90 dias)',
-    'Reajuste de aluguel com histórico completo',
-    'Ranking de corretores também por aluguéis administrados'
-  ];
-
-  const stats = [
-    { value: '2 módulos', label: 'vendas e aluguéis no mesmo sistema' },
-    { value: '14 dias', label: 'de teste grátis, sem cartão' },
-    { value: 'R$ 59,90', label: 'por mês, tudo incluso' }
+  const bentoFeatures = [
+    { icon: 'userPlus', title: 'Distribuição automática de leads', text: 'Cada lead novo vai direto pro corretor com menos leads ativos, sem esforço manual do gestor.', span: 2 },
+    { icon: 'phone', title: 'WhatsApp em um clique', text: 'Conversa aberta direto do card do lead, com mensagem já pronta.', span: 2 },
+    { icon: 'file', title: 'Gestão de aluguéis inclusa', text: 'Cobrança mensal, comissão de administração e reajuste anual, sem planilha paralela.', span: 2 },
+    { icon: 'calendar', title: 'Alerta de contrato vencendo', text: 'Avisos automáticos em 30, 60 e 90 dias antes do fim do contrato.', span: 2 },
+    { icon: 'check', title: 'Metas e ranking da equipe', text: 'Acompanhe quem mais vende e quem mais administra imóveis, com progresso automático.', span: 4 }
   ];
 
   const steps = ['Captar', 'Atender', 'Agendar', 'Propor', 'Fechar'];
@@ -53,12 +38,12 @@ function Home() {
     },
     {
       question: 'Os corretores têm acesso a tudo?',
-      answer: 'Não. Cada corretor vê apenas os próprios leads e imóveis. Você define, por corretor, se ele acessa vendas, aluguéis ou os dois. Só o administrador tem visão completa da operação.'
+      answer: 'Não. Cada corretor vê apenas os próprios leads e imóveis. Você define, por corretor, se ele acessa vendas, aluguéis ou os dois.'
     }
   ];
 
   return (
-    <main className="dd-landing">
+    <main className="dd-shell dd-landing">
       <nav className="dd-landing-nav">
         <Link className="dd-auth-brand" to="/">
           <span className="dd-brand-mark">D</span>
@@ -66,7 +51,6 @@ function Home() {
         </Link>
         <div className="dd-landing-nav-links">
           <a href="#sistema">Sistema</a>
-          <a href="#alugueis">Aluguéis</a>
           <a href="#precos">Preços</a>
           <a href="#faq">Dúvidas</a>
           <button className="dd-btn-secondary" onClick={() => navigate('/login')}>
@@ -80,12 +64,12 @@ function Home() {
 
       <section className="dd-hero">
         <div>
-          <span className="dd-auth-eyebrow">O único CRM que junta vendas e aluguéis</span>
-          <h1>Sua imobiliária inteira em um sistema só: leads, corretores e imóveis alugados sob controle.</h1>
+          <span className="dd-auth-eyebrow">Vendas + Aluguéis num sistema só</span>
+          <h1>2 operações, 1 sistema: venda mais e administre aluguéis sem planilha.</h1>
           <p>
-            Pare de espalhar sua operação entre WhatsApp, planilhas de comissão e cadernos de aluguel.
-            O Domus organiza a captação, o funil de vendas e a gestão de imóveis administrados —
-            com sua equipe toda vendo só o que precisa ver.
+            Sua imobiliária hoje provavelmente usa um app pra WhatsApp, uma planilha pra comissão
+            e um caderno pra aluguel. O Domus junta tudo isso: funil de vendas com distribuição
+            automática de leads e gestão financeira de imóveis administrados, no mesmo login.
           </p>
           <div className="dd-hero-actions">
             <button className="dd-btn-primary dd-btn-large" onClick={() => navigate('/register')}>
@@ -95,56 +79,69 @@ function Home() {
               Acessar plataforma
             </button>
           </div>
+          <div className="dd-trustbar">
+            <span>✓ Sem cartão de crédito</span>
+            <span>✓ Cancele quando quiser</span>
+            <span>✓ Dados protegidos (LGPD)</span>
+          </div>
         </div>
 
-        <div>
-          <div className="dd-showcase-card">
-            <span>Domus CRM</span>
-            <strong>Vendas + Aluguéis, conectados</strong>
+        <div className="dd-mockup-frame">
+          <div className="dd-mockup-chrome">
+            <span /><span /><span />
           </div>
-          <div className="dd-showcase-stats">
-            {stats.map((stat) => (
-              <article key={stat.label}>
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
-              </article>
-            ))}
+          <div className="dd-mockup-body">
+            <p className="dd-mockup-title">Dashboard · visão geral</p>
+            <div className="dd-mockup-metrics">
+              <div className="dd-card">
+                <span className="dd-card-label">Total de leads</span>
+                <strong className="dd-card-value">32</strong>
+              </div>
+              <div className="dd-card">
+                <span className="dd-card-label">Conversão</span>
+                <strong className="dd-card-value">41%</strong>
+              </div>
+              <div className="dd-card">
+                <span className="dd-card-label">Imóveis ativos</span>
+                <strong className="dd-card-value">18</strong>
+              </div>
+            </div>
+            <div className="dd-mockup-funnel">
+              <span style={{ background: '#2F6FED' }}>Novos</span>
+              <span style={{ background: '#4C4FE0' }}>Contato</span>
+              <span style={{ background: '#7C3AED' }}>Visita</span>
+              <span style={{ background: '#B0389E' }}>Proposta</span>
+              <span style={{ background: '#0D9488' }}>Fechado</span>
+            </div>
           </div>
         </div>
       </section>
 
       <section className="dd-section" id="sistema">
         <div className="dd-section-heading">
-          <span className="dd-auth-eyebrow">Dois módulos, um sistema só</span>
-          <h2>Tudo que sua imobiliária precisa, sem pagar por dois sistemas diferentes.</h2>
+          <span className="dd-auth-eyebrow">O que o Domus faz por você</span>
+          <h2>Recursos pensados pro dia a dia da sua imobiliária.</h2>
           <p>
-            A maioria dos CRMs do mercado só cuida da venda e esquece o pós — ou faz gestão de aluguel
-            separada, em outra ferramenta. No Domus, sua equipe trabalha em um lugar só.
+            Não é só um cadastro de leads. É um sistema completo pra captar, distribuir,
+            acompanhar, converter e ainda administrar os imóveis alugados pela imobiliária.
           </p>
         </div>
 
-        <div className="dd-modules-grid">
-          <article className="dd-module-card highlight">
-            <span className="dd-module-tag vendas">Vendas</span>
-            <h3>Funil comercial completo</h3>
-            <p>Do primeiro contato ao contrato fechado, com prioridade automática pros leads mais quentes.</p>
-            <ul className="dd-module-list">
-              {salesFeatures.map((item) => (
-                <li key={item}><span>✓</span>{item}</li>
-              ))}
-            </ul>
-          </article>
-
-          <article className="dd-module-card" id="alugueis">
-            <span className="dd-module-tag alugueis">Aluguéis</span>
-            <h3>Gestão de imóveis administrados</h3>
-            <p>Controle financeiro de cada imóvel alugado pela imobiliária, sem planilha paralela.</p>
-            <ul className="dd-module-list">
-              {rentalFeatures.map((item) => (
-                <li key={item}><span>✓</span>{item}</li>
-              ))}
-            </ul>
-          </article>
+        <div className="dd-bento-grid">
+          {bentoFeatures.map((feature) => (
+            <article
+              key={feature.title}
+              className={`dd-bento-card ${feature.span === 4 ? 'span-4' : ''}`}
+            >
+              <span className="dd-icon-badge" style={{ background: 'var(--dd-blue)' }}>
+                <Icon name={feature.icon} />
+              </span>
+              <div>
+                <h3>{feature.title}</h3>
+                <p>{feature.text}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -223,7 +220,6 @@ function Home() {
           <Link to="/termos">Termos de Uso</Link>
           <Link to="/privacidade">Política de Privacidade</Link>
           <a href="#sistema">Sistema</a>
-          <a href="#alugueis">Aluguéis</a>
           <a href="#precos">Preços</a>
         </div>
       </footer>
