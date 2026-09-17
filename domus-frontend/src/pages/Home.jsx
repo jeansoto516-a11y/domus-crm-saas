@@ -69,7 +69,7 @@ function Home() {
       <section className="dd-hero">
         <div>
           <span className="dd-auth-eyebrow">Vendas + Aluguéis num sistema só</span>
-          <h1>2 operações, 1 sistema: venda mais e administre aluguéis sem planilha.</h1>
+          <h1>Duas operações, Um sistema: venda mais e administre aluguéis sem planilha.</h1>
           <p>
             Sua imobiliária hoje provavelmente usa um app pra WhatsApp, uma planilha pra comissão
             e um caderno pra aluguel. O Domus junta tudo isso: funil de vendas com distribuição
