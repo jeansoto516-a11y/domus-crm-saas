@@ -43,7 +43,11 @@ function Home() {
   ];
 
   return (
-    <main className="dd-shell dd-landing">
+        <main className="dd-shell dd-landing">
+                  <div className="dd-universe-bg">
+        <span className="dd-universe-glow-1" />
+      </div>
+
       <nav className="dd-landing-nav">
         <Link className="dd-auth-brand" to="/">
           <span className="dd-brand-mark">D</span>
