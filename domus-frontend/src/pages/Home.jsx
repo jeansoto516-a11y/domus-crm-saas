@@ -68,7 +68,7 @@ function Home() {
 
       <section className="dd-hero">
         <div>
-          <span className="dd-auth-eyebrow">Vendas + Aluguéis num sistema só</span>
+          <span className="dd-auth-eyebrow">Vendas + Aluguéis em um sistema só</span>
           <h1>Duas operações, um sistema: venda mais e administre aluguéis sem planilha.</h1>
           <p>
             Sua imobiliária hoje provavelmente usa um app pra WhatsApp, uma planilha para comissão
