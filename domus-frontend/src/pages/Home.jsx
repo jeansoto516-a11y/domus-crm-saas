@@ -124,7 +124,7 @@ function Home() {
       <section className="dd-section" id="sistema">
         <div className="dd-section-heading">
           <span className="dd-auth-eyebrow">O que o Domus faz por você</span>
-          <h2>Recursos pensados pro dia a dia da sua imobiliária.</h2>
+          <h2>Recursos pensados para o dia a dia da sua imobiliária.</h2>
           <p>
             Não é só um cadastro de leads. É um sistema completo pra captar, distribuir,
             acompanhar, converter e ainda administrar os imóveis alugados pela imobiliária.
