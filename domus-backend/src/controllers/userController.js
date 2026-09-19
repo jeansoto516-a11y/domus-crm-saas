@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const pool = require('../config/db');
+const PLANS = require('../config/plans');
 const { sendMail } = require('../services/mailService');
 
 /**
@@ -58,6 +59,26 @@ exports.createBroker = async (req, res) => {
     }
 
     try {
+
+        const companyResult = await pool.query(
+            'SELECT plan FROM companies WHERE id = $1',
+            [req.user.company_id]
+        );
+
+        const currentPlan = PLANS[companyResult.rows[0]?.plan] || PLANS.normal;
+
+        const brokerCountResult = await pool.query(
+            `SELECT COUNT(*) FROM users WHERE company_id = $1 AND role = 'user'`,
+            [req.user.company_id]
+        );
+
+        const brokerCount = Number(brokerCountResult.rows[0].count);
+
+        if (brokerCount >= currentPlan.max_brokers) {
+            return res.status(403).json({
+                error: `Seu pacote atual (${currentPlan.label}) permite ate ${currentPlan.max_brokers} corretores. Faca upgrade de pacote no seu Perfil para cadastrar mais.`
+            });
+        }
 
         const userExists = await pool.query(
             'SELECT id FROM users WHERE email = $1',
@@ -369,7 +390,7 @@ exports.getMe = async (req, res) => {
         const user = userResult.rows[0];
 
                 const companyResult = await pool.query(
-            `SELECT id, name, public_slug FROM companies WHERE id = $1`,
+            `SELECT id, name, public_slug, plan FROM companies WHERE id = $1`,
             [user.company_id]
         );
 
@@ -456,4 +477,52 @@ exports.updateCompany = async (req, res) => {
         console.error('Erro ao atualizar imobiliaria:', err);
         return res.status(500).json({ error: 'Erro ao atualizar imobiliaria.' });
     }
+};
+
+/**
+ * Trocar o pacote da imobiliaria (somente admin)
+ */
+exports.updatePlan = async (req, res) => {
+    const { plan } = req.body;
+
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Apenas administradores podem trocar o pacote.' });
+    }
+
+    if (!PLANS[plan]) {
+        return res.status(400).json({ error: 'Pacote invalido.' });
+    }
+
+    try {
+        const brokerCountResult = await pool.query(
+            `SELECT COUNT(*) FROM users WHERE company_id = $1 AND role = 'user'`,
+            [req.user.company_id]
+        );
+
+        const brokerCount = Number(brokerCountResult.rows[0].count);
+
+        if (brokerCount > PLANS[plan].max_brokers) {
+            return res.status(400).json({
+                error: `Voce tem ${brokerCount} corretor(es) cadastrado(s). O pacote ${PLANS[plan].label} permite ate ${PLANS[plan].max_brokers}. Exclua corretores antes de reduzir de pacote.`
+            });
+        }
+
+        await pool.query(
+            `UPDATE companies SET plan = $1 WHERE id = $2`,
+            [plan, req.user.company_id]
+        );
+
+        return res.json({ message: `Pacote alterado para ${PLANS[plan].label} com sucesso.` });
+
+    } catch (err) {
+        console.error('Erro ao trocar pacote:', err);
+        return res.status(500).json({ error: 'Erro ao trocar pacote.' });
+    }
+};
+
+/**
+ * Listar os pacotes disponiveis
+ */
+exports.getPlans = async (req, res) => {
+    return res.json(PLANS);
 };

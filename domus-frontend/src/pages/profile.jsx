@@ -15,20 +15,63 @@ function Profile() {
 
     const [companyName, setCompanyName] = useState('');
 
-    const [message, setMessage] = useState('');
+        const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const navigate = useNavigate();
 
-    useEffect(() => {
+    const [plans, setPlans] = useState({});
+    const [brokerCount, setBrokerCount] = useState(0);
+    const [changingPlan, setChangingPlan] = useState(false);
+
+    const loadMe = () => {
     api.get('/users/me').then((response) => {
         setUser(response.data.user);
         setCompany(response.data.company);
         setName(response.data.user.name);
         setCompanyName(response.data.company?.name || '');
     });
+    };
+
+    useEffect(() => {
+    loadMe();
     }, []);
+
+    useEffect(() => {
+    if (user?.role !== 'admin') return;
+
+    api.get('/users/plans').then((response) => setPlans(response.data));
+
+    api.get('/users').then((response) => {
+        const count = response.data.filter((u) => u.role === 'user').length;
+        setBrokerCount(count);
+    });
+    }, [user]);
+
+    const handleChangePlan = async (planKey) => {
+    if (planKey === company?.plan) return;
+
+    const confirmChange = window.confirm(
+        `Confirma a troca para o pacote ${plans[planKey]?.label}?`
+    );
+    if (!confirmChange) return;
+
+    setChangingPlan(true);
+    setError('');
+    setMessage('');
+
+    try {
+        const response = await api.put('/users/company/plan', { plan: planKey });
+        setMessage(response.data.message);
+        loadMe();
+        setTimeout(() => setMessage(''), 4000);
+    } catch (err) {
+        setError(err.response?.data?.error || 'Erro ao trocar de pacote.');
+    } finally {
+        setChangingPlan(false);
+    }
+    };
 
     useEffect(() => {
     const checkUnread = () => {
@@ -187,6 +230,52 @@ function Profile() {
             </div>
             </form>
         </section>
+
+                {user.role === 'admin' && (
+            <section className="dd-panel">
+            <h2 style={{ marginTop: 0 }}>Pacote da imobiliaria</h2>
+
+            <div className="dd-plan-usage">
+                <p className="dd-plan-usage-text">
+                {brokerCount} de {plans[company?.plan]?.max_brokers || '-'} corretores usados no pacote {plans[company?.plan]?.label || '...'}
+                </p>
+                <div className="dd-progress-track" style={{ width: '100%' }}>
+                <div
+                    className="dd-progress-fill"
+                    style={{
+                    background: 'var(--dd-blue)',
+                    width: plans[company?.plan]
+                        ? `${Math.min(100, (brokerCount / plans[company.plan].max_brokers) * 100)}%`
+                        : '0%'
+                    }}
+                />
+                </div>
+            </div>
+
+            <div className="dd-plan-grid">
+                {Object.entries(plans).map(([key, plan]) => (
+                <div
+                    key={key}
+                    className={`dd-plan-card ${company?.plan === key ? 'active' : ''}`}
+                    onClick={() => !changingPlan && handleChangePlan(key)}
+                >
+                    {company?.plan === key && <span className="dd-plan-badge">Pacote atual</span>}
+                    <h3>{plan.label}</h3>
+                    <div className="dd-plan-price">
+                    R$ {plan.price.toFixed(2).replace('.', ',')}
+                    <span> /mes</span>
+                    </div>
+                    <p className="dd-plan-limit">Ate {plan.max_brokers} corretores</p>
+                    {company?.plan !== key && (
+                    <button className="dd-btn-secondary" disabled={changingPlan} type="button">
+                        {changingPlan ? 'Trocando...' : 'Trocar para este'}
+                    </button>
+                    )}
+                </div>
+                ))}
+            </div>
+            </section>
+        )}
 
         {user.role === 'admin' && (
             <section className="dd-panel dd-panel-narrow">

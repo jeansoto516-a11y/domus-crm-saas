@@ -25,6 +25,19 @@ router.put(
     userController.updateCompany
 );
 
+router.put(
+    '/company/plan',
+    authMiddleware,
+    adminMiddleware,
+    userController.updatePlan
+);
+
+router.get(
+    '/plans',
+    authMiddleware,
+    userController.getPlans
+);
+
 router.get(
     '/',
     authMiddleware,

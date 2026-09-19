@@ -165,30 +165,42 @@ function Home() {
       </section>
 
       <section className="dd-section" id="precos">
-        <div className="dd-section-heading">
-          <span className="dd-auth-eyebrow">Plano simples, sem pegadinha</span>
-          <h2>Um plano único, com vendas e aluguéis inclusos.</h2>
-        </div>
+  <div className="dd-section-heading">
+    <span className="dd-auth-eyebrow">Plano simples, sem pegadinha</span>
+    <h2>Um plano único, com vendas e aluguéis inclusos.</h2>
+  </div>
 
-        <div className="dd-pricing-card">
-          <span className="dd-auth-eyebrow">Plano Domus</span>
-          <div className="dd-pricing-value">
-            <strong>R$ 59,90</strong>
-            <span>/mês</span>
-          </div>
-          <p style={{ color: 'var(--dd-muted)' }}>Corretores ilimitados, leads ilimitados, imóveis ilimitados. Vendas e aluguéis no mesmo plano.</p>
-          <ul>
-            <li>✓ 14 dias de teste grátis, sem cartão de crédito</li>
-            <li>✓ Módulo completo de gestão de aluguéis incluso</li>
-            <li>✓ Pagamento por cartão (recorrente automático) ou Pix</li>
-            <li>✓ Cancele quando quiser, sem multa</li>
-            <li>✓ Suporte direto pelo chat do sistema</li>
-          </ul>
-          <button className="dd-btn-primary dd-btn-large full" onClick={() => navigate('/register')}>
-            Começar teste grátis
-          </button>
-        </div>
-      </section>
+  <div className="dd-pricing-card">
+    <span className="dd-auth-eyebrow">Plano Domus</span>
+
+    <div className="dd-pricing-value">
+      <strong>R$ 59,90</strong>
+      <span>/mês</span>
+    </div>
+
+    <p style={{ color: 'var(--dd-muted)' }}>
+      Corretores ilimitados, leads ilimitados, imóveis ilimitados.
+      Vendas e aluguéis no mesmo plano.
+    </p>
+
+    <ul>
+      <li>✓ 14 dias de teste grátis, sem cartão de crédito</li>
+      <li>✓ Módulo completo de gestão de aluguéis incluso</li>
+      <li>✓ Pagamento por cartão (recorrente automático) ou Pix</li>
+      <li>✓ Cancele quando quiser, sem multa</li>
+      <li>✓ Suporte direto pelo chat do sistema</li>
+    </ul>
+
+    <button
+      className="dd-btn-primary dd-btn-large full"
+      onClick={() => navigate('/register')}
+    >
+
+
+      Começar teste grátis
+    </button>
+  </div>
+</section>
 
       <section className="dd-section" id="faq">
         <div className="dd-section-heading">
