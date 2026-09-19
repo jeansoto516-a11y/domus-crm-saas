@@ -24,9 +24,9 @@ function Home() {
       question: 'O Domus serve só para vendas ou também para aluguéis?',
       answer: 'Os dois. O mesmo plano inclui o CRM de vendas completo e o módulo de gestão de aluguéis administrados, sem custo adicional.'
     },
-    {
+        {
       question: 'Como funciona a cobrança depois do teste?',
-      answer: 'A assinatura custa R$ 59,90 por mês, e pode ser paga por cartão de crédito (recorrente automático) ou Pix.'
+      answer: 'Depende do pacote escolhido: Normal (ate 5 corretores) por R$ 59,90/mes, Plus (ate 10) por R$ 99,90/mes, ou Premium (ate 20) por R$ 159,90/mes. Pode ser pago por cartao de credito (recorrente automatico) ou Pix.'
     },
     {
       question: 'Posso cancelar quando quiser?',
@@ -164,43 +164,70 @@ function Home() {
         </div>
       </section>
 
-      <section className="dd-section" id="precos">
-  <div className="dd-section-heading">
-    <span className="dd-auth-eyebrow">Plano simples, sem pegadinha</span>
-    <h2>Um plano único, com vendas e aluguéis inclusos.</h2>
-  </div>
+            <section className="dd-section" id="precos">
+        <div className="dd-section-heading">
+          <span className="dd-auth-eyebrow">Escolha o tamanho da sua equipe</span>
+          <h2>Um pacote pra cada fase da sua imobiliária.</h2>
+          <p>Vendas e aluguéis inclusos em todos os pacotes — a diferença é só quantos corretores você pode cadastrar.</p>
+        </div>
 
-  <div className="dd-pricing-card">
-    <span className="dd-auth-eyebrow">Plano Domus</span>
+        <div className="dd-pricing-grid">
+          <div className="dd-pricing-tier">
+            <h3>Normal</h3>
+            <div className="dd-pricing-value">
+              <strong>R$ 59,90</strong>
+              <span>/mes</span>
+            </div>
+            <p className="dd-pricing-tier-limit">Ate 5 corretores</p>
+            <ul>
+              <li>✓ Vendas e aluguéis inclusos</li>
+              <li>✓ Leads e imóveis ilimitados</li>
+              <li>✓ 14 dias de teste grátis</li>
+              <li>✓ Suporte pelo chat do sistema</li>
+            </ul>
+            <button className="dd-btn-secondary full" onClick={() => navigate('/register')}>
+              Começar com o Normal
+            </button>
+          </div>
 
-    <div className="dd-pricing-value">
-      <strong>R$ 59,90</strong>
-      <span>/mês</span>
-    </div>
+          <div className="dd-pricing-tier highlight">
+            <span className="dd-pricing-tier-badge">Mais escolhido</span>
+            <h3>Plus</h3>
+            <div className="dd-pricing-value">
+              <strong>R$ 99,90</strong>
+              <span>/mes</span>
+            </div>
+            <p className="dd-pricing-tier-limit">Ate 10 corretores</p>
+            <ul>
+              <li>✓ Vendas e aluguéis inclusos</li>
+              <li>✓ Leads e imóveis ilimitados</li>
+              <li>✓ 14 dias de teste grátis</li>
+              <li>✓ Suporte pelo chat do sistema</li>
+            </ul>
+            <button className="dd-btn-primary full" onClick={() => navigate('/register')}>
+              Começar com o Plus
+            </button>
+          </div>
 
-    <p style={{ color: 'var(--dd-muted)' }}>
-      Corretores ilimitados, leads ilimitados, imóveis ilimitados.
-      Vendas e aluguéis no mesmo plano.
-    </p>
-
-    <ul>
-      <li>✓ 14 dias de teste grátis, sem cartão de crédito</li>
-      <li>✓ Módulo completo de gestão de aluguéis incluso</li>
-      <li>✓ Pagamento por cartão (recorrente automático) ou Pix</li>
-      <li>✓ Cancele quando quiser, sem multa</li>
-      <li>✓ Suporte direto pelo chat do sistema</li>
-    </ul>
-
-    <button
-      className="dd-btn-primary dd-btn-large full"
-      onClick={() => navigate('/register')}
-    >
-
-
-      Começar teste grátis
-    </button>
-  </div>
-</section>
+          <div className="dd-pricing-tier">
+            <h3>Premium</h3>
+            <div className="dd-pricing-value">
+              <strong>R$ 159,90</strong>
+              <span>/mes</span>
+            </div>
+            <p className="dd-pricing-tier-limit">Ate 20 corretores</p>
+            <ul>
+              <li>✓ Vendas e aluguéis inclusos</li>
+              <li>✓ Leads e imóveis ilimitados</li>
+              <li>✓ 14 dias de teste grátis</li>
+              <li>✓ Suporte pelo chat do sistema</li>
+            </ul>
+            <button className="dd-btn-secondary full" onClick={() => navigate('/register')}>
+              Começar com o Premium
+            </button>
+          </div>
+        </div>
+      </section>
 
       <section className="dd-section" id="faq">
         <div className="dd-section-heading">
