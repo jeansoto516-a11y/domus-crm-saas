@@ -177,6 +177,30 @@ async function createTables() {
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_type TEXT DEFAULT 'venda';
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'normal';
       
+      CREATE TABLE IF NOT EXISTS lead_profiles (
+        id SERIAL PRIMARY KEY,
+        lead_id INTEGER UNIQUE REFERENCES leads(id) ON DELETE CASCADE,
+        acquisition_type TEXT,
+        property_type TEXT,
+        region TEXT,
+        city TEXT,
+        bedrooms INTEGER,
+        suites INTEGER,
+        bathrooms INTEGER,
+        garage_spots INTEGER,
+        min_area NUMERIC,
+        land_area NUMERIC,
+        floor_preference TEXT,
+        has_elevator TEXT,
+        budget_min NUMERIC,
+        budget_max NUMERIC,
+        down_payment NUMERIC,
+        trade_value NUMERIC,
+        urgency TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
 
       CREATE INDEX IF NOT EXISTS idx_leads_company_created_at ON leads(company_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_leads_company_status ON leads(company_id, status);

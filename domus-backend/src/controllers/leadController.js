@@ -77,7 +77,25 @@ exports.createLead = async (req, res) => {
     const {
         name,
         email,
-        phone
+        phone,
+        acquisition_type,
+        property_type,
+        region,
+        city,
+        bedrooms,
+        suites,
+        bathrooms,
+        garage_spots,
+        min_area,
+        land_area,
+        floor_preference,
+        has_elevator,
+        budget_min,
+        budget_max,
+        down_payment,
+        trade_value,
+        urgency,
+        notes
     } = req.body;
 
     const status = normalizeStatus(req.body.status) || 'novo';
@@ -88,6 +106,14 @@ exports.createLead = async (req, res) => {
 
         return res.status(400).json({
             error: 'Informe nome e pelo menos um contato.'
+        });
+
+    }
+
+    if (!acquisition_type || !property_type || region || !city || !urgency) {
+
+        return res.status(400).json({
+            error: 'Informe tipo de aquisição, tipo de imóvel, região, cidade e urgência.'
         });
 
     }
@@ -176,6 +202,20 @@ exports.createLead = async (req, res) => {
             [result.rows[0].id, req.user.id]
         );
 
+        await pool.query(
+            `
+            INSERT INTO lead_profiles
+            (lead_id, acquisition_type, property_type, region, city, bedrooms, suites, bathrooms, garage_spots, min_area, land_area, floor_preference, has_elevator, budget_min, budget_max, down_payment, trade_value, urgency, notes)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+            `,
+            [
+                result.rows[0].id, acquisition_type, property_type, region, city,
+                bedrooms || null, suites || null, bathrooms || null, garage_spots || null,
+                min_area || null, land_area || null, floor_preference || null, has_elevator || null,
+                budget_min || null, budget_max || null, down_payment || null, trade_value || null,
+                urgency, notes || null
+            ]
+        );
         return res.status(201).json(result.rows[0]);
 
     } catch (err) {
@@ -859,4 +899,82 @@ exports.getStaleLeads = async (req, res) => {
 
     }
 
+};
+
+/**
+ * Buscar mapeamento do lead
+ */
+
+exports.getLeadProfile = async (req, res) => {
+    const { id } = req.params;
+    const values = [];
+    let where = buildLeadScope(req, values);
+    values.push(id);
+
+    try {
+        const leadCheck =await pool.query(`SELECT id FROM leads ${where} AND id = $${values.length}`, values);
+        if (leadCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Lead nao encontrado.' });
+        }
+
+        const result = await pool.query(`SELECT * FROM lead_profiles WHERE lead_id = $1`, [id]);
+        return res.json(result.rows[0] || null); 
+        
+        } catch (err) {
+        console.error('Erro ao buscar mapeamento:', err);
+        return res.status(500).json({ error: 'Erro ao buscar mapeamento.' });
+    }
+    
+    };
+
+    /**
+ * Criar/atualizar mapeamento do lead
+ */
+
+    exports.updateLeadProfile = async (req, res) => {
+    const { id } = req.params;
+    const values = [];
+    let where = buildLeadScope(req, values);
+    values.push(id);
+
+    const {
+        acquisition_type, property_type, region, city, bedrooms, suites, bathrooms,
+        garage_spots, min_area, land_area, floor_preference, has_elevator,
+        budget_min, budget_max, down_payment, trade_value, urgency, notes
+    } = req.body;
+
+    try {
+        const leadCheck = await pool.query(`SELECT id FROM leads ${where} AND id = $${values.length}`, values);
+        if (leadCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Lead nao encontrado.' });
+        }
+
+        const result = await pool.query(
+            `
+            INSERT INTO lead_profiles
+            (lead_id, acquisition_type, property_type, region, city, bedrooms, suites, bathrooms, garage_spots, min_area, land_area, floor_preference, has_elevator, budget_min, budget_max, down_payment, trade_value, urgency, notes)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+            ON CONFLICT (lead_id) DO UPDATE SET
+                acquisition_type = $2, property_type = $3, region = $4, city = $5,
+                bedrooms = $6, suites = $7, bathrooms = $8, garage_spots = $9,
+                min_area = $10, land_area = $11, floor_preference = $12, has_elevator = $13,
+                budget_min = $14, budget_max = $15, down_payment = $16, trade_value = $17,
+                urgency = $18, notes = $19, updated_at = CURRENT_TIMESTAMP
+            RETURNING *
+            `,
+            [
+                id, acquisition_type || null, property_type || null, region || null, city || null,
+                bedrooms || null, suites || null, bathrooms || null, garage_spots || null,
+                min_area || null, land_area || null, floor_preference || null, has_elevator || null,
+                budget_min || null, budget_max || null, down_payment || null, trade_value || null,
+                urgency || null, notes || null
+            ]
+        );
+
+        return res.json(result.rows[0]);
+
+    } catch (err) {
+        console.error('Erro ao salvar mapeamento:', err);
+        return res.status(500).json({ error: 'Erro ao salvar mapeamento.' });
+    }
 };
