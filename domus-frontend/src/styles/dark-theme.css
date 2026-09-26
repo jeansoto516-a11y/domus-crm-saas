@@ -2077,3 +2077,102 @@
   align-items: center;
   gap: 8px;
 }
+
+.dd-analytics-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.dd-analytics-filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: var(--dd-muted, #888);
+  gap: 4px;
+}
+
+.dd-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.dd-chart-card {
+  background: var(--dd-panel, #1c1c22);
+  border: 1px solid var(--dd-border, #2a2a33);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.dd-chart-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dd-chart-card-head h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.dd-chart-menu-wrap {
+  position: relative;
+}
+
+.dd-chart-menu-btn {
+  background: none;
+  border: none;
+  color: var(--dd-muted, #888);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.dd-chart-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dd-chart-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.dd-chart-menu {
+  position: absolute;
+  right: 0;
+  top: 28px;
+  background: #24242c;
+  border: 1px solid var(--dd-border, #2a2a33);
+  border-radius: 10px;
+  padding: 4px;
+  z-index: 20;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dd-chart-menu-item {
+  background: none;
+  border: none;
+  color: var(--dd-text, #fff);
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.dd-chart-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dd-chart-menu-item.active {
+  color: var(--dd-accent, #6c5ce7);
+  font-weight: 600;
+}

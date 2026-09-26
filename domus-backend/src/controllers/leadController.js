@@ -376,6 +376,50 @@ exports.updateLead = async (req, res) => {
 };
 
 /**
+ * Serie diaria de leads cadastrados (para grafico de linha/barra)
+ */
+exports.getLeadsTimeseries = async (req, res) => {
+
+    const values = [];
+    let where = buildLeadScope(req, values);
+
+    where = addDateFilters(where, values, req.query);
+
+    try {
+
+        const result = await pool.query(
+            `
+            SELECT
+                DATE(created_at) AS date,
+                COUNT(*) AS total
+            FROM leads
+            ${where}
+            GROUP BY DATE(created_at)
+            ORDER BY DATE(created_at) ASC
+            `,
+            values
+        );
+
+        return res.json(
+            result.rows.map((row) => ({
+                date: row.date,
+                total: Number(row.total)
+            }))
+        );
+
+    } catch (err) {
+
+        console.error('Erro ao buscar serie de leads:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar serie de leads.'
+        });
+
+    }
+
+};
+
+/**
  * Dashboard
  */
 exports.getDashboard = async (req, res) => {

@@ -7,6 +7,7 @@ const adminMiddleware = require('../middlewares/adminMiddleware');
 const router = express.Router();
 
 router.get('/dashboard', authMiddleware, checkSubscription, leadController.getDashboard);
+router.get('/timeseries', authMiddleware, checkSubscription, leadController.getLeadsTimeseries);
 router.get('/export', authMiddleware, checkSubscription, leadController.exportLeads);
 router.get('/ranking', authMiddleware, checkSubscription, adminMiddleware, leadController.getBrokerRanking);
 router.get('/stale', authMiddleware, checkSubscription, leadController.getStaleLeads);

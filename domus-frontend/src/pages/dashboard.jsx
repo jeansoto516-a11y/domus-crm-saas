@@ -5,6 +5,7 @@ import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
 import '../styles/dark-theme.css';
 import Icon from '../components/Icon';
+import ChartCard from '../components/ChartCard';
 
 const statusLabels = {
   novo: 'Novos',
@@ -29,6 +30,11 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState('');
+
+  const [analyticsFilters, setAnalyticsFilters] = useState({ startDate: '', endDate: '' });
+  const [analyticsData, setAnalyticsData] = useState({ timeseries: [], byStatus: {}, byTemperature: {} });
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+
   const navigate = useNavigate();
 
   const user = useMemo(() => {
@@ -78,7 +84,49 @@ function Dashboard() {
     return () => {
       active = false;
     };
-  }, [filters, logout]);
+    }, [filters, logout]);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchAnalytics = async () => {
+      try {
+        setAnalyticsLoading(true);
+        const [timeseriesRes, dashboardRes] = await Promise.all([
+          api.get('/leads/timeseries', { params: analyticsFilters }),
+          api.get('/leads/dashboard', { params: analyticsFilters })
+        ]);
+
+        if (!active) return;
+
+        setAnalyticsData({
+          timeseries: timeseriesRes.data.map((item) => ({
+            label: new Date(item.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            value: item.total
+          })),
+          byStatus: dashboardRes.data.por_status || {},
+          byTemperature: dashboardRes.data.por_temperatura || {}
+        });
+      } catch (err) {
+        if (active) {
+          setError(err.response?.data?.error || 'Nao foi possivel carregar a analise.');
+        }
+      } finally {
+        if (active) setAnalyticsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+
+    return () => {
+      active = false;
+    };
+  }, [analyticsFilters]);
+
+  const updateAnalyticsFilter = (event) => {
+    const { name, value } = event.target;
+    setAnalyticsFilters((current) => ({ ...current, [name]: value }));
+  };
 
   useEffect(() => {
     const checkUnread = () => {
@@ -105,11 +153,23 @@ function Dashboard() {
   const roleLabel = user.role === 'admin' ? 'Gestor(a)' : 'Corretor(a)';
   const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
 
-  const todayLabel = new Date().toLocaleDateString('pt-BR', {
+    const todayLabel = new Date().toLocaleDateString('pt-BR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
+
+  const tempLabels = { frio: 'Frio', morno: 'Morno', quente: 'Quente' };
+
+  const statusChartData = Object.entries(statusLabels).map(([key, label]) => ({
+    label,
+    value: analyticsData.byStatus[key] || 0
+  }));
+
+  const temperatureChartData = Object.entries(tempLabels).map(([key, label]) => ({
+    label,
+    value: analyticsData.byTemperature[key] || 0
+  }));
 
   return (
     <main className="dd-shell app-shell">
@@ -339,7 +399,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div className="dd-temp-card" style={{ borderColor: '#E11D48' }}>
+                                <div className="dd-temp-card" style={{ borderColor: '#E11D48' }}>
                   <span className="dd-icon-badge" style={{ background: '#E11D48' }}><Icon name="flame" /></span>
                   <div>
                     <div className="dd-temp-value">{byTemperature.quente || 0}</div>
@@ -347,6 +407,55 @@ function Dashboard() {
                   </div>
                 </div>
               </div>
+            </section>
+
+            <section className="dd-panel">
+              <div className="dd-panel-head">
+                <div>
+                  <h2>Analise geral</h2>
+                  <p>Filtre por periodo.</p>
+                </div>
+              </div>
+
+              <div className="dd-analytics-filters">
+                <label>
+                  Inicio
+                  <input className="dd-input" name="startDate" onChange={updateAnalyticsFilter} type="date" value={analyticsFilters.startDate} />
+                </label>
+                <label>
+                  Fim
+                  <input className="dd-input" name="endDate" onChange={updateAnalyticsFilter} type="date" value={analyticsFilters.endDate} />
+                </label>
+                <button className="dd-btn-secondary" onClick={() => setAnalyticsFilters({ startDate: '', endDate: '' })}>
+                  Limpar
+                </button>
+              </div>
+
+              {analyticsLoading ? (
+                <p style={{ color: 'var(--dd-muted)' }}>Carregando analise...</p>
+              ) : (
+                <div className="dd-charts-grid">
+                  <ChartCard
+                    title="Leads registrados no periodo"
+                    data={analyticsData.timeseries}
+                    availableTypes={['line', 'bar', 'area']}
+                    valueLabel="Leads"
+                  />
+                  <ChartCard
+                    title="Leads por status"
+                    data={statusChartData}
+                    availableTypes={['bar', 'pie', 'line']}
+                    valueLabel="Leads"
+                  />
+                  <ChartCard
+                    title="Leads por temperatura"
+                    data={temperatureChartData}
+                    availableTypes={['pie', 'bar']}
+                    valueLabel="Leads"
+                    colors={['#3498db', '#f1c40f', '#e74c3c']}
+                  />
+                </div>
+              )}
             </section>
           </>
         )}
