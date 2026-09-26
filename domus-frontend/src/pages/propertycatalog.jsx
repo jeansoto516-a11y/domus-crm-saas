@@ -277,6 +277,9 @@ function PropertyCatalog() {
                 )}
 
                 <div className="dd-form-actions" style={{ marginTop: 20 }}>
+                <button className="dd-btn-small" onClick={() => navigate(`/catalogo/${selectedProperty.id}/editar`)}>
+                    Editar imovel
+                </button>
                 <button className="dd-btn-small" onClick={() => handleDelete(selectedProperty.id, selectedProperty.title)}>
                     Excluir imovel
                 </button>

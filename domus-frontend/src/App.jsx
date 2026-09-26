@@ -26,6 +26,7 @@ import RentalPropertyHistory from './pages/rentalpropertyhistory';
 import RentalRanking from './pages/rentalranking';
 import PropertyCatalog from './pages/propertycatalog';
 import CreateProperty from './pages/createproperty';
+import EditProperty from './pages/editproperty';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -228,11 +229,20 @@ function App() {
           }
         />
 
-        <Route
+                <Route
           path="/catalogo/novo"
           element={
             <PrivateRoute>
               <CreateProperty />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/catalogo/:id/editar"
+          element={
+            <PrivateRoute>
+              <EditProperty />
             </PrivateRoute>
           }
         />
