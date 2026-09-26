@@ -149,6 +149,7 @@ function Dashboard() {
   const conversion = data?.conversao || '0%';
   const byStatus = data?.por_status || {};
   const byTemperature = data?.por_temperatura || {};
+  const properties = data?.imoveis || { total: 0, por_status: {} };
 
   const roleLabel = user.role === 'admin' ? 'Gestor(a)' : 'Corretor(a)';
   const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
@@ -376,7 +377,7 @@ function Dashboard() {
               </div>
             </section>
 
-            <section className="dd-panel">
+                        <section className="dd-panel">
               <div className="dd-panel-head">
                 <div>
                   <h2>Temperatura dos leads</h2>
@@ -404,7 +405,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                                <div className="dd-temp-card" style={{ borderColor: '#E11D48' }}>
+                                                <div className="dd-temp-card" style={{ borderColor: '#E11D48' }}>
                   <span className="dd-icon-badge" style={{ background: '#E11D48' }}><Icon name="flame" /></span>
                   <div>
                     <div className="dd-temp-value">{byTemperature.quente || 0}</div>
@@ -414,7 +415,59 @@ function Dashboard() {
               </div>
             </section>
 
-            <section className="dd-panel">cd domus
+            <section className="dd-panel">
+              <div className="dd-panel-head">
+                <div>
+                  <h2>Imoveis no catalogo</h2>
+                  <p>Distribuicao dos imoveis cadastrados por status.</p>
+                </div>
+                <button className="dd-link-button" onClick={() => navigate('/catalogo')}>
+                  Ver catalogo
+                </button>
+              </div>
+
+              <section className="dd-grid-3" style={{ marginBottom: 16 }}>
+                <article className="dd-card">
+                  <div className="dd-card-top">
+                    <span className="dd-icon-badge" style={{ background: '#2F6FED' }}><Icon name="file" /></span>
+                  </div>
+                  <span className="dd-card-label">Total de imoveis</span>
+                  <strong className="dd-card-value">{properties.total}</strong>
+                </article>
+              </section>
+
+              <div className="dd-temp-grid">
+                <div className="dd-temp-card" style={{ borderColor: '#0D9488' }}>
+                  <div>
+                    <div className="dd-temp-value">{properties.por_status.disponivel || 0}</div>
+                    <p className="dd-temp-label">Disponiveis.</p>
+                  </div>
+                </div>
+
+                <div className="dd-temp-card" style={{ borderColor: '#D97706' }}>
+                  <div>
+                    <div className="dd-temp-value">{properties.por_status.reservado || 0}</div>
+                    <p className="dd-temp-label">Reservados.</p>
+                  </div>
+                </div>
+
+                <div className="dd-temp-card" style={{ borderColor: '#7f1d1d' }}>
+                  <div>
+                    <div className="dd-temp-value">{properties.por_status.vendido || 0}</div>
+                    <p className="dd-temp-label">Vendidos.</p>
+                  </div>
+                </div>
+
+                <div className="dd-temp-card" style={{ borderColor: '#7f1d1d' }}>
+                  <div>
+                    <div className="dd-temp-value">{properties.por_status.alugado || 0}</div>
+                    <p className="dd-temp-label">Alugados.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="dd-panel">
               <div className="dd-panel-head">
                 <div>
                   <h2>Analise geral</h2>

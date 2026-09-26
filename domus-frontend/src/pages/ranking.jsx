@@ -228,7 +228,7 @@ function Ranking() {
 
                     <strong className="dd-ranking-name">{broker.name}</strong>
 
-                    <div className="dd-ranking-stats">
+                                        <div className="dd-ranking-stats">
                         <div>
                         <span>{broker.fechados_mes}</span>
                         <small>Fechados/mes</small>
@@ -240,6 +240,10 @@ function Ranking() {
                         <div>
                         <span>{taxa}%</span>
                         <small>Conversao</small>
+                        </div>
+                        <div>
+                        <span>{broker.total_properties}</span>
+                        <small>Imoveis</small>
                         </div>
                     </div>
 
