@@ -5,6 +5,12 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const userController = require('../controllers/userController');
 const adminMiddleware = require('../middlewares/adminMiddleware');
 const checkSubscription = require('../middlewares/checkSubscription');
+const multer = require('multer');
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }
+});
 
 router.get(
     '/me',
@@ -16,6 +22,13 @@ router.put(
     '/me',
     authMiddleware,
     userController.updateMe
+);
+
+router.post(
+    '/me/avatar',
+    authMiddleware,
+    upload.single('avatar'),
+    userController.uploadAvatar
 );
 
 router.put(

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
@@ -21,9 +21,46 @@ function Profile() {
     const [unreadCount, setUnreadCount] = useState(0);
     const navigate = useNavigate();
 
-    const [plans, setPlans] = useState({});
+        const [plans, setPlans] = useState({});
     const [brokerCount, setBrokerCount] = useState(0);
     const [changingPlan, setChangingPlan] = useState(false);
+
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const fileInputRef = useRef(null);
+
+    const handleAvatarClick = () => fileInputRef.current?.click();
+
+    const handleAvatarChange = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        setAvatarUploading(true);
+        setError('');
+        setMessage('');
+
+        try {
+            const response = await api.post('/users/me/avatar', formData, {
+                headers: { 'Content-Type': undefined }
+            });
+
+            setUser((current) => ({ ...current, avatar_url: response.data.avatar_url }));
+
+            const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            localStorage.setItem('user', JSON.stringify({ ...storedUser, avatar_url: response.data.avatar_url }));
+
+            setMessage('Foto de perfil atualizada.');
+            setTimeout(() => setMessage(''), 3000);
+
+        } catch (err) {
+            setError(err.response?.data?.error || 'Erro ao enviar foto.');
+        } finally {
+            setAvatarUploading(false);
+            event.target.value = '';
+        }
+    };
 
     const loadMe = () => {
     api.get('/users/me').then((response) => {
@@ -182,8 +219,26 @@ function Profile() {
         {error && <div className="dd-alert-error">{error}</div>}
         {message && <div style={{ background: 'rgba(13,148,136,0.12)', border: '1px solid rgba(13,148,136,0.4)', color: '#5EEAD4', padding: '12px 16px', borderRadius: 8, marginBottom: 16 }}>{message}</div>}
 
-        <section className="dd-panel dd-panel-narrow">
+                <section className="dd-panel dd-panel-narrow">
             <h2 style={{ marginTop: 0 }}>Meus dados</h2>
+
+            <div className="dd-avatar-upload">
+                <div className="dd-avatar-circle-lg" onClick={handleAvatarClick}>
+                    {user.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.name} />
+                    ) : (
+                        <span>{user.name ? user.name.charAt(0).toUpperCase() : '?'}</span>
+                    )}
+                    <div className="dd-avatar-overlay">{avatarUploading ? 'Enviando...' : 'Alterar foto'}</div>
+                </div>
+                <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/webp"
+                    ref={fileInputRef}
+                    onChange={handleAvatarChange}
+                    style={{ display: 'none' }}
+                />
+            </div>
 
             <form className="dd-form" onSubmit={handleSaveProfile}>
             <label className="dd-field">

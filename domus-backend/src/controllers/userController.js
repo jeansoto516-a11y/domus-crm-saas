@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const pool = require('../config/db');
 const PLANS = require('../config/plans');
 const { sendMail } = require('../services/mailService');
+const supabase = require('../config/supabase');
+
 
 /**
  * Listar corretores da empresa
@@ -18,6 +20,7 @@ exports.getBrokers = async (req, res) => {
                 role,
                 company_id,
                 access_scope,
+                avatar_url,
                 created_at
             FROM users
             WHERE company_id = $1
@@ -379,7 +382,7 @@ exports.updateBroker = async (req, res) => {
 exports.getMe = async (req, res) => {
     try {
         const userResult = await pool.query(
-            `SELECT id, name, email, role, company_id FROM users WHERE id = $1`,
+            `SELECT id, name, email, role, company_id, avatar_url FROM users WHERE id = $1`,
             [req.user.id]
         );
 
@@ -525,4 +528,55 @@ exports.updatePlan = async (req, res) => {
  */
 exports.getPlans = async (req, res) => {
     return res.json(PLANS);
+};
+
+/**
+ * Upload/atualizacao da foto de perfil do usuario logado
+ */
+exports.uploadAvatar = async (req, res) => {
+
+    if (!req.file) {
+        return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (!allowedTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ error: 'Formato invalido. Envie JPG, PNG ou WEBP.' });
+    }
+
+    try {
+
+        const fileExt = req.file.mimetype.split('/')[1];
+        const filePath = `user-${req.user.id}-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('Avatars')
+            .upload(filePath, req.file.buffer, {
+                contentType: req.file.mimetype,
+                upsert: true
+            });
+
+        if (uploadError) {
+            console.error('Erro ao enviar imagem para o Supabase:', uploadError);
+            return res.status(500).json({ error: 'Erro ao enviar imagem.' });
+        }
+
+        const { data: publicUrlData } = supabase.storage
+            .from('Avatars')
+            .getPublicUrl(filePath);
+
+        const avatarUrl = publicUrlData.publicUrl;
+
+        await pool.query(
+            `UPDATE users SET avatar_url = $1 WHERE id = $2`,
+            [avatarUrl, req.user.id]
+        );
+
+        return res.json({ avatar_url: avatarUrl });
+
+    } catch (err) {
+        console.error('Erro ao processar upload de avatar:', err);
+        return res.status(500).json({ error: 'Erro ao processar upload.' });
+    }
 };

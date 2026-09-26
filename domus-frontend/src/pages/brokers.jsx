@@ -308,9 +308,20 @@ function Brokers() {
                                 </thead>
 
                                 <tbody>
-                                    {brokers.map((broker) => (
+                                                                        {brokers.map((broker) => (
                                         <tr key={broker.id}>
-                                            <td><strong>{broker.name}</strong></td>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <span className="dd-avatar-mini">
+                                                        {broker.avatar_url ? (
+                                                            <img src={broker.avatar_url} alt={broker.name} />
+                                                        ) : (
+                                                            broker.name.charAt(0).toUpperCase()
+                                                        )}
+                                                    </span>
+                                                    <strong>{broker.name}</strong>
+                                                </div>
+                                            </td>
                                             <td>{broker.email}</td>
                                             <td><span className="dd-pill">{broker.role}</span></td>
                                             <td>

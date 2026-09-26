@@ -2176,3 +2176,67 @@
   color: var(--dd-accent, #6c5ce7);
   font-weight: 600;
 }
+
+.dd-avatar img,
+.dd-avatar-mini img,
+.dd-avatar-circle-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.dd-avatar-upload {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.dd-avatar-circle-lg {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--dd-accent, #6c5ce7), #a29bfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.dd-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.dd-avatar-circle-lg:hover .dd-avatar-overlay {
+  opacity: 1;
+}
+
+.dd-avatar-mini {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--dd-accent, #6c5ce7), #a29bfe);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  overflow: hidden;
+  flex-shrink: 0;
+}

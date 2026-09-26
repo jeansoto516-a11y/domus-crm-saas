@@ -226,8 +226,10 @@ function Dashboard() {
               <Icon name="calendar" />
               Hoje, {todayLabel}
             </div>
-            <div className="dd-user-pill">
-              <span className="dd-avatar">{initial}</span>
+              <div className="dd-user-pill">
+              <span className="dd-avatar">
+                {user.avatar_url ? <img src={user.avatar_url} alt={user.name} /> : initial}
+              </span>
               <div>
                 <div className="dd-user-name">{user.name || 'Usuario'}</div>
                 <div className="dd-user-role">{roleLabel}</div>
@@ -409,7 +411,7 @@ function Dashboard() {
               </div>
             </section>
 
-            <section className="dd-panel">
+            <section className="dd-panel">cd domus
               <div className="dd-panel-head">
                 <div>
                   <h2>Analise geral</h2>

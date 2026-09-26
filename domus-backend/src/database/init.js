@@ -176,7 +176,9 @@ async function createTables() {
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS public_slug TEXT UNIQUE;
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_type TEXT DEFAULT 'venda';
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'normal';
-      
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+
       CREATE TABLE IF NOT EXISTS lead_profiles (
         id SERIAL PRIMARY KEY,
         lead_id INTEGER UNIQUE REFERENCES leads(id) ON DELETE CASCADE,
