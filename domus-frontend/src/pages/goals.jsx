@@ -123,6 +123,9 @@ function Goals() {
             <button onClick={() => navigate('/leads/novo')}>
                 <Icon name="userPlus" /> Novo lead
             </button>
+            <button onClick={() => navigate('/catalogo')}>
+            <Icon name="file" /> Catalogo de imoveis
+            </button>
             <button onClick={() => navigate('/brokers')}>
                 <Icon name="users" /> Corretores
             </button>

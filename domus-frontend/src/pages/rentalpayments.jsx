@@ -122,6 +122,9 @@ function Rentalpayments() {
             <button onClick={() => navigate('/leads')}>
                 <Icon name="users" /> Leads
             </button>
+            <button onClick={() => navigate('/catalogo')}>
+            <Icon name="file" /> Catalogo de imoveis
+            </button>
             <button onClick={() => navigate('/brokers')}>
                 <Icon name="users" /> Corretores
             </button>

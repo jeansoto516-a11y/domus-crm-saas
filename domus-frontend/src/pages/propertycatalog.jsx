@@ -31,8 +31,21 @@ function PropertyCatalog() {
     const [error, setError] = useState('');
     const [filters, setFilters] = useState({ lead_type: '', status: '' });
 
-    const [selectedProperty, setSelectedProperty] = useState(null);
+        const [selectedProperty, setSelectedProperty] = useState(null);
     const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        const checkUnread = () => {
+            api.get('/messages/unread-count')
+                .then((res) => setUnreadCount(res.data.unread))
+                .catch(() => {});
+        };
+
+        checkUnread();
+        const interval = setInterval(checkUnread, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     const loadProperties = () => {
     setLoading(true);
@@ -83,11 +96,33 @@ function PropertyCatalog() {
             <button onClick={() => navigate('/dashboard')}>
             <Icon name="calendar" /> Dashboard
             </button>
+            <button onClick={() => navigate('/alugueis')}>
+            <Icon name="file" /> Alugueis
+            </button>
             <button onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
             </button>
-            <button className="active" onClick={() => navigate('/catalogo')}>
+            <button className="active" onClick={() => navigate('/leads/novo')}>
+            <Icon name="userPlus" /> Novo lead
+            </button>
+            <button onClick={() => navigate('/catalogo')}>
             <Icon name="file" /> Catalogo de imoveis
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+            <Icon name="users" /> Corretores
+            </button>
+            <button onClick={() => navigate('/ranking')}>
+            <Icon name="check" /> Ranking
+            </button>
+            <button onClick={() => navigate('/metas')}>
+            <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+            <Icon name="users" /> Perfil
+            </button>
+            <button onClick={() => navigate('/mensagens')}>
+            <Icon name="chat" /> Mensagens
+            {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
             </button>
         </nav>
         </aside>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import RemindersWidget from '../components/RemindersWidget';
@@ -34,7 +34,20 @@ function CreateProperty() {
     const [createdProperty, setCreatedProperty] = useState(null);
     const [photoFiles, setPhotoFiles] = useState([]);
     const [uploadingPhotos, setUploadingPhotos] = useState(false);
-    const [uploadedPhotos, setUploadedPhotos] = useState([]);
+        const [uploadedPhotos, setUploadedPhotos] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        const checkUnread = () => {
+            api.get('/messages/unread-count')
+                .then((res) => setUnreadCount(res.data.unread))
+                .catch(() => {});
+        };
+
+        checkUnread();
+        const interval = setInterval(checkUnread, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     const updateField = (event) => {
     const { name, value } = event.target;
@@ -107,15 +120,37 @@ function CreateProperty() {
             <span className="dd-brand-mark">D</span>
             <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
-        <nav className="dd-nav">
+                <nav className="dd-nav">
             <button onClick={() => navigate('/dashboard')}>
             <Icon name="calendar" /> Dashboard
+            </button>
+            <button onClick={() => navigate('/alugueis')}>
+            <Icon name="file" /> Alugueis
             </button>
             <button onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
             </button>
-            <button onClick={() => navigate('/catalogo')}>
+            <button onClick={() => navigate('/leads/novo')}>
+            <Icon name="userPlus" /> Novo lead
+            </button>
+            <button className="active" onClick={() => navigate('/catalogo')}>
             <Icon name="file" /> Catalogo de imoveis
+            </button>
+            <button onClick={() => navigate('/brokers')}>
+            <Icon name="users" /> Corretores
+            </button>
+            <button onClick={() => navigate('/ranking')}>
+            <Icon name="check" /> Ranking
+            </button>
+            <button onClick={() => navigate('/metas')}>
+            <Icon name="filter" /> Metas
+            </button>
+            <button onClick={() => navigate('/perfil')}>
+            <Icon name="users" /> Perfil
+            </button>
+            <button onClick={() => navigate('/mensagens')}>
+            <Icon name="chat" /> Mensagens
+            {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
             </button>
         </nav>
         </aside>

@@ -169,6 +169,9 @@ function Brokers() {
                     <button onClick={() => navigate('/leads/novo')}>
                         <Icon name="userPlus" /> Novo lead
                     </button>
+                    <button onClick={() => navigate('/catalogo')}>
+                        <Icon name="file" /> Catalogo de imoveis
+                    </button>
                     <button className="active">
                         <Icon name="users" /> Corretores
                     </button>
