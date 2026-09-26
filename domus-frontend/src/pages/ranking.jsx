@@ -215,7 +215,13 @@ function Ranking() {
                     >
                     <div className="dd-ranking-medal">{medals[index] || `${index + 1}º`}</div>
 
-                    <div className="dd-ranking-avatar">{getInitials(broker.name)}</div>
+                                        <div className="dd-ranking-avatar">
+                        {broker.avatar_url ? (
+                        <img src={broker.avatar_url} alt={broker.name} />
+                        ) : (
+                        getInitials(broker.name)
+                        )}
+                    </div>
 
                     <strong className="dd-ranking-name">{broker.name}</strong>
 

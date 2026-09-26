@@ -759,23 +759,25 @@ exports.getBrokerRanking = async (req, res) => {
 
         const result = await pool.query(
             `
-            SELECT
+                        SELECT
                 users.id,
                 users.name,
+                users.avatar_url,
                 COUNT(*) FILTER (WHERE leads.status = 'fechado' AND date_trunc('month', leads.updated_at) = date_trunc('month', NOW())) AS fechados_mes,
                 COUNT(*) AS total_leads
             FROM users
             LEFT JOIN leads ON leads.user_id = users.id AND leads.company_id = users.company_id
             WHERE users.company_id = $1 AND users.role = 'user'
-            GROUP BY users.id, users.name
+            GROUP BY users.id, users.name, users.avatar_url
             ORDER BY fechados_mes DESC, total_leads DESC
             `,
             [req.user.company_id]
         );
 
-        const ranking = result.rows.map((row) => ({
+                const ranking = result.rows.map((row) => ({
             id: row.id,
             name: row.name,
+            avatar_url: row.avatar_url,
             fechados_mes: Number(row.fechados_mes),
             total_leads: Number(row.total_leads)
         }));

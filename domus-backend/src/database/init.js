@@ -176,7 +176,43 @@ async function createTables() {
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS public_slug TEXT UNIQUE;
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_type TEXT DEFAULT 'venda';
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'normal';
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+      CREATE TABLE IF NOT EXISTS properties (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        lead_type TEXT NOT NULL DEFAULT 'venda',
+        property_type TEXT,
+        region TEXT,
+        city TEXT,
+        bedrooms INTEGER,
+        suites INTEGER,
+        bathrooms INTEGER,
+        garage_spots INTEGER,
+        area NUMERIC,
+        land_area NUMERIC,
+        floor TEXT,
+        has_elevator BOOLEAN,
+        price NUMERIC,
+        rent_price NUMERIC,
+        status TEXT NOT NULL DEFAULT 'disponivel',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS property_photos (
+        id SERIAL PRIMARY KEY,
+        property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
+        url TEXT NOT NULL,
+        position INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_properties_company ON properties(company_id);
+      CREATE INDEX IF NOT EXISTS idx_property_photos_property ON property_photos(property_id);
 
 
       CREATE TABLE IF NOT EXISTS lead_profiles (

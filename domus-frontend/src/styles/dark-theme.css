@@ -2179,7 +2179,8 @@
 
 .dd-avatar img,
 .dd-avatar-mini img,
-.dd-avatar-circle-lg img {
+.dd-avatar-circle-lg img,
+.dd-ranking-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
