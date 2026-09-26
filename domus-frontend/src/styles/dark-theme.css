@@ -1967,3 +1967,113 @@
   font-size: 11px;
   text-transform: uppercase;
 }
+
+.dd-ranking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.dd-ranking-card {
+  position: relative;
+  background: var(--dd-panel, #1c1c22);
+  border: 1px solid var(--dd-border, #2a2a33);
+  border-top: 4px solid var(--dd-accent, #6c5ce7);
+  border-radius: 14px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dd-ranking-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.dd-ranking-card.rank-1 { border-top-color: #f1c40f; }
+.dd-ranking-card.rank-2 { border-top-color: #bdc3c7; }
+.dd-ranking-card.rank-3 { border-top-color: #cd7f32; }
+
+.dd-ranking-medal {
+  font-size: 22px;
+  position: absolute;
+  top: 12px;
+  right: 14px;
+}
+
+.dd-ranking-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--dd-accent, #6c5ce7), #a29bfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+}
+
+.dd-ranking-name {
+  font-size: 15px;
+  text-align: center;
+}
+
+.dd-ranking-stats {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.dd-ranking-stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.dd-ranking-stats span {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.dd-ranking-stats small {
+  color: var(--dd-muted, #888);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.dd-ranking-view {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.dd-broker-lead-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dd-broker-lead-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--dd-border, #2a2a33);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.dd-broker-lead-list li > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
