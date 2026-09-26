@@ -455,7 +455,7 @@ exports.getDashboard = async (req, res) => {
             values
         );
 
-        // Quantidade por temperatura
+                // Quantidade por temperatura
         const temperatureResult = await pool.query(
             `
             SELECT
@@ -466,6 +466,19 @@ exports.getDashboard = async (req, res) => {
             GROUP BY temperature
             `,
             values
+        );
+
+        // Quantidade de imoveis por status
+        const propertyStatusResult = await pool.query(
+            `
+            SELECT
+                status,
+                COUNT(*) AS total
+            FROM properties
+            WHERE company_id = $1
+            GROUP BY status
+            `,
+            [req.user.company_id]
         );
 
         const dashboard = {
@@ -479,10 +492,20 @@ exports.getDashboard = async (req, res) => {
                 fechado: 0
             },
 
-            por_temperatura: {
+                        por_temperatura: {
                 frio: 0,
                 morna: 0,
                 quente: 0
+            },
+
+            imoveis: {
+                total: 0,
+                por_status: {
+                    disponivel: 0,
+                    reservado: 0,
+                    vendido: 0,
+                    alugado: 0
+                }
             }
         };
 
@@ -490,8 +513,13 @@ exports.getDashboard = async (req, res) => {
             dashboard.por_status[item.status] = Number(item.total);
 });
 
-            temperatureResult.rows.forEach((item) => {
+                        temperatureResult.rows.forEach((item) => {
             dashboard.por_temperatura[item.temperature] = Number(item.total);
+});
+
+            propertyStatusResult.rows.forEach((item) => {
+            dashboard.imoveis.por_status[item.status] = Number(item.total);
+            dashboard.imoveis.total += Number(item.total);
 });
 
         const totalLeads = dashboard.total;
@@ -759,14 +787,16 @@ exports.getBrokerRanking = async (req, res) => {
 
         const result = await pool.query(
             `
-                        SELECT
+                                    SELECT
                 users.id,
                 users.name,
                 users.avatar_url,
-                COUNT(*) FILTER (WHERE leads.status = 'fechado' AND date_trunc('month', leads.updated_at) = date_trunc('month', NOW())) AS fechados_mes,
-                COUNT(*) AS total_leads
+                COUNT(DISTINCT leads.id) FILTER (WHERE leads.status = 'fechado' AND date_trunc('month', leads.updated_at) = date_trunc('month', NOW())) AS fechados_mes,
+                COUNT(DISTINCT leads.id) AS total_leads,
+                COUNT(DISTINCT properties.id) AS total_properties
             FROM users
             LEFT JOIN leads ON leads.user_id = users.id AND leads.company_id = users.company_id
+            LEFT JOIN properties ON properties.created_by = users.id AND properties.company_id = users.company_id
             WHERE users.company_id = $1 AND users.role = 'user'
             GROUP BY users.id, users.name, users.avatar_url
             ORDER BY fechados_mes DESC, total_leads DESC
@@ -774,12 +804,13 @@ exports.getBrokerRanking = async (req, res) => {
             [req.user.company_id]
         );
 
-                const ranking = result.rows.map((row) => ({
+                        const ranking = result.rows.map((row) => ({
             id: row.id,
             name: row.name,
             avatar_url: row.avatar_url,
             fechados_mes: Number(row.fechados_mes),
-            total_leads: Number(row.total_leads)
+            total_leads: Number(row.total_leads),
+            total_properties: Number(row.total_properties)
         }));
 
         return res.json(ranking);
