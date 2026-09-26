@@ -24,6 +24,8 @@ import RentalDashboard from './pages/rentaldashboard';
 import Rentalpayments from './pages/rentalpayments';
 import RentalPropertyHistory from './pages/rentalpropertyhistory';
 import RentalRanking from './pages/rentalranking';
+import PropertyCatalog from './pages/propertycatalog';
+import CreateProperty from './pages/createproperty';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -213,6 +215,24 @@ function App() {
           element={
             <PrivateRoute>
               <RentalRanking />
+            </PrivateRoute>
+          }
+        />
+
+                <Route
+          path="/catalogo"
+          element={
+            <PrivateRoute>
+              <PropertyCatalog />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/catalogo/novo"
+          element={
+            <PrivateRoute>
+              <CreateProperty />
             </PrivateRoute>
           }
         />

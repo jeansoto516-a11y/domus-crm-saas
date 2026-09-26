@@ -15,6 +15,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const goalRoutes = require('./routes/goalRoutes');
 const rentalRoutes = require('./routes/rentalRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
+const propertyRoutes = require('./routes/propertyRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,6 +50,7 @@ app.get('/health', async (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/leads', leadRoutes);
 app.use('/payments', paymentRoutes);
+app.use('/properties', propertyRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Rota nao encontrada.' });

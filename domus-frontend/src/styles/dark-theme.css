@@ -2241,3 +2241,135 @@
   overflow: hidden;
   flex-shrink: 0;
 }
+
+.dd-property-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.dd-property-photo-thumb {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--dd-border, #2a2a33);
+}
+
+.dd-property-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.dd-property-card {
+  background: var(--dd-panel, #1c1c22);
+  border: 1px solid var(--dd-border, #2a2a33);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dd-property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.dd-property-cover {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background: #14141a;
+}
+
+.dd-property-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dd-property-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dd-muted, #888);
+  font-size: 28px;
+}
+
+.dd-property-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+}
+
+.dd-property-status.disponivel { background: #0d9488; }
+.dd-property-status.reservado { background: #d97706; }
+.dd-property-status.vendido,
+.dd-property-status.alugado { background: #7f1d1d; }
+
+.dd-property-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dd-property-location {
+  font-size: 12px;
+  color: var(--dd-muted, #888);
+}
+
+.dd-property-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--dd-muted, #888);
+}
+
+.dd-property-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.dd-property-gallery-main {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.dd-property-gallery-thumbs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.dd-property-gallery-thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0.6;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+.dd-property-gallery-thumb.active {
+  opacity: 1;
+  border-color: var(--dd-accent, #6c5ce7);
+}
