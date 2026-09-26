@@ -28,9 +28,11 @@ function Leads() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
-  const [expandedLeadId, setExpandedLeadId] = useState(null);
+  const [selectedLead, setSelectedLead] = useState(null);
   const [historyByLead, setHistoryByLead] = useState({});
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [profileByLead, setProfileByLead] = useState({});
+  const [profileLoading, setProfileLoading] = useState(false);
   const [noteText, setNoteText] = useState('');
   const navigate = useNavigate();
   const [staleLeadIds, setStaleLeadIds] = useState(new Set());
@@ -131,18 +133,33 @@ function Leads() {
     }
   };
 
-  const toggleHistory = (leadId) => {
-    if (expandedLeadId === leadId) {
-      setExpandedLeadId(null);
-      return;
+    const loadProfile = async (leadId) => {
+    try {
+      setProfileLoading(true);
+      const { data } = await api.get(`/leads/${leadId}/profile`);
+      setProfileByLead((current) => ({ ...current, [leadId]: data }));
+    } catch (err) {
+      setError(err.response?.data?.error || 'Nao foi possivel carregar o mapeamento.');
+    } finally {
+      setProfileLoading(false);
     }
+  };
 
-    setExpandedLeadId(leadId);
+  const openLeadModal = (lead) => {
+    setSelectedLead(lead);
     setNoteText('');
 
-    if (!historyByLead[leadId]) {
-      loadHistory(leadId);
+    if (!historyByLead[lead.id]) {
+      loadHistory(lead.id);
     }
+
+    if (!profileByLead[lead.id]) {
+      loadProfile(lead.id);
+    }
+  };
+
+  const closeLeadModal = () => {
+    setSelectedLead(null);
   };
 
   const openWhatsApp = (lead) => {
@@ -298,7 +315,7 @@ function Leads() {
 
         {error && <div className="dd-alert-error">{error}</div>}
 
-        <section className="dd-table-wrap">
+                <section className="dd-leads-grid">
           {loading ? (
             <div className="dd-empty">Carregando leads...</div>
           ) : leads.length === 0 ? (
@@ -308,130 +325,185 @@ function Leads() {
               <button className="dd-btn-primary" style={{ marginTop: 12 }} onClick={() => navigate('/leads/novo')}>Cadastrar lead</button>
             </div>
           ) : (
-            <table className="dd-table">
-              <thead>
-                <tr>
-                  <th>Lead</th>
-                  <th>Contato</th>
-                  <th>Status</th>
-                  <th>Score</th>
-                  <th>Temperatura</th>
-                  <th>Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((lead) => {
-                  const currentIndex = flow.indexOf(lead.status);
-                  const isStale = staleLeadIds.has(lead.id);
-                  return (
-                    <React.Fragment key={lead.id}>
-                      <tr
-                        className={`clickable${isStale ? ' stale' : ''}`}
-                        onClick={() => toggleHistory(lead.id)}
+            leads.map((lead) => {
+              const currentIndex = flow.indexOf(lead.status);
+              const isStale = staleLeadIds.has(lead.id);
+
+              return (
+                <article
+                  key={lead.id}
+                  className={`dd-lead-card${isStale ? ' stale' : ''}`}
+                  onClick={() => openLeadModal(lead)}
+                >
+                  <div className="dd-lead-card-top">
+                    <strong>{lead.name}</strong>
+                    <span className={`dd-temp-tag ${lead.temperature || 'frio'}`}>
+                      {temperatureLabels[lead.temperature] || 'Frio'}
+                    </span>
+                  </div>
+
+                  {isStale && <span className="dd-stale-tag">Parado ha mais de 5 dias</span>}
+
+                  <div className="dd-lead-card-contact">
+                    <div>{lead.email || 'Sem email'}</div>
+                    <div style={{ color: 'var(--dd-muted)', fontSize: 12 }}>{lead.phone || 'Sem telefone'}</div>
+                  </div>
+
+                  <div className="dd-lead-card-meta">
+                    <span className="dd-pill">{statusLabels[lead.status] || lead.status}</span>
+                    <strong>Score: {lead.score || 0}</strong>
+                  </div>
+
+                  <div style={{ color: 'var(--dd-muted)', fontSize: 12 }}>
+                    {new Date(lead.created_at).toLocaleDateString('pt-BR')}
+                  </div>
+
+                  <div className="dd-row-actions" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className="dd-btn-small"
+                      disabled={currentIndex <= 0}
+                      onClick={() => changeStatus(lead, -1)}
+                    >
+                      Voltar
+                    </button>
+                    <button
+                      className="dd-btn-small"
+                      disabled={currentIndex >= flow.length - 1}
+                      onClick={() => changeStatus(lead, 1)}
+                    >
+                      Avancar
+                    </button>
+                    {lead.phone && (
+                      <button
+                        className="dd-btn-small dd-btn-whatsapp"
+                        onClick={() => openWhatsApp(lead)}
                       >
-                        <td>
-                          <strong>{lead.name}</strong>
-                          {isStale && (
-                            <span className="dd-stale-tag">Parado ha mais de 5 dias</span>
-                          )}
-                          <div style={{ color: 'var(--dd-muted)', fontSize: 12, marginTop: 2 }}>
-                            {new Date(lead.created_at).toLocaleDateString('pt-BR')}
-                          </div>
-                        </td>
-
-                        <td>
-                          <div>{lead.email || 'Sem email'}</div>
-                          <div style={{ color: 'var(--dd-muted)', fontSize: 12 }}>{lead.phone || 'Sem telefone'}</div>
-                        </td>
-                        <td><span className="dd-pill">{statusLabels[lead.status] || lead.status}</span></td>
-                        <td><strong>{lead.score || 0}</strong></td>
-                        <td>
-                          <span className={`dd-temp-tag ${lead.temperature || 'frio'}`}>
-                            {temperatureLabels[lead.temperature] || 'Frio'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="dd-row-actions">
-                            <button
-                              className="dd-btn-small"
-                              disabled={currentIndex <= 0}
-                              onClick={(e) => { e.stopPropagation(); changeStatus(lead, -1); }}
-                            >
-                              Voltar
-                            </button>
-                            <button
-                              className="dd-btn-small"
-                              disabled={currentIndex >= flow.length - 1}
-                              onClick={(e) => { e.stopPropagation(); changeStatus(lead, 1); }}
-                            >
-                              Avancar
-                            </button>
-                            {lead.phone && (
-                              <button
-                                className="dd-btn-small dd-btn-whatsapp"
-                                onClick={(e) => { e.stopPropagation(); openWhatsApp(lead); }}
-                              >
-                                WhatsApp
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-
-                      {expandedLeadId === lead.id && (
-                        <tr className="dd-history-row">
-                          <td colSpan={6}>
-                            <div style={{ padding: '12px 4px' }}>
-                              <strong>Historico do lead</strong>
-
-                              {historyLoading && !historyByLead[lead.id] ? (
-                                <p style={{ color: 'var(--dd-muted)' }}>Carregando historico...</p>
-                              ) : (
-                                <ul className="dd-history-list">
-                                  {(historyByLead[lead.id] || []).length === 0 && (
-                                    <li style={{ color: 'var(--dd-muted)' }}>Nenhum registro ainda.</li>
-                                  )}
-                                  {(historyByLead[lead.id] || []).map((item) => (
-                                    <li key={item.id}>
-                                      <div style={{ fontSize: 13 }}>
-                                        {item.type === 'status' ? '🔄 ' : '📝 '}
-                                        {item.content}
-                                      </div>
-                                      <div className="dd-history-meta">
-                                        {item.autor || 'Sistema'} - {new Date(item.created_at).toLocaleString('pt-BR')}
-                                      </div>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-
-                              <div style={{ display: 'flex', gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
-                                <input
-                                  type="text"
-                                  className="dd-input"
-                                  placeholder="Adicionar anotacao..."
-                                  value={noteText}
-                                  onChange={(e) => setNoteText(e.target.value)}
-                                  style={{ flex: 1 }}
-                                />
-                                <button
-                                  className="dd-btn-small"
-                                  onClick={() => submitNote(lead.id)}
-                                >
-                                  Adicionar
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+                        WhatsApp
+                      </button>
+                    )}
+                  </div>
+                </article>
+              );
+            })
           )}
         </section>
+
+        {selectedLead && (
+          <div className="dd-modal-overlay" onClick={closeLeadModal}>
+            <div className="dd-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="dd-modal-header">
+                <h2>{selectedLead.name}</h2>
+                <button className="dd-modal-close" onClick={closeLeadModal}>×</button>
+              </div>
+
+              <div className="dd-modal-body">
+                <h3>Mapeamento do lead</h3>
+
+                {profileLoading && !profileByLead[selectedLead.id] ? (
+                  <p style={{ color: 'var(--dd-muted)' }}>Carregando mapeamento...</p>
+                ) : (
+                  (() => {
+                    const profile = profileByLead[selectedLead.id];
+
+                    if (!profile) {
+                      return <p style={{ color: 'var(--dd-muted)' }}>Nenhum mapeamento preenchido.</p>;
+                    }
+
+                    const profileFields = [
+                      { key: 'acquisition_type', label: 'Tipo de aquisição' },
+                      { key: 'property_type', label: 'Tipo de imóvel' },
+                      { key: 'region', label: 'Região' },
+                      { key: 'city', label: 'Cidade' },
+                      { key: 'bedrooms', label: 'Dormitórios' },
+                      { key: 'suites', label: 'Suítes' },
+                      { key: 'bathrooms', label: 'Banheiros' },
+                      { key: 'garage_spots', label: 'Vagas de garagem' },
+                      { key: 'min_area', label: 'Área mínima (m²)' },
+                      { key: 'land_area', label: 'Área do terreno (m²)' },
+                      { key: 'floor_preference', label: 'Preferência de andar' },
+                      { key: 'has_elevator', label: 'Elevador' },
+                      { key: 'budget_min', label: 'Orçamento mínimo' },
+                      { key: 'budget_max', label: 'Orçamento máximo' },
+                      { key: 'down_payment', label: 'Valor de entrada' },
+                      { key: 'trade_value', label: 'Valor do imóvel na troca' },
+                      { key: 'urgency', label: 'Urgência' }
+                    ];
+
+                    return (
+                      <>
+                        <div className="dd-profile-grid">
+                          {profileFields.map(({ key, label }) => {
+                            let value = profile[key];
+
+                            if (key === 'has_elevator') {
+                              value = value === true ? 'Sim' : value === false ? 'Não' : null;
+                            }
+
+                            if (value === null || value === undefined || value === '') return null;
+
+                            return (
+                              <div className="dd-profile-item" key={key}>
+                                <span>{label}</span>
+                                <strong>{value}</strong>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {profile.notes && (
+                          <div className="dd-profile-notes">
+                            <span>Observações</span>
+                            <p>{profile.notes}</p>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()
+                )}
+
+                <h3 style={{ marginTop: 20 }}>Historico do lead</h3>
+
+                {historyLoading && !historyByLead[selectedLead.id] ? (
+                  <p style={{ color: 'var(--dd-muted)' }}>Carregando historico...</p>
+                ) : (
+                  <ul className="dd-history-list">
+                    {(historyByLead[selectedLead.id] || []).length === 0 && (
+                      <li style={{ color: 'var(--dd-muted)' }}>Nenhum registro ainda.</li>
+                    )}
+                    {(historyByLead[selectedLead.id] || []).map((item) => (
+                      <li key={item.id}>
+                        <div style={{ fontSize: 13 }}>
+                          {item.type === 'status' ? '🔄 ' : '📝 '}
+                          {item.content}
+                        </div>
+                        <div className="dd-history-meta">
+                          {item.autor || 'Sistema'} - {new Date(item.created_at).toLocaleString('pt-BR')}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <input
+                    type="text"
+                    className="dd-input"
+                    placeholder="Adicionar anotacao..."
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    className="dd-btn-small"
+                    onClick={() => submitNote(selectedLead.id)}
+                  >
+                    Adicionar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
       <RemindersWidget />
     </main>

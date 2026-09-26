@@ -1855,3 +1855,115 @@
 @media (max-width: 560px) {
   .dd-field-grid { grid-template-columns: 1fr; }
 }
+
+.dd-leads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.dd-lead-card {
+  background: var(--dd-panel, #1c1c22);
+  border: 1px solid var(--dd-border, #2a2a33);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.dd-lead-card:hover {
+  border-color: var(--dd-accent, #6c5ce7);
+  transform: translateY(-2px);
+}
+
+.dd-lead-card.stale {
+  border-color: #e17055;
+}
+
+.dd-lead-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.dd-lead-card-contact {
+  font-size: 13px;
+}
+
+.dd-lead-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.dd-modal {
+  background: var(--dd-panel, #1c1c22);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.dd-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.dd-modal-close {
+  background: none;
+  border: none;
+  color: var(--dd-text, #fff);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.dd-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.dd-profile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.dd-profile-item span {
+  color: var(--dd-muted, #888);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.dd-profile-notes {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.dd-profile-notes span {
+  color: var(--dd-muted, #888);
+  font-size: 11px;
+  text-transform: uppercase;
+}

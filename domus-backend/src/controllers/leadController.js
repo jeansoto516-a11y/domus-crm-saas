@@ -110,7 +110,7 @@ exports.createLead = async (req, res) => {
 
     }
 
-    if (!acquisition_type || !property_type || region || !city || !urgency) {
+        if (!acquisition_type || !property_type || !region || !city || !urgency) {
 
         return res.status(400).json({
             error: 'Informe tipo de aquisição, tipo de imóvel, região, cidade e urgência.'
