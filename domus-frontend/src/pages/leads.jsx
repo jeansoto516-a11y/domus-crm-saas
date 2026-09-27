@@ -31,9 +31,13 @@ function Leads() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [historyByLead, setHistoryByLead] = useState({});
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [profileByLead, setProfileByLead] = useState({});
+    const [profileByLead, setProfileByLead] = useState({});
   const [profileLoading, setProfileLoading] = useState(false);
   const [noteText, setNoteText] = useState('');
+
+  const [suggestionsLead, setSuggestionsLead] = useState(null);
+  const [suggestionsData, setSuggestionsData] = useState(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const navigate = useNavigate();
   const [staleLeadIds, setStaleLeadIds] = useState(new Set());
 
@@ -143,6 +147,27 @@ function Leads() {
     } finally {
       setProfileLoading(false);
     }
+  };
+
+    const openSuggestions = async (lead, event) => {
+    event.stopPropagation();
+    setSuggestionsLead(lead);
+    setSuggestionsData(null);
+    setSuggestionsLoading(true);
+
+    try {
+      const { data } = await api.get(`/leads/${lead.id}/suggestions`);
+      setSuggestionsData(data);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Nao foi possivel buscar sugestoes.');
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  const closeSuggestions = () => {
+    setSuggestionsLead(null);
+    setSuggestionsData(null);
   };
 
   const openLeadModal = (lead) => {
@@ -361,7 +386,13 @@ function Leads() {
                     {new Date(lead.created_at).toLocaleDateString('pt-BR')}
                   </div>
 
-                  <div className="dd-row-actions" onClick={(e) => e.stopPropagation()}>
+                                    <div className="dd-row-actions" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className="dd-btn-small dd-btn-suggestions"
+                      onClick={(e) => openSuggestions(lead, e)}
+                    >
+                      Ver sugestoes
+                    </button>
                     <button
                       className="dd-btn-small"
                       disabled={currentIndex <= 0}
@@ -390,6 +421,74 @@ function Leads() {
             })
           )}
         </section>
+
+          
+
+                {suggestionsLead && (
+          <div className="dd-modal-overlay" onClick={closeSuggestions}>
+            <div className="dd-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="dd-modal-header">
+                <h2>Sugestoes para {suggestionsLead.name}</h2>
+                <button className="dd-modal-close" onClick={closeSuggestions}>×</button>
+              </div>
+
+              <div className="dd-modal-body">
+                {suggestionsLoading ? (
+                  <p style={{ color: 'var(--dd-muted)' }}>Buscando imoveis compativeis...</p>
+                ) : !suggestionsData?.profile ? (
+                  <p style={{ color: 'var(--dd-muted)' }}>
+                    Este lead ainda nao tem mapeamento preenchido. Preencha o mapeamento para sugestoes mais precisas.
+                  </p>
+                ) : suggestionsData.suggestions.length === 0 ? (
+                  <p style={{ color: 'var(--dd-muted)' }}>Nenhum imovel disponivel no catalogo para essa finalidade.</p>
+                ) : (
+                  <div className="dd-suggestions-list">
+                    {suggestionsData.suggestions.map((property) => {
+                      const cover = property.photos?.[0]?.url;
+                      const relevantPrice = suggestionsData.lead_type === 'aluguel' ? property.rent_price : property.price;
+
+                      return (
+                        <div key={property.id} className="dd-suggestion-card">
+                          <div className="dd-suggestion-cover">
+                            {cover ? (
+                              <img src={cover} alt={property.title} />
+                            ) : (
+                              <div className="dd-property-cover-placeholder"><Icon name="file" /></div>
+                            )}
+                          </div>
+
+                          <div className="dd-suggestion-body">
+                            <div className="dd-suggestion-top">
+                              <strong>{property.title}</strong>
+                              {property.match_percent !== null && (
+                                <span className={`dd-match-badge ${property.match_percent >= 70 ? 'high' : property.match_percent >= 40 ? 'mid' : 'low'}`}>
+                                  {property.match_percent}% compativel
+                                </span>
+                              )}
+                            </div>
+
+                            <span className="dd-property-location">{property.city} - {property.region}</span>
+
+                            <div className="dd-property-specs">
+                              {property.bedrooms > 0 && <span>{property.bedrooms} dorm.</span>}
+                              {property.bathrooms > 0 && <span>{property.bathrooms} banh.</span>}
+                              {property.garage_spots > 0 && <span>{property.garage_spots} vaga(s)</span>}
+                              {property.area && <span>{property.area}m²</span>}
+                            </div>
+
+                            {relevantPrice && (
+                              <strong>{Number(relevantPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {selectedLead && (
           <div className="dd-modal-overlay" onClick={closeLeadModal}>

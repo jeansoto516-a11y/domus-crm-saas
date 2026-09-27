@@ -14,6 +14,7 @@ router.get('/stale', authMiddleware, checkSubscription, leadController.getStaleL
 router.get('/public/:slug', leadController.getPublicCompany);
 router.post('/public/:slug', leadController.createPublicLead);
 router.get('/:id/profile', authMiddleware, checkSubscription, leadController.getLeadProfile);
+router.get('/:id/suggestions', authMiddleware, checkSubscription, leadController.getLeadSuggestions);
 router.put('/:id/profile', authMiddleware, checkSubscription, leadController.updateLeadProfile);
 router.get('/:id/history', authMiddleware, checkSubscription, leadController.getLeadHistory);
 router.post('/:id/history', authMiddleware, checkSubscription, leadController.addLeadNote);

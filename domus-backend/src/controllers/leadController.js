@@ -1048,10 +1048,136 @@ exports.getLeadProfile = async (req, res) => {
             ]
         );
 
-        return res.json(result.rows[0]);
+                return res.json(result.rows[0]);
 
     } catch (err) {
         console.error('Erro ao salvar mapeamento:', err);
         return res.status(500).json({ error: 'Erro ao salvar mapeamento.' });
     }
+};
+
+/**
+ * Sugestoes de imoveis do catalogo compativeis com o mapeamento do lead
+ */
+exports.getLeadSuggestions = async (req, res) => {
+
+    const { id } = req.params;
+    const values = [];
+    let where = buildLeadScope(req, values);
+    values.push(id);
+
+    try {
+
+        const leadResult = await pool.query(
+            `SELECT * FROM leads ${where} AND id = $${values.length}`,
+            values
+        );
+
+        if (leadResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Lead nao encontrado.' });
+        }
+
+        const lead = leadResult.rows[0];
+
+        const profileResult = await pool.query(
+            `SELECT * FROM lead_profiles WHERE lead_id = $1`,
+            [id]
+        );
+
+        const profile = profileResult.rows[0] || null;
+
+        const propertiesResult = await pool.query(
+            `
+            SELECT
+                properties.*,
+                COALESCE(
+                    (
+                        SELECT json_agg(json_build_object('id', pp.id, 'url', pp.url) ORDER BY pp.position ASC)
+                        FROM property_photos pp
+                        WHERE pp.property_id = properties.id
+                    ),
+                    '[]'
+                ) AS photos
+            FROM properties
+            WHERE properties.company_id = $1
+              AND properties.status = 'disponivel'
+              AND (properties.lead_type = $2 OR properties.lead_type = 'ambos')
+            `,
+            [req.user.company_id, lead.lead_type]
+        );
+
+        const normalize = (text) => (text || '').toString().trim().toLowerCase();
+
+        const suggestions = propertiesResult.rows.map((property) => {
+
+            let score = 0;
+            let maxScore = 0;
+
+            if (profile) {
+
+                maxScore += 3;
+                if (profile.property_type && normalize(profile.property_type) === normalize(property.property_type)) {
+                    score += 3;
+                }
+
+                maxScore += 2;
+                if (profile.city && normalize(profile.city) === normalize(property.city)) {
+                    score += 2;
+                }
+
+                maxScore += 2;
+                if (profile.region && normalize(profile.region) === normalize(property.region)) {
+                    score += 2;
+                }
+
+                if (profile.bedrooms) {
+                    maxScore += 1;
+                    if (property.bedrooms && Number(property.bedrooms) >= Number(profile.bedrooms)) {
+                        score += 1;
+                    }
+                }
+
+                if (profile.garage_spots) {
+                    maxScore += 1;
+                    if (property.garage_spots && Number(property.garage_spots) >= Number(profile.garage_spots)) {
+                        score += 1;
+                    }
+                }
+
+                const relevantPrice = lead.lead_type === 'aluguel' ? property.rent_price : property.price;
+
+                if (profile.budget_max && relevantPrice) {
+                    maxScore += 3;
+                    if (Number(relevantPrice) <= Number(profile.budget_max) * 1.15) {
+                        score += 3;
+                    }
+                }
+            }
+
+            const matchPercent = maxScore > 0 ? Math.round((score / maxScore) * 100) : null;
+
+            return {
+                ...property,
+                match_percent: matchPercent
+            };
+        });
+
+        suggestions.sort((a, b) => (b.match_percent ?? -1) - (a.match_percent ?? -1));
+
+        return res.json({
+            profile,
+            lead_type: lead.lead_type,
+            suggestions
+        });
+
+    } catch (err) {
+
+        console.error('Erro ao buscar sugestoes:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar sugestoes.'
+        });
+
+    }
+
 };
