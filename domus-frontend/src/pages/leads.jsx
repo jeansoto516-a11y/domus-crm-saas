@@ -38,6 +38,10 @@ function Leads() {
   const [suggestionsLead, setSuggestionsLead] = useState(null);
   const [suggestionsData, setSuggestionsData] = useState(null);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState(null);
+  const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
   const [staleLeadIds, setStaleLeadIds] = useState(new Set());
 
@@ -183,8 +187,68 @@ function Leads() {
     }
   };
 
-  const closeLeadModal = () => {
+    const closeLeadModal = () => {
     setSelectedLead(null);
+    setEditingProfile(false);
+    setProfileForm(null);
+  };
+
+  const startEditProfile = (lead) => {
+    const current = profileByLead[lead.id] || {};
+
+    setProfileForm({
+      acquisition_type: current.acquisition_type || '',
+      property_type: current.property_type || '',
+      region: current.region || '',
+      city: current.city || '',
+      bedrooms: current.bedrooms ?? '',
+      suites: current.suites ?? '',
+      bathrooms: current.bathrooms ?? '',
+      garage_spots: current.garage_spots ?? '',
+      min_area: current.min_area ?? '',
+      land_area: current.land_area ?? '',
+      floor_preference: current.floor_preference || '',
+      has_elevator: current.has_elevator === true ? 'sim' : current.has_elevator === false ? 'nao' : '',
+      budget_min: current.budget_min ?? '',
+      budget_max: current.budget_max ?? '',
+      down_payment: current.down_payment ?? '',
+      trade_value: current.trade_value ?? '',
+      urgency: current.urgency || '',
+      notes: current.notes || ''
+    });
+
+    setEditingProfile(true);
+  };
+
+  const cancelEditProfile = () => {
+    setEditingProfile(false);
+    setProfileForm(null);
+  };
+
+  const updateProfileField = (event) => {
+    const { name, value } = event.target;
+    setProfileForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const saveProfile = async (leadId) => {
+    setSavingProfile(true);
+    setError('');
+
+    try {
+      const payload = {
+        ...profileForm,
+        has_elevator: profileForm.has_elevator === '' ? null : profileForm.has_elevator === 'sim'
+      };
+
+      const { data } = await api.put(`/leads/${leadId}/profile`, payload);
+      setProfileByLead((current) => ({ ...current, [leadId]: data }));
+      setEditingProfile(false);
+      setProfileForm(null);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Nao foi possivel salvar o mapeamento.');
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const openWhatsApp = (lead) => {
@@ -498,10 +562,122 @@ function Leads() {
                 <button className="dd-modal-close" onClick={closeLeadModal}>×</button>
               </div>
 
-              <div className="dd-modal-body">
-                <h3>Mapeamento do lead</h3>
+                            <div className="dd-modal-body">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0 }}>Mapeamento do lead</h3>
+                  {!editingProfile && (
+                    <button className="dd-btn-small" onClick={() => startEditProfile(selectedLead)}>
+                      Editar mapeamento
+                    </button>
+                  )}
+                </div>
 
-                {profileLoading && !profileByLead[selectedLead.id] ? (
+                {editingProfile ? (
+                  <div className="dd-form" style={{ marginTop: 12 }}>
+                    <label className="dd-field">
+                      Tipo de aquisição
+                      <input className="dd-input" name="acquisition_type" onChange={updateProfileField} value={profileForm.acquisition_type} />
+                    </label>
+
+                    <label className="dd-field">
+                      Tipo de imóvel
+                      <input className="dd-input" name="property_type" onChange={updateProfileField} value={profileForm.property_type} />
+                    </label>
+
+                    <label className="dd-field">
+                      Região
+                      <input className="dd-input" name="region" onChange={updateProfileField} value={profileForm.region} />
+                    </label>
+
+                    <label className="dd-field">
+                      Cidade
+                      <input className="dd-input" name="city" onChange={updateProfileField} value={profileForm.city} />
+                    </label>
+
+                    <label className="dd-field">
+                      Urgência
+                      <input className="dd-input" name="urgency" onChange={updateProfileField} value={profileForm.urgency} />
+                    </label>
+
+                    <label className="dd-field">
+                      Dormitórios
+                      <input className="dd-input" name="bedrooms" onChange={updateProfileField} type="number" min="0" value={profileForm.bedrooms} />
+                    </label>
+
+                    <label className="dd-field">
+                      Suítes
+                      <input className="dd-input" name="suites" onChange={updateProfileField} type="number" min="0" value={profileForm.suites} />
+                    </label>
+
+                    <label className="dd-field">
+                      Banheiros
+                      <input className="dd-input" name="bathrooms" onChange={updateProfileField} type="number" min="0" value={profileForm.bathrooms} />
+                    </label>
+
+                    <label className="dd-field">
+                      Vagas de garagem
+                      <input className="dd-input" name="garage_spots" onChange={updateProfileField} type="number" min="0" value={profileForm.garage_spots} />
+                    </label>
+
+                    <label className="dd-field">
+                      Área mínima (m²)
+                      <input className="dd-input" name="min_area" onChange={updateProfileField} type="number" min="0" value={profileForm.min_area} />
+                    </label>
+
+                    <label className="dd-field">
+                      Área do terreno (m²)
+                      <input className="dd-input" name="land_area" onChange={updateProfileField} type="number" min="0" value={profileForm.land_area} />
+                    </label>
+
+                    <label className="dd-field">
+                      Preferência de andar
+                      <input className="dd-input" name="floor_preference" onChange={updateProfileField} value={profileForm.floor_preference} />
+                    </label>
+
+                    <label className="dd-field">
+                      Elevador
+                      <select className="dd-select" name="has_elevator" onChange={updateProfileField} value={profileForm.has_elevator}>
+                        <option value="">Não informado</option>
+                        <option value="sim">Sim</option>
+                        <option value="nao">Não</option>
+                      </select>
+                    </label>
+
+                    <label className="dd-field">
+                      Orçamento mínimo
+                      <input className="dd-input" name="budget_min" onChange={updateProfileField} type="number" min="0" value={profileForm.budget_min} />
+                    </label>
+
+                    <label className="dd-field">
+                      Orçamento máximo
+                      <input className="dd-input" name="budget_max" onChange={updateProfileField} type="number" min="0" value={profileForm.budget_max} />
+                    </label>
+
+                    <label className="dd-field">
+                      Valor de entrada
+                      <input className="dd-input" name="down_payment" onChange={updateProfileField} type="number" min="0" value={profileForm.down_payment} />
+                    </label>
+
+                    <label className="dd-field">
+                      Valor do imóvel na troca
+                      <input className="dd-input" name="trade_value" onChange={updateProfileField} type="number" min="0" value={profileForm.trade_value} />
+                    </label>
+
+                    <label className="dd-field">
+                      Observações
+                      <textarea className="dd-input" name="notes" onChange={updateProfileField} value={profileForm.notes} />
+                    </label>
+
+                    <div className="dd-form-actions">
+                      <button className="dd-btn-secondary" type="button" onClick={cancelEditProfile}>
+                        Cancelar
+                      </button>
+                      <button className="dd-btn-primary" type="button" disabled={savingProfile} onClick={() => saveProfile(selectedLead.id)}>
+                        {savingProfile ? 'Salvando...' : 'Salvar mapeamento'}
+                      </button>
+                    </div>
+                  </div>
+                ) : profileLoading && !profileByLead[selectedLead.id] ? (
                   <p style={{ color: 'var(--dd-muted)' }}>Carregando mapeamento...</p>
                 ) : (
                   (() => {
