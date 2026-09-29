@@ -276,6 +276,16 @@ function PropertyCatalog() {
                 </div>
                 )}
 
+                {(selectedProperty.owner_name || selectedProperty.owner_contact) && (
+                <div className="dd-profile-notes" style={{ borderTop: '1px solid var(--dd-border, #2a2a33)', paddingTop: 12, marginTop: 12 }}>
+                    <span>Proprietario (visivel apenas para a equipe)</span>
+                    <p>
+                    {selectedProperty.owner_name || 'Nome nao informado'}
+                    {selectedProperty.owner_contact ? ` — ${selectedProperty.owner_contact}` : ''}
+                    </p>
+                </div>
+                )}
+
                 <div className="dd-form-actions" style={{ marginTop: 20 }}>
                 <button className="dd-btn-small" onClick={() => navigate(`/catalogo/${selectedProperty.id}/editar`)}>
                     Editar imovel

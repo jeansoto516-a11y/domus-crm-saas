@@ -25,7 +25,9 @@ function CreateProperty() {
     has_elevator: '',
     price: '',
     rent_price: '',
-    status: 'disponivel'
+    status: 'disponivel',
+    owner_name: '',
+    owner_contact: ''
     });
 
     const [error, setError] = useState('');
@@ -263,7 +265,7 @@ function CreateProperty() {
                 </label>
                 )}
 
-                <label className="dd-field">
+                                <label className="dd-field">
                 Status
                 <select className="dd-select" name="status" onChange={updateField} value={form.status}>
                     <option value="disponivel">Disponivel</option>
@@ -271,6 +273,20 @@ function CreateProperty() {
                     <option value="vendido">Vendido</option>
                     <option value="alugado">Alugado</option>
                 </select>
+                </label>
+
+                <p style={{ color: 'var(--dd-muted)', fontSize: 12, margin: '8px 0 0' }}>
+                    Os dados abaixo (dono do imovel) sao visiveis apenas para corretores e a imobiliaria. Nunca aparecem para o lead.
+                </p>
+
+                <label className="dd-field">
+                Nome do proprietario
+                <input className="dd-input" name="owner_name" onChange={updateField} placeholder="Nome de quem e o dono do imovel" value={form.owner_name} />
+                </label>
+
+                <label className="dd-field">
+                Contato do proprietario
+                <input className="dd-input" name="owner_contact" onChange={updateField} placeholder="Telefone ou email do proprietario" value={form.owner_contact} />
                 </label>
 
                 <div className="dd-form-actions">

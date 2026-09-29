@@ -52,7 +52,9 @@ function EditProperty() {
             has_elevator: p.has_elevator === true ? 'true' : p.has_elevator === false ? 'false' : '',
             price: p.price ?? '',
             rent_price: p.rent_price ?? '',
-            status: p.status || 'disponivel'
+            status: p.status || 'disponivel',
+            owner_name: p.owner_name || '',
+            owner_contact: p.owner_contact || ''
         });
         setPhotos(p.photos || []);
         })

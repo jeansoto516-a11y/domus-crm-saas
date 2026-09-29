@@ -107,7 +107,8 @@ exports.createProperty = async (req, res) => {
     const {
         title, description, lead_type, property_type, region, city,
         bedrooms, suites, bathrooms, garage_spots, area, land_area,
-        floor, has_elevator, price, rent_price, status
+        floor, has_elevator, price, rent_price, status,
+        owner_name, owner_contact
     } = req.body;
 
     if (!title || !property_type || !region || !city) {
@@ -120,13 +121,13 @@ exports.createProperty = async (req, res) => {
 
     try {
 
-        const result = await pool.query(
+                const result = await pool.query(
             `
             INSERT INTO properties
             (company_id, created_by, title, description, lead_type, property_type, region, city,
-             bedrooms, suites, bathrooms, garage_spots, area, land_area, floor, has_elevator,
-             price, rent_price, status)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+            bedrooms, suites, bathrooms, garage_spots, area, land_area, floor, has_elevator,
+            price, rent_price, status, owner_name, owner_contact)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
             RETURNING *
             `,
             [
@@ -136,7 +137,8 @@ exports.createProperty = async (req, res) => {
                 area || null, land_area || null, floor || null,
                 has_elevator === true || has_elevator === 'true',
                 price || null, rent_price || null,
-                status || 'disponivel'
+                status || 'disponivel',
+                owner_name || null, owner_contact || null
             ]
         );
 
@@ -164,7 +166,8 @@ exports.updateProperty = async (req, res) => {
     const {
         title, description, lead_type, property_type, region, city,
         bedrooms, suites, bathrooms, garage_spots, area, land_area,
-        floor, has_elevator, price, rent_price, status
+        floor, has_elevator, price, rent_price, status,
+        owner_name, owner_contact
     } = req.body;
 
     if (!title || !property_type || !region || !city) {
@@ -186,15 +189,16 @@ exports.updateProperty = async (req, res) => {
             return res.status(404).json({ error: 'Imovel nao encontrado.' });
         }
 
-        const result = await pool.query(
+                const result = await pool.query(
             `
             UPDATE properties SET
                 title = $1, description = $2, lead_type = $3, property_type = $4,
                 region = $5, city = $6, bedrooms = $7, suites = $8, bathrooms = $9,
                 garage_spots = $10, area = $11, land_area = $12, floor = $13,
                 has_elevator = $14, price = $15, rent_price = $16, status = $17,
+                owner_name = $18, owner_contact = $19,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $18 AND company_id = $19
+            WHERE id = $20 AND company_id = $21
             RETURNING *
             `,
             [
@@ -203,6 +207,7 @@ exports.updateProperty = async (req, res) => {
                 area || null, land_area || null, floor || null,
                 has_elevator === true || has_elevator === 'true',
                 price || null, rent_price || null, status || 'disponivel',
+                owner_name || null, owner_contact || null,
                 id, req.user.company_id
             ]
         );
