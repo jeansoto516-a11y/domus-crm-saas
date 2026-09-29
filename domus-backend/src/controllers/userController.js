@@ -382,7 +382,7 @@ exports.updateBroker = async (req, res) => {
 exports.getMe = async (req, res) => {
     try {
         const userResult = await pool.query(
-            `SELECT id, name, email, role, company_id, avatar_url FROM users WHERE id = $1`,
+            `SELECT id, name, email, role, company_id, avatar_url, phone FROM users WHERE id = $1`,
             [req.user.id]
         );
 
@@ -392,8 +392,8 @@ exports.getMe = async (req, res) => {
 
         const user = userResult.rows[0];
 
-                const companyResult = await pool.query(
-            `SELECT id, name, public_slug, plan FROM companies WHERE id = $1`,
+            const companyResult = await pool.query(
+            `SELECT id, name, public_slug, plan, whatsapp FROM companies WHERE id = $1`,
             [user.company_id]
         );
 
@@ -412,7 +412,7 @@ exports.getMe = async (req, res) => {
  * Atualizar meus dados (nome e, opcionalmente, senha)
  */
 exports.updateMe = async (req, res) => {
-    const { name, current_password, new_password } = req.body;
+    const { name, phone, current_password, new_password } = req.body;
 
     try {
         if (new_password) {
@@ -443,10 +443,17 @@ exports.updateMe = async (req, res) => {
             );
         }
 
-        if (name) {
+                if (name) {
             await pool.query(
                 `UPDATE users SET name = $1 WHERE id = $2`,
                 [name, req.user.id]
+            );
+        }
+
+        if (phone !== undefined) {
+            await pool.query(
+                `UPDATE users SET phone = $1 WHERE id = $2`,
+                [phone || null, req.user.id]
             );
         }
 
@@ -462,7 +469,7 @@ exports.updateMe = async (req, res) => {
  * Atualizar nome da imobiliaria (somente admin)
  */
 exports.updateCompany = async (req, res) => {
-    const { name } = req.body;
+    const { name, whatsapp } = req.body;
 
     if (!name) {
         return res.status(400).json({ error: 'Informe o nome da imobiliaria.' });
@@ -470,8 +477,8 @@ exports.updateCompany = async (req, res) => {
 
     try {
         await pool.query(
-            `UPDATE companies SET name = $1 WHERE id = $2`,
-            [name, req.user.company_id]
+            `UPDATE companies SET name = $1, whatsapp = $2 WHERE id = $3`,
+            [name, whatsapp || null, req.user.company_id]
         );
 
         return res.json({ message: 'Imobiliaria atualizada com sucesso.' });

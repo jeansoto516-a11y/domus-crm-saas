@@ -307,6 +307,22 @@ function EditProperty() {
                 </select>
             </label>
 
+            <p style={{ color: 'var(--dd-muted)', fontSize: 12, margin: '8px 0 0' }}>
+                Os dados abaixo (dono do imovel) sao visiveis apenas para corretores e a imobiliaria. Nunca aparecem para o lead.
+            </p>
+
+            <label className="dd-field">
+                Nome do proprietario
+                <input className="dd-input" name="owner_name" onChange={updateField} value={form.owner_name} />
+            </label>
+
+            <label className="dd-field">
+                Contato do proprietario
+                <input className="dd-input" name="owner_contact" onChange={updateField} value={form.owner_contact} />
+            </label>
+
+            <div className="dd-form-actions">
+
             <div className="dd-form-actions">
                 <button className="dd-btn-secondary" onClick={() => navigate('/catalogo')} type="button">
                 Cancelar
