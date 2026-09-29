@@ -308,7 +308,7 @@ function EditProperty() {
             </label>
 
             <p style={{ color: 'var(--dd-muted)', fontSize: 12, margin: '8px 0 0' }}>
-                Os dados abaixo (dono do imovel) sao visiveis apenas para corretores e a imobiliaria. Nunca aparecem para o lead.
+                Preencha com os dados do proprietario para contato.
             </p>
 
             <label className="dd-field">
@@ -321,9 +321,7 @@ function EditProperty() {
                 <input className="dd-input" name="owner_contact" onChange={updateField} value={form.owner_contact} />
             </label>
 
-            <div className="dd-form-actions">
-
-            <div className="dd-form-actions">
+                        <div className="dd-form-actions">
                 <button className="dd-btn-secondary" onClick={() => navigate('/catalogo')} type="button">
                 Cancelar
                 </button>

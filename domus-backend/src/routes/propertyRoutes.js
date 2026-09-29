@@ -11,6 +11,7 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }
 });
 
+router.get('/public/:slug', propertyController.getPublicCatalog);
 router.get('/', authMiddleware, checkSubscription, propertyController.getProperties);
 router.get('/:id', authMiddleware, checkSubscription, propertyController.getPropertyById);
 router.post('/', authMiddleware, checkSubscription, propertyController.createProperty);

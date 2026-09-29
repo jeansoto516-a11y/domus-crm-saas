@@ -369,6 +369,71 @@ exports.uploadPropertyPhotos = async (req, res) => {
 };
 
 /**
+ * Vitrine publica: listar imoveis disponiveis de uma imobiliaria pelo slug
+ * Nao exige login. Nunca retorna dados do proprietario.
+ */
+exports.getPublicCatalog = async (req, res) => {
+
+    const { slug } = req.params;
+
+    try {
+
+        const companyResult = await pool.query(
+            `SELECT id, name, whatsapp FROM companies WHERE public_slug = $1`,
+            [slug]
+        );
+
+        if (companyResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Catalogo nao encontrado.' });
+        }
+
+        const company = companyResult.rows[0];
+
+        const propertiesResult = await pool.query(
+            `
+            SELECT
+                properties.id, properties.title, properties.description, properties.lead_type,
+                properties.property_type, properties.region, properties.city,
+                properties.bedrooms, properties.suites, properties.bathrooms, properties.garage_spots,
+                properties.area, properties.land_area, properties.floor, properties.has_elevator,
+                properties.price, properties.rent_price, properties.status,
+                COALESCE(
+                    (
+                        SELECT json_agg(json_build_object('id', pp.id, 'url', pp.url) ORDER BY pp.position ASC)
+                        FROM property_photos pp
+                        WHERE pp.property_id = properties.id
+                    ),
+                    '[]'
+                ) AS photos
+            FROM properties
+            WHERE properties.company_id = $1 AND properties.status = 'disponivel'
+            ORDER BY properties.created_at DESC
+            `,
+            [company.id]
+        );
+
+        return res.json({
+            company: {
+                name: company.name,
+                whatsapp: company.whatsapp
+            },
+            properties: propertiesResult.rows
+        });
+
+    } catch (err) {
+
+        console.error('Erro ao buscar catalogo publico:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar catalogo.'
+        });
+
+    }
+
+};
+
+
+/**
  * Excluir uma foto especifica do imovel
  */
 exports.deletePropertyPhoto = async (req, res) => {
@@ -416,3 +481,4 @@ exports.deletePropertyPhoto = async (req, res) => {
     }
 
 };
+

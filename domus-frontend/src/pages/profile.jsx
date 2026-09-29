@@ -10,10 +10,12 @@ function Profile() {
     const [company, setCompany] = useState(null);
 
     const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
 
     const [companyName, setCompanyName] = useState('');
+    const [companyWhatsapp, setCompanyWhatsapp] = useState('');
 
         const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -62,12 +64,14 @@ function Profile() {
         }
     };
 
-    const loadMe = () => {
+        const loadMe = () => {
     api.get('/users/me').then((response) => {
         setUser(response.data.user);
         setCompany(response.data.company);
         setName(response.data.user.name);
+        setPhone(response.data.user.phone || '');
         setCompanyName(response.data.company?.name || '');
+        setCompanyWhatsapp(response.data.company?.whatsapp || '');
     });
     };
 
@@ -131,6 +135,7 @@ function Profile() {
     try {
         await api.put('/users/me', {
         name,
+        phone,
         current_password: currentPassword || undefined,
         new_password: newPassword || undefined
         });
@@ -153,7 +158,7 @@ function Profile() {
     setLoading(true);
 
     try {
-        await api.put('/users/company', { name: companyName });
+        await api.put('/users/company', { name: companyName, whatsapp: companyWhatsapp });
         setMessage('Imobiliaria atualizada com sucesso.');
     } catch (err) {
         setError(err.response?.data?.error || 'Erro ao atualizar imobiliaria.');
@@ -244,13 +249,24 @@ function Profile() {
             </div>
 
             <form className="dd-form" onSubmit={handleSaveProfile}>
-            <label className="dd-field">
+                        <label className="dd-field">
                 Nome
                 <input
                 className="dd-input"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                />
+            </label>
+
+            <label className="dd-field">
+                Whatsapp 
+                <input
+                className="dd-input"
+                type="text"
+                placeholder="(11) 99999-9999"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 />
             </label>
 
@@ -367,13 +383,24 @@ function Profile() {
             )}
 
             <form className="dd-form" onSubmit={handleSaveCompany}>
-                <label className="dd-field">
+                                <label className="dd-field">
                 Nome da imobiliaria
                 <input
                     className="dd-input"
                     type="text"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
+                />
+                </label>
+
+                <label className="dd-field">
+                WhatsApp da imobiliaria.
+                <input
+                    className="dd-input"
+                    type="text"
+                    placeholder="(11) 99999-9999"
+                    value={companyWhatsapp}
+                    onChange={(e) => setCompanyWhatsapp(e.target.value)}
                 />
                 </label>
 
