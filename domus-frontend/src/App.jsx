@@ -19,6 +19,7 @@ import Privacidade from './pages/privacidade';
 import Ranking from './pages/ranking';
 import Goals from './pages/goals';
 import PublicForm from './pages/publicform';
+import PublicCatalog from './pages/publiccatalog';
 import Rentals from './pages/rentals';
 import RentalDashboard from './pages/rentaldashboard';
 import Rentalpayments from './pages/rentalpayments';
@@ -46,6 +47,7 @@ function App() {
             <Route path="/termos" element={<Termos />} />
               <Route path="/privacidade" element={<Privacidade />} />
                 <Route path="/f/:slug" element={<PublicForm />} />
+                  <Route path="/vitrine/:slug" element={<PublicCatalog />} />
         <Route
           path="/login"
           element={

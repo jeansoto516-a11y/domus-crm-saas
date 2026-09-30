@@ -1,3 +1,5 @@
+/** Lista de Imoveis para Aluguel */
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';

@@ -2453,3 +2453,24 @@
 .dd-match-badge.high { background: rgba(13, 148, 136, 0.2); color: #5eead4; }
 .dd-match-badge.mid { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
 .dd-match-badge.low { background: rgba(127, 29, 29, 0.3); color: #fca5a5; }
+
+.dd-public-catalog {
+  min-height: 100vh;
+  background: #0f0f13;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.dd-public-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.dd-public-header h1 {
+  margin-bottom: 4px;
+}
+
+.dd-public-header p {
+  color: var(--dd-muted, #888);
+}
