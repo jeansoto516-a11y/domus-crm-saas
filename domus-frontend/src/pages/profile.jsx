@@ -227,7 +227,7 @@ function Profile() {
         {error && <div className="dd-alert-error">{error}</div>}
         {message && <div style={{ background: 'rgba(13,148,136,0.12)', border: '1px solid rgba(13,148,136,0.4)', color: '#5EEAD4', padding: '12px 16px', borderRadius: 8, marginBottom: 16 }}>{message}</div>}
 
-                <section className="dd-panel dd-panel-narrow">
+            <section className="dd-panel dd-panel-narrow">
             <h2 style={{ marginTop: 0 }}>Meus dados</h2>
 
             <div className="dd-avatar-upload">
@@ -297,12 +297,39 @@ function Profile() {
                 />
             </label>
 
-            <div className="dd-form-actions" style={{ justifyContent: 'flex-start' }}>
+                        <div className="dd-form-actions" style={{ justifyContent: 'flex-start' }}>
                 <button className="dd-btn-primary" type="submit" disabled={loading}>
                 {loading ? 'Salvando...' : 'Salvar meus dados'}
                 </button>
             </div>
             </form>
+
+            {company?.public_slug && (
+                <div style={{ background: 'var(--dd-panel-2)', border: '1px solid var(--dd-border)', borderRadius: 8, padding: 12, marginTop: 20 }}>
+                <p style={{ fontSize: 13, margin: '0 0 8px', color: 'var(--dd-muted)' }}>
+                    Seu link pessoal do catalogo (seu site pessoal com imoveis):
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                    className="dd-input"
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/vitrine/${company.public_slug}?corretor=${user.id}`}
+                    style={{ flex: 1, fontSize: 13 }}
+                    />
+                    <button
+                    type="button"
+                    className="dd-btn-secondary"
+                    onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/vitrine/${company.public_slug}?corretor=${user.id}`);
+                        alert('Link copiado!');
+                    }}
+                    >
+                    Copiar
+                    </button>
+                </div>
+                </div>
+            )}
         </section>
 
                 {user.role === 'admin' && (
@@ -355,7 +382,7 @@ function Profile() {
             <section className="dd-panel dd-panel-narrow">
             <h2 style={{ marginTop: 0 }}>Dados da imobiliaria</h2>
 
-            {company?.public_slug && (
+                        {company?.public_slug && (
                 <div style={{ background: 'var(--dd-panel-2)', border: '1px solid var(--dd-border)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
                 <p style={{ fontSize: 13, margin: '0 0 8px', color: 'var(--dd-muted)' }}>
                     Link publico para captacao de leads (divulgue no seu site/Instagram):
@@ -373,6 +400,33 @@ function Profile() {
                     className="dd-btn-secondary"
                     onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/f/${company.public_slug}`);
+                        alert('Link copiado!');
+                    }}
+                    >
+                    Copiar
+                    </button>
+                </div>
+                </div>
+            )}
+
+            {company?.public_slug && (
+                <div style={{ background: 'var(--dd-panel-2)', border: '1px solid var(--dd-border)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                <p style={{ fontSize: 13, margin: '0 0 8px', color: 'var(--dd-muted)' }}>
+                    Link geral do catalogo de imoveis (mini site):
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                    className="dd-input"
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/vitrine/${company.public_slug}`}
+                    style={{ flex: 1, fontSize: 13 }}
+                    />
+                    <button
+                    type="button"
+                    className="dd-btn-secondary"
+                    onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/vitrine/${company.public_slug}`);
                         alert('Link copiado!');
                     }}
                     >
