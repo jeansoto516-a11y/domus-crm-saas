@@ -11,7 +11,7 @@ const supabase = require('../config/supabase');
 exports.getBrokers = async (req, res) => {
     try {
 
-                const result = await pool.query(
+                                const result = await pool.query(
             `
             SELECT
                 id,
@@ -21,6 +21,7 @@ exports.getBrokers = async (req, res) => {
                 company_id,
                 access_scope,
                 avatar_url,
+                phone,
                 created_at
             FROM users
             WHERE company_id = $1
@@ -47,7 +48,7 @@ exports.getBrokers = async (req, res) => {
  */
 exports.createBroker = async (req, res) => {
 
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, access_scope } = req.body;
 
     if (req.user.role !== 'admin') {
         return res.status(403).json({
@@ -94,7 +95,9 @@ exports.createBroker = async (req, res) => {
             });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+                const hashedPassword = await bcrypt.hash(password, 10);
+
+        const scopeToSave = ['vendas', 'aluguel', 'ambos'].includes(access_scope) ? access_scope : 'vendas';
 
         const result = await pool.query(
             `
@@ -104,7 +107,9 @@ exports.createBroker = async (req, res) => {
                 email,
                 password,
                 role,
-                company_id
+                company_id,
+                phone,
+                access_scope
             )
             VALUES
             (
@@ -112,25 +117,31 @@ exports.createBroker = async (req, res) => {
                 $2,
                 $3,
                 $4,
-                $5
+                $5,
+                $6,
+                $7
             )
             RETURNING
                 id,
                 name,
                 email,
                 role,
-                company_id
+                company_id,
+                phone,
+                access_scope
             `,
             [
                 name,
                 email,
                 hashedPassword,
                 'user',
-                req.user.company_id
+                req.user.company_id,
+                phone || null,
+                scopeToSave
             ]
         );
 
-   const appUrl = process.env.APP_URL || 'http://localhost:5173';
+    const appUrl = process.env.APP_URL || 'http://localhost:5173';
 
         await sendMail({
             to: email,
@@ -245,7 +256,7 @@ exports.deleteBroker = async (req, res) => {
 exports.updateBroker = async (req, res) => {
 
     const { id } = req.params;
-    const { name, email, password, access_scope } = req.body;
+    const { name, email, password, access_scope, phone } = req.body;
 
     if (req.user.role !== 'admin') {
         return res.status(403).json({
@@ -312,7 +323,7 @@ exports.updateBroker = async (req, res) => {
 
                 const scopeToSave = ['vendas', 'aluguel', 'ambos'].includes(access_scope) ? access_scope : 'vendas';
 
-        if (password && password.trim() !== '') {
+                if (password && password.trim() !== '') {
 
             const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -323,15 +334,17 @@ exports.updateBroker = async (req, res) => {
                     name = $1,
                     email = $2,
                     password = $3,
-                    access_scope = $4
-                WHERE id = $5
-                AND company_id = $6
+                    access_scope = $4,
+                    phone = $5
+                WHERE id = $6
+                AND company_id = $7
                 `,
                 [
                     name,
                     email,
                     hashedPassword,
                     scopeToSave,
+                    phone || null,
                     id,
                     req.user.company_id
                 ]
@@ -345,14 +358,16 @@ exports.updateBroker = async (req, res) => {
                 SET
                     name = $1,
                     email = $2,
-                    access_scope = $3
-                WHERE id = $4
-                AND company_id = $5
+                    access_scope = $3,
+                    phone = $4
+                WHERE id = $5
+                AND company_id = $6
                 `,
                 [
                     name,
                     email,
                     scopeToSave,
+                    phone || null,
                     id,
                     req.user.company_id
                 ]

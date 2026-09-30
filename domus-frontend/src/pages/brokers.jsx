@@ -9,10 +9,11 @@ import '../styles/dark-theme.css';
 function Brokers() {
     const navigate = useNavigate();
 
-    const [formData, setFormData] = useState({
+        const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
+        phone: '',
         access_scope: 'vendas'
     });
 
@@ -87,13 +88,14 @@ function Brokers() {
         }
     };
 
-    const handleEdit = (broker) => {
+        const handleEdit = (broker) => {
         setEditingBroker(broker);
 
         setFormData({
             name: broker.name,
             email: broker.email,
             password: '',
+            phone: broker.phone || '',
             access_scope: broker.access_scope || 'vendas'
         });
 
@@ -131,10 +133,11 @@ function Brokers() {
 
             setEditingBroker(null);
 
-            setFormData({
+                        setFormData({
                 name: '',
                 email: '',
                 password: '',
+                phone: '',
                 access_scope: 'vendas'
             });
 
@@ -236,7 +239,7 @@ function Brokers() {
                             />
                         </label>
 
-                        <label className="dd-field">
+                                                <label className="dd-field">
                             Senha
                             <input
                                 className="dd-input"
@@ -249,21 +252,31 @@ function Brokers() {
                             />
                         </label>
 
-                        {editingBroker && (
-                            <label className="dd-field">
-                                Acesso do corretor
-                                <select
-                                    className="dd-select"
-                                    name="access_scope"
-                                    value={formData.access_scope}
-                                    onChange={handleChange}
-                                >
-                                    <option value="vendas">Somente Vendas</option>
-                                    <option value="aluguel">Somente Aluguéis</option>
-                                    <option value="ambos">Vendas e Aluguéis</option>
-                                </select>
-                            </label>
-                        )}
+                        <label className="dd-field">
+                            Telefone (WhatsApp)
+                            <input
+                                className="dd-input"
+                                type="text"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                placeholder="(11) 99999-9999"
+                            />
+                        </label>
+
+                                                <label className="dd-field">
+                            Acesso do corretor
+                            <select
+                                className="dd-select"
+                                name="access_scope"
+                                value={formData.access_scope}
+                                onChange={handleChange}
+                            >
+                                <option value="vendas">Somente Vendas</option>
+                                <option value="aluguel">Somente Aluguéis</option>
+                                <option value="ambos">Vendas e Aluguéis</option>
+                            </select>
+                        </label>
 
                         <div className="dd-form-actions">
                             {editingBroker && (
@@ -276,6 +289,7 @@ function Brokers() {
                                             name: '',
                                             email: '',
                                             password: '',
+                                            phone: '',
                                             access_scope: 'vendas'
                                         });
                                     }}
