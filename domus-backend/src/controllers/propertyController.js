@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const supabase = require('../config/supabase');
+const { calculateScore, getTemperature } = require('../services/leadScoringService');
 
 /**
  * Listar imoveis da empresa
@@ -432,6 +433,125 @@ exports.getPublicCatalog = async (req, res) => {
 
 };
 
+/**
+ * Vitrine publica: registrar interesse em um imovel (cria o lead automaticamente)
+ */
+exports.registerInterest = async (req, res) => {
+
+    const { slug } = req.params;
+    const { name, phone, property_id, broker_id } = req.body;
+
+    if (!name || !phone || !property_id) {
+        return res.status(400).json({ error: 'Informe nome, telefone e o imovel de interesse.' });
+    }
+
+    try {
+
+        const companyResult = await pool.query(
+            `SELECT id, whatsapp FROM companies WHERE public_slug = $1`,
+            [slug]
+        );
+
+        if (companyResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Catalogo nao encontrado.' });
+        }
+
+        const companyId = companyResult.rows[0].id;
+        const companyWhatsapp = companyResult.rows[0].whatsapp;
+
+        const propertyResult = await pool.query(
+            `SELECT id, title, lead_type FROM properties WHERE id = $1 AND company_id = $2`,
+            [property_id, companyId]
+        );
+
+        if (propertyResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Imovel nao encontrado.' });
+        }
+
+        const property = propertyResult.rows[0];
+        const leadType = property.lead_type === 'aluguel' ? 'aluguel' : 'venda';
+
+        let assignedUserId = null;
+        let contactPhone = companyWhatsapp;
+
+        if (broker_id) {
+
+            const brokerResult = await pool.query(
+                `SELECT id, phone FROM users WHERE id = $1 AND company_id = $2`,
+                [broker_id, companyId]
+            );
+
+            if (brokerResult.rows.length > 0) {
+                assignedUserId = brokerResult.rows[0].id;
+                contactPhone = brokerResult.rows[0].phone || companyWhatsapp;
+            }
+        }
+
+        if (!assignedUserId) {
+
+            const distributionResult = await pool.query(
+                `
+                SELECT
+                    users.id,
+                    users.phone,
+                    COUNT(leads.id) FILTER (WHERE leads.status != 'fechado') AS leads_ativos
+                FROM users
+                LEFT JOIN leads ON leads.user_id = users.id AND leads.company_id = users.company_id
+                WHERE users.company_id = $1 AND users.role = 'user'
+                GROUP BY users.id, users.phone
+                ORDER BY leads_ativos ASC
+                LIMIT 1
+                `,
+                [companyId]
+            );
+
+            if (distributionResult.rows.length > 0) {
+                assignedUserId = distributionResult.rows[0].id;
+            } else {
+                const adminResult = await pool.query(
+                    `SELECT id FROM users WHERE company_id = $1 AND role = 'admin' LIMIT 1`,
+                    [companyId]
+                );
+                assignedUserId = adminResult.rows[0]?.id || null;
+            }
+        }
+
+        const leadData = { name, phone, status: 'novo' };
+        const score = calculateScore(leadData);
+        const temperature = getTemperature(score);
+
+        const leadResult = await pool.query(
+            `
+            INSERT INTO leads (name, phone, status, score, temperature, user_id, company_id, lead_type)
+            VALUES ($1, $2, 'novo', $3, $4, $5, $6, $7)
+            RETURNING id
+            `,
+            [name, phone, score, temperature, assignedUserId, companyId, leadType]
+        );
+
+        const leadId = leadResult.rows[0].id;
+
+        await pool.query(
+            `INSERT INTO lead_history (lead_id, user_id, type, content) VALUES ($1, $2, 'status', $3)`,
+            [leadId, assignedUserId, `Lead cadastrado via catalogo publico - interesse no imovel "${property.title}"`]
+        );
+
+        return res.status(201).json({
+            message: 'Interesse registrado com sucesso.',
+            contact_phone: contactPhone || null
+        });
+
+    } catch (err) {
+
+        console.error('Erro ao registrar interesse:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao registrar interesse.'
+        });
+
+    }
+
+};
 
 /**
  * Excluir uma foto especifica do imovel

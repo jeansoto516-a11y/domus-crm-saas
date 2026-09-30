@@ -12,6 +12,7 @@ const upload = multer({
 });
 
 router.get('/public/:slug', propertyController.getPublicCatalog);
+router.post('/public/:slug/interest', propertyController.registerInterest);
 router.get('/', authMiddleware, checkSubscription, propertyController.getProperties);
 router.get('/:id', authMiddleware, checkSubscription, propertyController.getPropertyById);
 router.post('/', authMiddleware, checkSubscription, propertyController.createProperty);
