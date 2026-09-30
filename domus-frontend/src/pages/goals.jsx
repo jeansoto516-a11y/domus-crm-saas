@@ -135,6 +135,9 @@ function Goals() {
             <button className="active" onClick={() => navigate('/metas')}>
                 <Icon name="filter" /> Metas
             </button>
+            <button className="active" onClick={() => navigate('/meta-ads')}>
+            <Icon name="facebook" /> Meta Ads
+            </button>
             <button onClick={() => navigate('/perfil')}>
                 <Icon name="users" /> Perfil
             </button>

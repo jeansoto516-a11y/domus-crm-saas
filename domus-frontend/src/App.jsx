@@ -28,6 +28,7 @@ import RentalRanking from './pages/rentalranking';
 import PropertyCatalog from './pages/propertycatalog';
 import CreateProperty from './pages/createproperty';
 import EditProperty from './pages/editproperty';
+import MetaAds from './pages/metaads';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -245,6 +246,15 @@ function App() {
           element={
             <PrivateRoute>
               <EditProperty />
+            </PrivateRoute>
+          }
+        />
+
+                <Route
+          path="/meta-ads"
+          element={
+            <PrivateRoute>
+              <MetaAds />
             </PrivateRoute>
           }
         />

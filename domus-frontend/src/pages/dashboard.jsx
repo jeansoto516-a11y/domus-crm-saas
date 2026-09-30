@@ -205,6 +205,9 @@ function Dashboard() {
           <button onClick={() => navigate('/metas')}>
             <Icon name="filter" /> Metas
           </button>
+          <button className="active" onClick={() => navigate('/meta-ads')}>
+          <Icon name="facebook" /> Meta Ads
+          </button>
           <button onClick={() => navigate('/perfil')}>
             <Icon name="users" /> Perfil
           </button>
@@ -291,13 +294,22 @@ function Dashboard() {
                 <p className="dd-card-desc">Percentual de leads que finalizaram em fechado.</p>
               </article>
 
-              <article className="dd-card">
+                            <article className="dd-card">
                 <div className="dd-card-top">
                   <span className="dd-icon-badge" style={{ background: '#4C4FE0' }}><Icon name="calendar" /></span>
                 </div>
                 <span className="dd-card-label">Em negociacao</span>
                 <strong className="dd-card-value">{(byStatus.visita || 0) + (byStatus.proposta || 0)}</strong>
                 <p className="dd-card-desc">Oportunidades em visita ou proposta.</p>
+              </article>
+
+              <article className="dd-card" style={{ cursor: 'pointer' }} onClick={() => navigate('/meta-ads')}>
+                <div className="dd-card-top">
+                  <span className="dd-icon-badge" style={{ background: '#1877F2' }}>f</span>
+                </div>
+                <span className="dd-card-label">Meta Ads</span>
+                <strong className="dd-card-value">Ver campanhas</strong>
+                <p className="dd-card-desc">Desempenho do trafego pago no Facebook e Instagram.</p>
               </article>
             </section>
 

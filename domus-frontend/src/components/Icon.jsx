@@ -13,7 +13,8 @@ export default function Icon({ name }) {
     sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
     flame: <path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-1-2-1-2 1 3-1 4-1 4a6 6 0 0 1-4-11z" />,
     filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54z" />,
-    download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>
+    download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>,
+    facebook: <><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M14 8.5h-1.2a1.3 1.3 0 0 0-1.3 1.3V11h2.3l-.3 2h-2v5h-2v-5H9.2v-2h1.3V9.6A3 3 0 0 1 13.5 6.6H14z" /></>
     };
 
     return <svg {...common}>{paths[name]}</svg>;
