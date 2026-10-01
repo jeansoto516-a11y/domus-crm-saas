@@ -20,6 +20,7 @@ function Goals() {
 
     const [newTopicName, setNewTopicName] = useState('');
     const [form, setForm] = useState({ user_id: '', topic_id: '', target_value: '' });
+    const [newLeadsCount, setNewLeadsCount] = useState(0);
 
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -49,6 +50,18 @@ function Goals() {
     useEffect(() => {
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+    const checkNewLeads = () => {
+        api.get('/leads/new-count')
+        .then((res) => setNewLeadsCount(res.data.count))
+        .catch(() => {});
+    };
+
+    checkNewLeads();
+    const interval = setInterval(checkNewLeads, 10000);
+    return () => clearInterval(interval);
     }, []);
 
     const handleCreateTopic = async (e) => {
@@ -119,6 +132,7 @@ function Goals() {
             </button>
             <button onClick={() => navigate('/leads')}>
                 <Icon name="users" /> Leads
+                {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
             </button>
             <button onClick={() => navigate('/leads/novo')}>
                 <Icon name="userPlus" /> Novo lead
@@ -132,10 +146,10 @@ function Goals() {
             <button onClick={() => navigate('/ranking')}>
                 <Icon name="check" /> Ranking
             </button>
-            <button className="active" onClick={() => navigate('/metas')}>
+            <button onClick={() => navigate('/metas')}>
                 <Icon name="filter" /> Metas
             </button>
-            <button className="active" onClick={() => navigate('/meta-ads')}>
+            <button onClick={() => navigate('/meta-ads')}>
             <Icon name="facebook" /> Meta Ads
             </button>
             <button onClick={() => navigate('/perfil')}>

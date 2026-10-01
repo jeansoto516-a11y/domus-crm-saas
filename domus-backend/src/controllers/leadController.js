@@ -1050,10 +1050,85 @@ exports.getLeadProfile = async (req, res) => {
 
                 return res.json(result.rows[0]);
 
+            return res.json(result.rows[0]);
+
     } catch (err) {
         console.error('Erro ao salvar mapeamento:', err);
         return res.status(500).json({ error: 'Erro ao salvar mapeamento.' });
     }
+};
+
+/**
+ * Contagem de leads novos desde o ultimo acesso do usuario a tela de Leads
+ */
+exports.getNewLeadsCount = async (req, res) => {
+
+    try {
+
+        const userResult = await pool.query(
+            `SELECT leads_last_seen_at FROM users WHERE id = $1`,
+            [req.user.id]
+        );
+
+        const lastSeen = userResult.rows[0]?.leads_last_seen_at || new Date(0);
+
+        const values = [lastSeen];
+        let where = `WHERE leads.company_id = $${values.length + 1}`;
+        values.push(req.user.company_id);
+
+        if (req.user.role !== 'admin') {
+            where += ` AND leads.user_id = $${values.length + 1}`;
+            values.push(req.user.id);
+        }
+
+        const result = await pool.query(
+            `
+            SELECT COUNT(*) AS total
+            FROM leads
+            ${where}
+            AND leads.created_at > $1
+            `,
+            values
+        );
+
+        return res.json({ count: Number(result.rows[0].total) });
+
+    } catch (err) {
+
+        console.error('Erro ao contar leads novos:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao contar leads novos.'
+        });
+
+    }
+
+};
+
+/**
+ * Marcar leads como vistos (zera o contador)
+ */
+exports.markLeadsSeen = async (req, res) => {
+
+    try {
+
+        await pool.query(
+            `UPDATE users SET leads_last_seen_at = CURRENT_TIMESTAMP WHERE id = $1`,
+            [req.user.id]
+        );
+
+        return res.json({ message: 'Leads marcados como vistos.' });
+
+    } catch (err) {
+
+        console.error('Erro ao marcar leads como vistos:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao marcar leads como vistos.'
+        });
+
+    }
+
 };
 
 /**

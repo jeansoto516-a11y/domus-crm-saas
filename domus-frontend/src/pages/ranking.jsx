@@ -31,7 +31,20 @@ function Ranking() {
     const [ranking, setRanking] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [newLeadsCount, setNewLeadsCount] = useState(0);
     const navigate = useNavigate();
+
+    useEffect(() => {
+    const checkNewLeads = () => {
+        api.get('/leads/new-count')
+        .then((res) => setNewLeadsCount(res.data.count))
+        .catch(() => {});
+    };
+
+    checkNewLeads();
+    const interval = setInterval(checkNewLeads, 10000);
+    return () => clearInterval(interval);
+    }, []);
 
     const [allLeads, setAllLeads] = useState([]);
     const [leadsLoading, setLeadsLoading] = useState(true);
@@ -160,6 +173,7 @@ function Ranking() {
             </button>
             <button onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
+            {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
             </button>
             <button onClick={() => navigate('/leads/novo')}>
             <Icon name="userPlus" /> Novo lead

@@ -11,6 +11,8 @@ router.get('/timeseries', authMiddleware, checkSubscription, leadController.getL
 router.get('/export', authMiddleware, checkSubscription, leadController.exportLeads);
 router.get('/ranking', authMiddleware, checkSubscription, adminMiddleware, leadController.getBrokerRanking);
 router.get('/stale', authMiddleware, checkSubscription, leadController.getStaleLeads);
+router.get('/new-count', authMiddleware, checkSubscription, leadController.getNewLeadsCount);
+router.put('/mark-seen', authMiddleware, checkSubscription, leadController.markLeadsSeen);
 router.get('/public/:slug', leadController.getPublicCompany);
 router.post('/public/:slug', leadController.createPublicLead);
 router.get('/:id/profile', authMiddleware, checkSubscription, leadController.getLeadProfile);

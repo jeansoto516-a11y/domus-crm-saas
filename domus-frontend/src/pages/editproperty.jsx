@@ -15,6 +15,7 @@ function EditProperty() {
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [newLeadsCount, setNewLeadsCount] = useState(0);
 
     const [photoFiles, setPhotoFiles] = useState([]);
     const [uploadingPhotos, setUploadingPhotos] = useState(false);
@@ -28,6 +29,18 @@ function EditProperty() {
 
     checkUnread();
     const interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+    const checkNewLeads = () => {
+        api.get('/leads/new-count')
+        .then((res) => setNewLeadsCount(res.data.count))
+        .catch(() => {});
+    };
+
+    checkNewLeads();
+    const interval = setInterval(checkNewLeads, 10000);
     return () => clearInterval(interval);
     }, []);
 
@@ -164,6 +177,7 @@ function EditProperty() {
             </button>
             <button onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
+            {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
             </button>
             <button onClick={() => navigate('/leads/novo')}>
             <Icon name="userPlus" /> Novo lead

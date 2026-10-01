@@ -29,6 +29,7 @@ function Dashboard() {
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [error, setError] = useState('');
 
   const [analyticsFilters, setAnalyticsFilters] = useState({ startDate: '', endDate: '' });
@@ -128,7 +129,7 @@ function Dashboard() {
     setAnalyticsFilters((current) => ({ ...current, [name]: value }));
   };
 
-  useEffect(() => {
+    useEffect(() => {
     const checkUnread = () => {
       api.get('/messages/unread-count')
         .then((res) => setUnreadCount(res.data.unread))
@@ -137,6 +138,18 @@ function Dashboard() {
 
     checkUnread();
     const interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const checkNewLeads = () => {
+      api.get('/leads/new-count')
+        .then((res) => setNewLeadsCount(res.data.count))
+        .catch(() => {});
+    };
+
+    checkNewLeads();
+    const interval = setInterval(checkNewLeads, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -189,6 +202,7 @@ function Dashboard() {
           </button>
           <button onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
+            {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
           </button>
           <button onClick={() => navigate('/leads/novo')}>
             <Icon name="userPlus" /> Novo lead

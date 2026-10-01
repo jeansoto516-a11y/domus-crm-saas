@@ -44,6 +44,7 @@ function Leads() {
   const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
   const [staleLeadIds, setStaleLeadIds] = useState(new Set());
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
 
   const totals = useMemo(() => {
     return leads.reduce(
@@ -92,11 +93,27 @@ function Leads() {
     };
   }, [filters, logout]);
 
-  useEffect(() => {
+    useEffect(() => {
     api.get('/leads/stale')
       .then((res) => setStaleLeadIds(new Set(res.data.map((l) => l.id))))
       .catch(() => {});
   }, [leads]);
+
+  useEffect(() => {
+    api.put('/leads/mark-seen').catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const checkNewLeads = () => {
+      api.get('/leads/new-count')
+        .then((res) => setNewLeadsCount(res.data.count))
+        .catch(() => {});
+    };
+
+    checkNewLeads();
+    const interval = setInterval(checkNewLeads, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const checkUnread = () => {
@@ -291,6 +308,7 @@ function Leads() {
           </button>
           <button className="active" onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
+            {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
           </button>
           <button onClick={() => navigate('/leads/novo')}>
             <Icon name="userPlus" /> Novo lead

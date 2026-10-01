@@ -17,10 +17,11 @@ function Profile() {
     const [companyName, setCompanyName] = useState('');
     const [companyWhatsapp, setCompanyWhatsapp] = useState('');
 
-        const [message, setMessage] = useState('');
+    const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [newLeadsCount, setNewLeadsCount] = useState(0);
     const navigate = useNavigate();
 
         const [plans, setPlans] = useState({});
@@ -114,7 +115,7 @@ function Profile() {
     }
     };
 
-    useEffect(() => {
+        useEffect(() => {
     const checkUnread = () => {
         api.get('/messages/unread-count')
             .then((res) => setUnreadCount(res.data.unread))
@@ -123,6 +124,18 @@ function Profile() {
 
     checkUnread();
     const interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+    const checkNewLeads = () => {
+        api.get('/leads/new-count')
+            .then((res) => setNewLeadsCount(res.data.count))
+            .catch(() => {});
+    };
+
+    checkNewLeads();
+    const interval = setInterval(checkNewLeads, 10000);
     return () => clearInterval(interval);
     }, []);
 
@@ -184,7 +197,8 @@ function Profile() {
                 <Icon name="file" /> Alugueis
             </button>
             <button onClick={() => navigate('/leads')}>
-                <Icon name="users" /> Leads
+            <Icon name="users" /> Leads
+            {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
             </button>
             <button onClick={() => navigate('/catalogo')}>
             <Icon name="file" /> Catalogo de imoveis

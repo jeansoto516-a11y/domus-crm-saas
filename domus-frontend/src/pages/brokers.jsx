@@ -22,6 +22,7 @@ function Brokers() {
     const [brokers, setBrokers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [newLeadsCount, setNewLeadsCount] = useState(0);
 
     const [editingBroker, setEditingBroker] = useState(null);
 
@@ -42,7 +43,7 @@ function Brokers() {
         loadBrokers();
     }, []);
 
-    useEffect(() => {
+        useEffect(() => {
         const checkUnread = () => {
             api.get('/messages/unread-count')
                 .then((res) => setUnreadCount(res.data.unread))
@@ -51,6 +52,18 @@ function Brokers() {
 
         checkUnread();
         const interval = setInterval(checkUnread, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const checkNewLeads = () => {
+            api.get('/leads/new-count')
+                .then((res) => setNewLeadsCount(res.data.count))
+                .catch(() => {});
+        };
+
+        checkNewLeads();
+        const interval = setInterval(checkNewLeads, 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -168,6 +181,7 @@ function Brokers() {
                     </button>
                     <button onClick={() => navigate('/leads')}>
                         <Icon name="users" /> Leads
+                        {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
                     </button>
                     <button onClick={() => navigate('/leads/novo')}>
                         <Icon name="userPlus" /> Novo lead

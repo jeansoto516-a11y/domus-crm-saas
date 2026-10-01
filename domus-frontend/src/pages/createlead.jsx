@@ -36,6 +36,7 @@ function CreateLead() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
   const navigate = useNavigate();
 
   const logout = () => {
@@ -44,7 +45,7 @@ function CreateLead() {
     navigate('/login');
   };
 
-  useEffect(() => {
+    useEffect(() => {
     const checkUnread = () => {
       api.get('/messages/unread-count')
         .then((res) => setUnreadCount(res.data.unread))
@@ -53,6 +54,18 @@ function CreateLead() {
 
     checkUnread();
     const interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const checkNewLeads = () => {
+      api.get('/leads/new-count')
+        .then((res) => setNewLeadsCount(res.data.count))
+        .catch(() => {});
+    };
+
+    checkNewLeads();
+    const interval = setInterval(checkNewLeads, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -111,6 +124,7 @@ function CreateLead() {
           </button>
           <button onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
+            {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
           </button>
           <button className="active" onClick={() => navigate('/leads/novo')}>
             <Icon name="userPlus" /> Novo lead
