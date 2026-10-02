@@ -437,9 +437,9 @@ exports.getPublicCatalog = async (req, res) => {
  * Vitrine publica: registrar interesse em um imovel (cria o lead automaticamente)
  */
 exports.registerInterest = async (req, res) => {
-
+    
     const { slug } = req.params;
-    const { name, phone, property_id, broker_id } = req.body;
+    const { name, phone, property_id, broker_id, interest_type } = req.body;
 
     if (!name || !phone || !property_id) {
         return res.status(400).json({ error: 'Informe nome, telefone e o imovel de interesse.' });
@@ -469,7 +469,7 @@ exports.registerInterest = async (req, res) => {
         }
 
         const property = propertyResult.rows[0];
-        const leadType = property.lead_type === 'aluguel' ? 'aluguel' : 'venda';
+        const leadType = interest_type === 'aluguel' ? 'aluguel' : 'venda';
 
         let assignedUserId = null;
         let contactPhone = companyWhatsapp;

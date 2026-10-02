@@ -80,7 +80,7 @@ function PublicCatalog() {
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [activePhotoIndex, setActivePhotoIndex] = useState(0);
 
-    const [contactForm, setContactForm] = useState({ name: '', phone: '' });
+    const [contactForm, setContactForm] = useState({ name: '', phone: '', interest_type: 'venda' });
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
 
@@ -108,7 +108,11 @@ function PublicCatalog() {
     const openProperty = (property) => {
     setSelectedProperty(property);
     setActivePhotoIndex(0);
-    setContactForm({ name: '', phone: '' });
+    setContactForm({
+        name: '',
+        phone: '',
+        interest_type: property.lead_type === 'aluguel' ? 'aluguel' : 'venda'
+    });
     setSubmitError('');
     };
 
@@ -134,6 +138,7 @@ function PublicCatalog() {
         const { data: result } = await api.post(`/properties/public/${slug}/interest`, {
         name: contactForm.name,
         phone: contactForm.phone,
+        interest_type: contactForm.interest_type,
         property_id: selectedProperty.id,
         broker_id: brokerId || undefined
         });
@@ -323,6 +328,14 @@ function PublicCatalog() {
                     <label className="pc-field">
                     Seu nome
                     <input name="name" onChange={updateContactField} value={contactForm.name} />
+                    </label>
+
+                    <label className="pc-field">
+                    Voce quer
+                    <select name="interest_type" onChange={updateContactField} value={contactForm.interest_type} style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, padding: '10px 12px', borderRadius: 6, border: '1px solid var(--pc-line)', color: 'var(--pc-ink)' }}>
+                        <option value="venda">Comprar</option>
+                        <option value="aluguel">Alugar</option>
+                    </select>
                     </label>
 
                     <label className="pc-field">
