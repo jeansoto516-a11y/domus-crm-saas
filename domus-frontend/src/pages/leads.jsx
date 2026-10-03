@@ -44,7 +44,7 @@ function Leads() {
   const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
   const [staleLeadIds, setStaleLeadIds] = useState(new Set());
-  const [newLeadsCount, setNewLeadsCount] = useState(0);
+  const [newLeadsCounts, setNewLeadsCounts] = useState({ count: 0, venda: 0, aluguel: 0 });
 
   const totals = useMemo(() => {
     return leads.reduce(
@@ -99,17 +99,24 @@ function Leads() {
       .catch(() => {});
   }, [leads]);
 
+    const checkNewLeads = () => {
+    api.get('/leads/new-count')
+      .then((res) => setNewLeadsCounts(res.data))
+      .catch(() => {});
+  };
+
+  const markTabSeen = (leadType) => {
+    api.put(`/leads/mark-seen?lead_type=${leadType}`)
+      .then(checkNewLeads)
+      .catch(() => {});
+  };
+
   useEffect(() => {
-    api.put('/leads/mark-seen').catch(() => {});
+    markTabSeen(filters.lead_type);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    const checkNewLeads = () => {
-      api.get('/leads/new-count')
-        .then((res) => setNewLeadsCount(res.data.count))
-        .catch(() => {});
-    };
-
     checkNewLeads();
     const interval = setInterval(checkNewLeads, 10000);
     return () => clearInterval(interval);
@@ -308,7 +315,7 @@ function Leads() {
           </button>
           <button className="active" onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
-            {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
+            {newLeadsCounts.count > 0 && <span className="dd-badge">{newLeadsCounts.count}</span>}
           </button>
           <button onClick={() => navigate('/leads/novo')}>
             <Icon name="userPlus" /> Novo lead
@@ -380,18 +387,26 @@ function Leads() {
 
         <TrialBanner />
 
-        <div className="dd-tabs">
+                <div className="dd-tabs">
           <button
             className={`dd-tab ${filters.lead_type === 'venda' ? 'active' : ''}`}
-            onClick={() => setFilters((current) => ({ ...current, lead_type: 'venda' }))}
+            onClick={() => {
+              setFilters((current) => ({ ...current, lead_type: 'venda' }));
+              markTabSeen('venda');
+            }}
           >
             Vendas
+            {newLeadsCounts.venda > 0 && <span className="dd-tab-badge">{newLeadsCounts.venda}</span>}
           </button>
           <button
             className={`dd-tab ${filters.lead_type === 'aluguel' ? 'active' : ''}`}
-            onClick={() => setFilters((current) => ({ ...current, lead_type: 'aluguel' }))}
+            onClick={() => {
+              setFilters((current) => ({ ...current, lead_type: 'aluguel' }));
+              markTabSeen('aluguel');
+            }}
           >
             Aluguel
+            {newLeadsCounts.aluguel > 0 && <span className="dd-tab-badge">{newLeadsCounts.aluguel}</span>}
           </button>
         </div>
 

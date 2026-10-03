@@ -1066,32 +1066,57 @@ exports.getNewLeadsCount = async (req, res) => {
     try {
 
         const userResult = await pool.query(
-            `SELECT leads_last_seen_at FROM users WHERE id = $1`,
+            `SELECT leads_venda_last_seen_at, leads_aluguel_last_seen_at FROM users WHERE id = $1`,
             [req.user.id]
         );
 
-        const lastSeen = userResult.rows[0]?.leads_last_seen_at || new Date(0);
+        const lastSeenVenda = userResult.rows[0]?.leads_venda_last_seen_at || new Date(0);
+        const lastSeenAluguel = userResult.rows[0]?.leads_aluguel_last_seen_at || new Date(0);
 
-        const values = [lastSeen];
-        let where = `WHERE leads.company_id = $${values.length + 1}`;
-        values.push(req.user.company_id);
+        const buildWhere = (values) => {
+            let where = `WHERE leads.company_id = $${values.length + 1}`;
+            values.push(req.user.company_id);
 
-        if (req.user.role !== 'admin') {
-            where += ` AND leads.user_id = $${values.length + 1}`;
-            values.push(req.user.id);
-        }
+            if (req.user.role !== 'admin') {
+                where += ` AND leads.user_id = $${values.length + 1}`;
+                values.push(req.user.id);
+            }
 
-        const result = await pool.query(
+            return where;
+        };
+
+        const vendaValues = [lastSeenVenda];
+        const vendaWhere = buildWhere(vendaValues);
+
+        const vendaResult = await pool.query(
             `
             SELECT COUNT(*) AS total
             FROM leads
-            ${where}
+            ${vendaWhere}
+            AND leads.lead_type = 'venda'
             AND leads.created_at > $1
             `,
-            values
+            vendaValues
         );
 
-        return res.json({ count: Number(result.rows[0].total) });
+        const aluguelValues = [lastSeenAluguel];
+        const aluguelWhere = buildWhere(aluguelValues);
+
+        const aluguelResult = await pool.query(
+            `
+            SELECT COUNT(*) AS total
+            FROM leads
+            ${aluguelWhere}
+            AND leads.lead_type = 'aluguel'
+            AND leads.created_at > $1
+            `,
+            aluguelValues
+        );
+
+        const venda = Number(vendaResult.rows[0].total);
+        const aluguel = Number(aluguelResult.rows[0].total);
+
+        return res.json({ count: venda + aluguel, venda, aluguel });
 
     } catch (err) {
 
@@ -1106,14 +1131,18 @@ exports.getNewLeadsCount = async (req, res) => {
 };
 
 /**
- * Marcar leads como vistos (zera o contador)
+ * Marcar leads de um tipo (venda/aluguel) como vistos
  */
 exports.markLeadsSeen = async (req, res) => {
+
+    const leadType = req.query.lead_type === 'aluguel' ? 'aluguel' : 'venda';
+
+    const column = leadType === 'aluguel' ? 'leads_aluguel_last_seen_at' : 'leads_venda_last_seen_at';
 
     try {
 
         await pool.query(
-            `UPDATE users SET leads_last_seen_at = CURRENT_TIMESTAMP WHERE id = $1`,
+            `UPDATE users SET ${column} = CURRENT_TIMESTAMP WHERE id = $1`,
             [req.user.id]
         );
 
