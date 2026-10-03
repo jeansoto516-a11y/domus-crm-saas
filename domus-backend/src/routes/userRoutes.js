@@ -51,6 +51,12 @@ router.get(
     userController.getPlans
 );
 
+router.put(
+    '/me/onboarding-complete',
+    authMiddleware,
+    userController.completeOnboarding
+);
+
 router.get(
     '/',
     authMiddleware,

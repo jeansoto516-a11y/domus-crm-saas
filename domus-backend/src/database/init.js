@@ -217,7 +217,8 @@ async function createTables() {
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS whatsapp TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS leads_last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS leads_venda_last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS leads_aluguel_last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS leads_aluguel_last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMP;
 
       CREATE INDEX IF NOT EXISTS idx_properties_company ON properties(company_id);
       CREATE INDEX IF NOT EXISTS idx_property_photos_property ON property_photos(property_id);

@@ -397,7 +397,7 @@ exports.updateBroker = async (req, res) => {
 exports.getMe = async (req, res) => {
     try {
         const userResult = await pool.query(
-            `SELECT id, name, email, role, company_id, avatar_url, phone FROM users WHERE id = $1`,
+            `SELECT id, name, email, role, company_id, avatar_url, phone, onboarding_completed_at FROM users WHERE id = $1`,
             [req.user.id]
         );
 
@@ -550,6 +550,24 @@ exports.updatePlan = async (req, res) => {
  */
 exports.getPlans = async (req, res) => {
     return res.json(PLANS);
+};
+
+/**
+ * Marcar o onboarding/tour guiado como concluido
+ */
+exports.completeOnboarding = async (req, res) => {
+    try {
+        await pool.query(
+            `UPDATE users SET onboarding_completed_at = CURRENT_TIMESTAMP WHERE id = $1`,
+            [req.user.id]
+        );
+
+        return res.json({ message: 'Onboarding concluido.' });
+
+    } catch (err) {
+        console.error('Erro ao concluir onboarding:', err);
+        return res.status(500).json({ error: 'Erro ao concluir onboarding.' });
+    }
 };
 
 /**
