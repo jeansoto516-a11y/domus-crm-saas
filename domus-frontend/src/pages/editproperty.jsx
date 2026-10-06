@@ -20,6 +20,10 @@ function EditProperty() {
     const [photoFiles, setPhotoFiles] = useState([]);
     const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
+    const [photos360, setPhotos360] = useState([]);
+    const [photo360Files, setPhoto360Files] = useState([]);
+    const [uploading360, setUploading360] = useState(false);
+
     useEffect(() => {
     const checkUnread = () => {
         api.get('/messages/unread-count')
@@ -70,6 +74,7 @@ function EditProperty() {
             owner_contact: p.owner_contact || ''
         });
         setPhotos(p.photos || []);
+        setPhotos360(p.photos_360 || []);
         })
         .catch((err) => setError(err.response?.data?.error || 'Nao foi possivel carregar o imovel.'))
         .finally(() => setPageLoading(false));
@@ -136,7 +141,7 @@ function EditProperty() {
     }
     };
 
-    const handleDeletePhoto = async (photoId) => {
+        const handleDeletePhoto = async (photoId) => {
     const confirmDelete = window.confirm('Excluir esta foto?');
     if (!confirmDelete) return;
 
@@ -145,6 +150,45 @@ function EditProperty() {
         setPhotos((current) => current.filter((p) => p.id !== photoId));
     } catch (err) {
         setError(err.response?.data?.error || 'Nao foi possivel excluir a foto.');
+    }
+    };
+
+    const handleFiles360Change = (event) => {
+    setPhoto360Files(Array.from(event.target.files));
+    };
+
+    const handleUpload360Photos = async () => {
+    if (photo360Files.length === 0) return;
+
+    const formData = new FormData();
+    photo360Files.forEach((file) => formData.append('photos360', file));
+
+    setUploading360(true);
+    setError('');
+
+    try {
+        const { data } = await api.post(`/properties/${id}/photos360`, formData, {
+        headers: { 'Content-Type': undefined }
+        });
+
+        setPhotos360((current) => [...current, ...data]);
+        setPhoto360Files([]);
+    } catch (err) {
+        setError(err.response?.data?.error || 'Erro ao enviar fotos 360.');
+    } finally {
+        setUploading360(false);
+    }
+    };
+
+    const handleDelete360Photo = async (photoId) => {
+    const confirmDelete = window.confirm('Excluir esta foto 360?');
+    if (!confirmDelete) return;
+
+    try {
+        await api.delete(`/properties/${id}/photos360/${photoId}`);
+        setPhotos360((current) => current.filter((p) => p.id !== photoId));
+    } catch (err) {
+        setError(err.response?.data?.error || 'Nao foi possivel excluir a foto 360.');
     }
     };
 
@@ -369,7 +413,7 @@ function EditProperty() {
             </div>
             )}
 
-            {photos.length < 10 && (
+                        {photos.length < 10 && (
             <>
                 <input
                 type="file"
@@ -381,6 +425,47 @@ function EditProperty() {
                 <div className="dd-form-actions" style={{ justifyContent: 'flex-start', marginTop: 12 }}>
                 <button className="dd-btn-primary" onClick={handleUploadPhotos} disabled={uploadingPhotos || photoFiles.length === 0} type="button">
                     {uploadingPhotos ? 'Enviando...' : 'Enviar fotos selecionadas'}
+                </button>
+                </div>
+            </>
+            )}
+        </section>
+
+        <section className="dd-panel dd-panel-narrow">
+            <h2 style={{ marginTop: 0 }}>Fotos 360° - Tour Virtual ({photos360.length}/15)</h2>
+            <p style={{ color: 'var(--dd-muted)', fontSize: 13 }}>
+                Opcional. Use o modo panoramico/360 da camera do celular pra tirar a foto ja "costurada" de cada ambiente.
+            </p>
+
+            {photos360.length > 0 && (
+            <div className="dd-property-photo-grid" style={{ marginBottom: 16 }}>
+                {photos360.map((photo) => (
+                <div key={photo.id} style={{ position: 'relative' }}>
+                    <img src={photo.url} alt="Foto 360 do imovel" className="dd-property-photo-thumb" />
+                    <button
+                    type="button"
+                    className="dd-photo-remove-btn"
+                    onClick={() => handleDelete360Photo(photo.id)}
+                    >
+                    ×
+                    </button>
+                </div>
+                ))}
+            </div>
+            )}
+
+            {photos360.length < 15 && (
+            <>
+                <input
+                type="file"
+                accept="image/png, image/jpeg, image/webp"
+                multiple
+                onChange={handleFiles360Change}
+                className="dd-input"
+                />
+                <div className="dd-form-actions" style={{ justifyContent: 'flex-start', marginTop: 12 }}>
+                <button className="dd-btn-primary" onClick={handleUpload360Photos} disabled={uploading360 || photo360Files.length === 0} type="button">
+                    {uploading360 ? 'Enviando...' : 'Enviar fotos 360 selecionadas'}
                 </button>
                 </div>
             </>
