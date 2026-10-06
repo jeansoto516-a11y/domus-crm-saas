@@ -37,6 +37,10 @@ function CreateProperty() {
     const [photoFiles, setPhotoFiles] = useState([]);
     const [uploadingPhotos, setUploadingPhotos] = useState(false);
     const [uploadedPhotos, setUploadedPhotos] = useState([]);
+
+    const [photo360Files, setPhoto360Files] = useState([]);
+    const [uploading360, setUploading360] = useState(false);
+    const [uploaded360Photos, setUploaded360Photos] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [newLeadsCount, setNewLeadsCount] = useState(0);
 
@@ -101,7 +105,6 @@ function CreateProperty() {
     setError('');
     setPhotoFiles(files);
     };
-
     const handleUploadPhotos = async () => {
     if (photoFiles.length === 0) return;
 
@@ -122,6 +125,33 @@ function CreateProperty() {
         setError(err.response?.data?.error || 'Erro ao enviar fotos.');
     } finally {
         setUploadingPhotos(false);
+    }
+    };
+
+    const handleFiles360Change = (event) => {
+    setPhoto360Files(Array.from(event.target.files));
+    };
+
+    const handleUpload360Photos = async () => {
+    if (photo360Files.length === 0) return;
+
+    const formData = new FormData();
+    photo360Files.forEach((file) => formData.append('photos360', file));
+
+    setUploading360(true);
+    setError('');
+
+    try {
+        const { data } = await api.post(`/properties/${createdProperty.id}/photos360`, formData, {
+        headers: { 'Content-Type': undefined }
+        });
+
+        setUploaded360Photos((current) => [...current, ...data]);
+        setPhoto360Files([]);
+    } catch (err) {
+        setError(err.response?.data?.error || 'Erro ao enviar fotos 360.');
+    } finally {
+        setUploading360(false);
     }
     };
 
@@ -316,7 +346,8 @@ function CreateProperty() {
                 </div>
             </form>
             </section>
-        ) : (
+                ) : (
+            <>
             <section className="dd-panel dd-panel-narrow">
             <h2 style={{ marginTop: 0 }}>Fotos do imovel</h2>
             <p style={{ color: 'var(--dd-muted)' }}>
@@ -331,29 +362,62 @@ function CreateProperty() {
                 </div>
             )}
 
-            {uploadedPhotos.length < 10 && (
+                        {uploadedPhotos.length < 10 && (
+              <>
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  multiple
+                  onChange={handleFilesChange}
+                  className="dd-input"
+                />
+                <div className="dd-form-actions" style={{ justifyContent: 'flex-start', marginTop: 12 }}>
+                  <button className="dd-btn-primary" onClick={handleUploadPhotos} disabled={uploadingPhotos || photoFiles.length === 0} type="button">
+                    {uploadingPhotos ? 'Enviando...' : 'Enviar fotos selecionadas'}
+                  </button>
+                </div>
+              </>
+            )}
+          </section>
+
+          <section className="dd-panel dd-panel-narrow">
+            <h2 style={{ marginTop: 0 }}>Fotos 360° (Tour Virtual)</h2>
+            <p style={{ color: 'var(--dd-muted)', fontSize: 13 }}>
+              Opcional. Use o modo panoramico/360 da camera do celular (nativo em Android e iPhone) pra tirar uma foto ja "costurada" de cada ambiente. Voce ja enviou {uploaded360Photos.length}.
+            </p>
+
+            {uploaded360Photos.length > 0 && (
+              <div className="dd-property-photo-grid" style={{ marginBottom: 16 }}>
+                {uploaded360Photos.map((photo) => (
+                    <img key={photo.id} src={photo.url} alt="Foto 360 do imovel" className="dd-property-photo-thumb" />
+                ))}
+                </div>
+            )}
+
+            {uploaded360Photos.length < 15 && (
                 <>
                 <input
                     type="file"
                     accept="image/png, image/jpeg, image/webp"
                     multiple
-                    onChange={handleFilesChange}
+                    onChange={handleFiles360Change}
                     className="dd-input"
                 />
                 <div className="dd-form-actions" style={{ justifyContent: 'flex-start', marginTop: 12 }}>
-                    <button className="dd-btn-primary" onClick={handleUploadPhotos} disabled={uploadingPhotos || photoFiles.length === 0} type="button">
-                    {uploadingPhotos ? 'Enviando...' : 'Enviar fotos selecionadas'}
+                    <button className="dd-btn-primary" onClick={handleUpload360Photos} disabled={uploading360 || photo360Files.length === 0} type="button">
+                    {uploading360 ? 'Enviando...' : 'Enviar fotos 360 selecionadas'}
                     </button>
                 </div>
                 </>
             )}
 
-            <div className="dd-form-actions" style={{ marginTop: 20 }}>
+                <div className="dd-form-actions" style={{ marginTop: 20 }}>
                 <button className="dd-btn-primary" onClick={() => navigate('/catalogo')} type="button">
                 Ir para o catalogo
                 </button>
             </div>
             </section>
+            </>
         )}
         </section>
         <RemindersWidget />

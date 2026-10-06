@@ -218,7 +218,18 @@ async function createTables() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS leads_last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS leads_venda_last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
             ALTER TABLE users ADD COLUMN IF NOT EXISTS leads_aluguel_last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMP;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMP;
+
+      CREATE TABLE IF NOT EXISTS property_360_photos (
+        id SERIAL PRIMARY KEY,
+        property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
+        url TEXT NOT NULL,
+        label TEXT,
+        position INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_property_360_photos_property ON property_360_photos(property_id);
 
       CREATE INDEX IF NOT EXISTS idx_properties_company ON properties(company_id);
       CREATE INDEX IF NOT EXISTS idx_property_photos_property ON property_photos(property_id);

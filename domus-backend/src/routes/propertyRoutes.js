@@ -14,6 +14,7 @@ const upload = multer({
 router.get('/public/:slug', propertyController.getPublicCatalog);
 router.post('/public/:slug/interest', propertyController.registerInterest);
 router.get('/', authMiddleware, checkSubscription, propertyController.getProperties);
+router.get('/360/tour', authMiddleware, checkSubscription, propertyController.getPropertiesWithTour);
 router.get('/:id', authMiddleware, checkSubscription, propertyController.getPropertyById);
 router.post('/', authMiddleware, checkSubscription, propertyController.createProperty);
 router.put('/:id', authMiddleware, checkSubscription, propertyController.updateProperty);
@@ -21,5 +22,8 @@ router.delete('/:id', authMiddleware, checkSubscription, propertyController.dele
 
 router.post('/:id/photos', authMiddleware, checkSubscription, upload.array('photos', 10), propertyController.uploadPropertyPhotos);
 router.delete('/:id/photos/:photoId', authMiddleware, checkSubscription, propertyController.deletePropertyPhoto);
+
+router.post('/:id/photos360', authMiddleware, checkSubscription, upload.array('photos360', 15), propertyController.uploadProperty360Photos);
+router.delete('/:id/photos360/:photoId', authMiddleware, checkSubscription, propertyController.deleteProperty360Photo);
 
 module.exports = router;

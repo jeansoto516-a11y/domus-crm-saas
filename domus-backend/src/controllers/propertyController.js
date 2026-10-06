@@ -75,7 +75,15 @@ exports.getPropertyById = async (req, res) => {
                         WHERE pp.property_id = properties.id
                     ),
                     '[]'
-                ) AS photos
+                ) AS photos,
+                COALESCE(
+                    (
+                        SELECT json_agg(json_build_object('id', p3.id, 'url', p3.url, 'label', p3.label) ORDER BY p3.position ASC)
+                        FROM property_360_photos p3
+                        WHERE p3.property_id = properties.id
+                    ),
+                    '[]'
+                ) AS photos_360
             FROM properties
             WHERE properties.id = $1 AND properties.company_id = $2
             `,
@@ -432,6 +440,199 @@ exports.getPublicCatalog = async (req, res) => {
     }
 
 };
+
+/**
+ * Upload de fotos 360 do imovel (ate 15 no total)
+ */
+exports.uploadProperty360Photos = async (req, res) => {
+
+    const { id } = req.params;
+    const labels = req.body.labels ? JSON.parse(req.body.labels) : [];
+
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'Nenhuma imagem enviada.' });
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    try {
+
+        const propertyCheck = await pool.query(
+            `SELECT id FROM properties WHERE id = $1 AND company_id = $2`,
+            [id, req.user.company_id]
+        );
+
+        if (propertyCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Imovel nao encontrado.' });
+        }
+
+        const currentCountResult = await pool.query(
+            `SELECT COUNT(*) FROM property_360_photos WHERE property_id = $1`,
+            [id]
+        );
+
+        const currentCount = Number(currentCountResult.rows[0].count);
+
+        if (currentCount + req.files.length > 15) {
+            return res.status(400).json({
+                error: `Este imovel ja tem ${currentCount} foto(s) 360. Voce pode adicionar no maximo ${15 - currentCount}.`
+            });
+        }
+
+        const insertedPhotos = [];
+
+        for (let i = 0; i < req.files.length; i++) {
+
+            const file = req.files[i];
+
+            if (!allowedTypes.includes(file.mimetype)) {
+                continue;
+            }
+
+            const fileExt = file.mimetype.split('/')[1];
+            const filePath = `360-property-${id}-${Date.now()}-${i}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('properties')
+                .upload(filePath, file.buffer, {
+                    contentType: file.mimetype,
+                    upsert: true
+                });
+
+            if (uploadError) {
+                console.error('Erro ao enviar foto 360:', uploadError);
+                continue;
+            }
+
+            const { data: publicUrlData } = supabase.storage
+                .from('properties')
+                .getPublicUrl(filePath);
+
+            const result = await pool.query(
+                `INSERT INTO property_360_photos (property_id, url, label, position) VALUES ($1, $2, $3, $4) RETURNING *`,
+                [id, publicUrlData.publicUrl, labels[i] || null, currentCount + i]
+            );
+
+            insertedPhotos.push(result.rows[0]);
+        }
+
+        if (insertedPhotos.length === 0) {
+            return res.status(400).json({ error: 'Nenhuma imagem valida foi enviada.' });
+        }
+
+        return res.status(201).json(insertedPhotos);
+
+    } catch (err) {
+
+        console.error('Erro ao processar upload de fotos 360:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao processar upload de fotos 360.'
+        });
+
+    }
+
+};
+
+/**
+ * Excluir uma foto 360 especifica
+ */
+exports.deleteProperty360Photo = async (req, res) => {
+
+    const { id, photoId } = req.params;
+
+    try {
+
+        const propertyCheck = await pool.query(
+            `SELECT id FROM properties WHERE id = $1 AND company_id = $2`,
+            [id, req.user.company_id]
+        );
+
+        if (propertyCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Imovel nao encontrado.' });
+        }
+
+        const photo = await pool.query(
+            `SELECT url FROM property_360_photos WHERE id = $1 AND property_id = $2`,
+            [photoId, id]
+        );
+
+        if (photo.rows.length === 0) {
+            return res.status(404).json({ error: 'Foto nao encontrada.' });
+        }
+
+        const path = photo.rows[0].url.split('/properties/')[1];
+
+        if (path) {
+            await supabase.storage.from('properties').remove([path]);
+        }
+
+        await pool.query(`DELETE FROM property_360_photos WHERE id = $1`, [photoId]);
+
+        return res.json({ message: 'Foto 360 excluida com sucesso.' });
+
+    } catch (err) {
+
+        console.error('Erro ao excluir foto 360:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao excluir foto 360.'
+        });
+
+    }
+
+};
+
+/**
+ * Listar imoveis que tem tour virtual 360 cadastrado
+ */
+exports.getPropertiesWithTour = async (req, res) => {
+
+    try {
+
+        const result = await pool.query(
+            `
+            SELECT
+                properties.id, properties.title, properties.city, properties.region,
+                properties.property_type, properties.lead_type,
+                COALESCE(
+                    (
+                        SELECT json_agg(json_build_object('id', pp.id, 'url', pp.url) ORDER BY pp.position ASC)
+                        FROM property_photos pp
+                        WHERE pp.property_id = properties.id
+                    ),
+                    '[]'
+                ) AS photos,
+                COALESCE(
+                    (
+                        SELECT json_agg(json_build_object('id', p3.id, 'url', p3.url, 'label', p3.label) ORDER BY p3.position ASC)
+                        FROM property_360_photos p3
+                        WHERE p3.property_id = properties.id
+                    ),
+                    '[]'
+                ) AS photos_360
+            FROM properties
+            WHERE properties.company_id = $1
+              AND EXISTS (SELECT 1 FROM property_360_photos WHERE property_360_photos.property_id = properties.id)
+            ORDER BY properties.created_at DESC
+            `,
+            [req.user.company_id]
+        );
+
+        return res.json(result.rows);
+
+    } catch (err) {
+
+        console.error('Erro ao buscar imoveis com tour 360:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar imoveis com tour 360.'
+        });
+
+    }
+
+};
+
 
 /**
  * Vitrine publica: registrar interesse em um imovel (cria o lead automaticamente)
