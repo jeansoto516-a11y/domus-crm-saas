@@ -2490,3 +2490,46 @@
   font-weight: 700;
   line-height: 1;
 }
+
+.dd-tour-tooltip {
+  background: #1c1c22;
+  border: 1px solid var(--dd-border, #2a2a33);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+.dd-tour-step-count {
+  font-size: 11px;
+  color: var(--dd-muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.dd-tour-tooltip h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.dd-tour-tooltip p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--dd-muted, #888);
+  line-height: 1.5;
+}
+
+.dd-tour-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dd-tour-skip {
+  background: none;
+  border: none;
+  color: var(--dd-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}

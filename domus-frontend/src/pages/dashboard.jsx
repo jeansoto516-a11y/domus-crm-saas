@@ -6,6 +6,7 @@ import RemindersWidget from '../components/RemindersWidget';
 import '../styles/dark-theme.css';
 import Icon from '../components/Icon';
 import ChartCard from '../components/ChartCard';
+import OnboardingTour from '../components/OnboardingTour';
 
 const statusLabels = {
   novo: 'Novos',
@@ -36,6 +37,8 @@ function Dashboard() {
   const [analyticsData, setAnalyticsData] = useState({ timeseries: [], byStatus: {}, byTemperature: {} });
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
+  const [showTour, setShowTour] = useState(false);
+
   const navigate = useNavigate();
 
   const user = useMemo(() => {
@@ -52,11 +55,51 @@ function Dashboard() {
     navigate('/login');
   }, [navigate]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (user?.role === 'super_admin') {
       navigate('/admin');
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    api.get('/users/me')
+      .then((res) => {
+        if (!res.data.user.onboarding_completed_at) {
+          setShowTour(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const finishTour = () => {
+    setShowTour(false);
+    api.put('/users/me/onboarding-complete').catch(() => {});
+  };
+
+  const adminTourSteps = [
+    { selector: '[data-tour="nav-dashboard"]', title: 'Dashboard', text: 'Aqui voce acompanha os indicadores gerais: leads, conversao, imoveis e analises com graficos.' },
+    { selector: '[data-tour="nav-leads"]', title: 'Leads', text: 'Veja todos os leads da imobiliaria em cards, com historico, mapeamento e sugestoes de imoveis.' },
+    { selector: '[data-tour="nav-leads-novo"]', title: 'Novo lead', text: 'Cadastre um lead manualmente preenchendo o mapeamento completo de busca.' },
+    { selector: '[data-tour="nav-catalogo"]', title: 'Catalogo de imoveis', text: 'Cadastre imoveis com fotos. Eles alimentam o matching automatico com os leads e a vitrine publica.' },
+    { selector: '[data-tour="nav-brokers"]', title: 'Corretores', text: 'Cadastre e gerencie os corretores da sua equipe, definindo o acesso de cada um (vendas, alugueis ou ambos).' },
+    { selector: '[data-tour="nav-ranking"]', title: 'Ranking', text: 'Acompanhe o desempenho de cada corretor: fechamentos, leads e imoveis cadastrados.' },
+    { selector: '[data-tour="nav-metas"]', title: 'Metas', text: 'Defina metas mensais para a equipe e acompanhe o progresso de cada corretor.' },
+    { selector: '[data-tour="nav-metaads"]', title: 'Meta Ads', text: 'Em breve: conecte sua conta do Meta Ads para ver o desempenho das campanhas direto aqui.' },
+    { selector: '[data-tour="nav-perfil"]', title: 'Perfil', text: 'Aqui ficam seus dados, o link do catalogo publico da imobiliaria e o plano contratado.' },
+    { selector: '[data-tour="nav-mensagens"]', title: 'Mensagens', text: 'Fale diretamente com a equipe do Domus por aqui.' }
+  ];
+
+  const brokerTourSteps = [
+    { selector: '[data-tour="nav-dashboard"]', title: 'Dashboard', text: 'Aqui voce acompanha seus indicadores: seus leads, conversao e analises.' },
+    { selector: '[data-tour="nav-leads"]', title: 'Leads', text: 'Veja seus leads em cards, com historico, mapeamento de busca e sugestoes automaticas de imoveis compativeis.' },
+    { selector: '[data-tour="nav-leads-novo"]', title: 'Novo lead', text: 'Cadastre um lead manualmente preenchendo o mapeamento completo de busca.' },
+    { selector: '[data-tour="nav-catalogo"]', title: 'Catalogo de imoveis', text: 'Veja e cadastre imoveis. Eles sao usados no matching automatico com seus leads.' },
+    { selector: '[data-tour="nav-ranking"]', title: 'Ranking', text: 'Veja sua posicao no ranking da equipe e seus numeros do mes.' },
+    { selector: '[data-tour="nav-perfil"]', title: 'Perfil', text: 'Aqui fica seu link pessoal de divulgacao do catalogo — leads que vierem por ele caem direto na sua lista.' },
+    { selector: '[data-tour="nav-mensagens"]', title: 'Mensagens', text: 'Fale diretamente com a equipe do Domus por aqui.' }
+  ];
+
+  const tourSteps = user.role === 'admin' ? adminTourSteps : brokerTourSteps;
 
   useEffect(() => {
     let active = true;
@@ -193,39 +236,39 @@ function Dashboard() {
           <span className="dd-brand-name">Domus <span>CRM</span></span>
         </div>
 
-        <nav className="dd-nav">
-          <button className="active" onClick={() => navigate('/dashboard')}>
+                <nav className="dd-nav">
+          <button className="active" data-tour="nav-dashboard" onClick={() => navigate('/dashboard')}>
             <Icon name="calendar" /> Dashboard
           </button>
           <button onClick={() => navigate('/alugueis')}>
             <Icon name="file" /> Alugueis
           </button>
-          <button onClick={() => navigate('/leads')}>
+          <button data-tour="nav-leads" onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
             {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
           </button>
-          <button onClick={() => navigate('/leads/novo')}>
+          <button data-tour="nav-leads-novo" onClick={() => navigate('/leads/novo')}>
             <Icon name="userPlus" /> Novo lead
           </button>
-          <button onClick={() => navigate('/catalogo')}>
+          <button data-tour="nav-catalogo" onClick={() => navigate('/catalogo')}>
             <Icon name="file" /> Catalogo de imoveis
           </button>
-          <button onClick={() => navigate('/brokers')}>
+          <button data-tour="nav-brokers" onClick={() => navigate('/brokers')}>
             <Icon name="users" /> Corretores
           </button>
-          <button onClick={() => navigate('/ranking')}>
+          <button data-tour="nav-ranking" onClick={() => navigate('/ranking')}>
             <Icon name="check" /> Ranking
           </button>
-          <button onClick={() => navigate('/metas')}>
+          <button data-tour="nav-metas" onClick={() => navigate('/metas')}>
             <Icon name="filter" /> Metas
           </button>
-          <button className="active" onClick={() => navigate('/meta-ads')}>
+          <button data-tour="nav-metaads" onClick={() => navigate('/meta-ads')}>
           <Icon name="facebook" /> Meta Ads
           </button>
-          <button onClick={() => navigate('/perfil')}>
+          <button data-tour="nav-perfil" onClick={() => navigate('/perfil')}>
             <Icon name="users" /> Perfil
           </button>
-          <button onClick={() => navigate('/mensagens')}>
+          <button data-tour="nav-mensagens" onClick={() => navigate('/mensagens')}>
             <Icon name="chat" /> Mensagens
             {unreadCount > 0 && <span className="dd-badge">{unreadCount}</span>}
           </button>
@@ -544,6 +587,7 @@ function Dashboard() {
           </>
         )}
       </section>
+      {showTour && <OnboardingTour steps={tourSteps} onFinish={finishTour} />}
       <RemindersWidget />
     </main>
   );
