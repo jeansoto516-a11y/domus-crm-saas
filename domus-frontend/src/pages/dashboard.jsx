@@ -253,6 +253,9 @@ function Dashboard() {
           <button data-tour="nav-catalogo" onClick={() => navigate('/catalogo')}>
             <Icon name="file" /> Catalogo de imoveis
           </button>
+          <button onClick={() => navigate('/tour-360')}>
+            <Icon name="vr" /> Tour Virtual 360°
+          </button>
           <button data-tour="nav-brokers" onClick={() => navigate('/brokers')}>
             <Icon name="users" /> Corretores
           </button>
