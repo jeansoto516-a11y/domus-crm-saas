@@ -149,6 +149,247 @@ function Home() {
         </div>
       </section>
 
+      <section className="dd-showcase-section" id="meta-ads-showcase">
+        <div className="dd-showcase-grid">
+          <div className="dd-showcase-visual">
+            <div className="dd-mockup-frame">
+              <div className="dd-mockup-chrome">
+                <span /><span /><span />
+              </div>
+              <div className="dd-mockup-body">
+                <p className="dd-mockup-title">
+                  <span className="dd-fb-badge">f</span> Meta Ads · desempenho
+                </p>
+                <div className="dd-mockup-metrics">
+                  <div className="dd-card">
+                    <span className="dd-card-label">Investimento</span>
+                    <strong className="dd-card-value">R$ 1.240</strong>
+                  </div>
+                  <div className="dd-card">
+                    <span className="dd-card-label">Leads gerados</span>
+                    <strong className="dd-card-value">58</strong>
+                  </div>
+                  <div className="dd-card">
+                    <span className="dd-card-label">Custo por lead</span>
+                    <strong className="dd-card-value">R$ 21</strong>
+                  </div>
+                </div>
+                <div className="dd-showcase-bars">
+                  <div className="dd-showcase-bar-row">
+                    <span>Campanha Lançamento</span>
+                    <div className="dd-showcase-bar-track"><div className="dd-showcase-bar-fill" style={{ width: '82%', background: '#1877F2' }} /></div>
+                  </div>
+                  <div className="dd-showcase-bar-row">
+                    <span>Campanha Aluguel</span>
+                    <div className="dd-showcase-bar-track"><div className="dd-showcase-bar-fill" style={{ width: '54%', background: '#4C4FE0' }} /></div>
+                  </div>
+                  <div className="dd-showcase-bar-row">
+                    <span>Campanha Retargeting</span>
+                    <div className="dd-showcase-bar-track"><div className="dd-showcase-bar-fill" style={{ width: '31%', background: '#7C3AED' }} /></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="dd-showcase-content">
+            <span className="dd-auth-eyebrow">Novidade</span>
+            <h2>Veja o retorno dos seus anúncios sem sair do CRM.</h2>
+            <p>
+              Conecte sua conta do Meta Ads e acompanhe investimento, leads gerados e custo por lead
+              de cada campanha de Facebook e Instagram — direto no painel do Domus, sem planilha
+              paralela e sem custo extra de ferramenta.
+            </p>
+            <ul className="dd-showcase-list">
+              <li>✓ Conexão simples, sem mensalidade adicional</li>
+              <li>✓ Investimento e custo por lead por campanha</li>
+              <li>✓ Saiba qual anúncio realmente traz cliente, não só clique</li>
+            </ul>
+            <button className="dd-btn-primary" onClick={() => navigate('/register')}>
+              Quero testar grátis
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="dd-showcase-section reverse" id="tour-360-showcase">
+        <div className="dd-showcase-grid">
+          <div className="dd-showcase-content">
+            <span className="dd-auth-eyebrow">Novidade</span>
+            <h2>Leve o cliente para dentro do imóvel, mesmo à distância.</h2>
+            <p>
+              Cadastre fotos 360° de cada ambiente e deixe seus leads "caminharem" pelo imóvel
+              direto do catálogo — no computador, arrastando com o mouse, ou no celular, girando
+              o aparelho pra olhar em volta.
+            </p>
+            <ul className="dd-showcase-list">
+              <li>✓ Um tour por imóvel, com quantos ambientes quiser</li>
+              <li>✓ Funciona em qualquer computador ou celular, sem app</li>
+              <li>✓ Aumenta o interesse de quem ainda não pode visitar pessoalmente</li>
+            </ul>
+            <button className="dd-btn-primary" onClick={() => navigate('/register')}>
+              Quero testar grátis
+            </button>
+          </div>
+
+          <div className="dd-showcase-visual">
+            <div className="dd-tour-mockup">
+              <div className="dd-tour-mockup-panorama">
+                <svg
+                  viewBox="0 0 800 450"
+                  preserveAspectRatio="xMidYMid slice"
+                  xmlns="http://www.w3.org/2000/svg"
+                  role="img"
+                  aria-label="Visão em primeira pessoa de uma sala em um tour de realidade virtual"
+                  style={{ width: '100%', height: '100%', display: 'block' }}
+                >
+                  <defs>
+                    <linearGradient id="tourWall" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stopColor="#3b4080" />
+                      <stop offset="1" stopColor="#262b5e" />
+                    </linearGradient>
+                    <linearGradient id="tourSideWall" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0" stopColor="#1a1d45" />
+                      <stop offset="1" stopColor="#2b3068" />
+                    </linearGradient>
+                    <linearGradient id="tourSideWallR" x1="1" y1="0" x2="0" y2="0">
+                      <stop offset="0" stopColor="#1a1d45" />
+                      <stop offset="1" stopColor="#2b3068" />
+                    </linearGradient>
+                    <linearGradient id="tourFloor" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stopColor="#4a3a78" />
+                      <stop offset="1" stopColor="#1f1840" />
+                    </linearGradient>
+                    <linearGradient id="tourCeiling" x1="0" y1="1" x2="0" y2="0">
+                      <stop offset="0" stopColor="#20244f" />
+                      <stop offset="1" stopColor="#12142f" />
+                    </linearGradient>
+                    <linearGradient id="tourWindow" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stopColor="#cfe6ff" />
+                      <stop offset="1" stopColor="#8fb8f5" />
+                    </linearGradient>
+                    <linearGradient id="tourDoor" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0" stopColor="#ffd9a0" stopOpacity="0.85" />
+                      <stop offset="1" stopColor="#ffb86b" stopOpacity="0.55" />
+                    </linearGradient>
+                    <radialGradient id="tourVignette" cx="0.5" cy="0.5" r="0.75">
+                      <stop offset="0.45" stopColor="#000" stopOpacity="0" />
+                      <stop offset="1" stopColor="#000" stopOpacity="0.9" />
+                    </radialGradient>
+                    <clipPath id="tourFloorClip">
+                      <polygon points="0,450 150,260 650,260 800,450" />
+                    </clipPath>
+                  </defs>
+
+                  <g transform="translate(400 225)">
+                    <g>
+                      <animateTransform
+                        attributeName="transform"
+                        type="scale"
+                        values="1;1.08;1"
+                        dur="14s"
+                        repeatCount="indefinite"
+                      />
+                      <g transform="translate(-400 -225)">
+                        {/* Teto, paredes e piso */}
+                        <polygon points="0,0 800,0 650,60 150,60" fill="url(#tourCeiling)" />
+                        <polygon points="0,0 150,60 150,260 0,450" fill="url(#tourSideWall)" />
+                        <polygon points="800,0 650,60 650,260 800,450" fill="url(#tourSideWallR)" />
+                        <rect x="150" y="60" width="500" height="200" fill="url(#tourWall)" />
+                        <polygon points="0,450 150,260 650,260 800,450" fill="url(#tourFloor)" />
+
+                        {/* Linhas do piso em perspectiva */}
+                        <g clipPath="url(#tourFloorClip)" stroke="#ffffff" strokeOpacity="0.07" strokeWidth="2">
+                          <line x1="150" y1="260" x2="-325" y2="450" />
+                          <line x1="250" y1="260" x2="-35" y2="450" />
+                          <line x1="350" y1="260" x2="255" y2="450" />
+                          <line x1="450" y1="260" x2="545" y2="450" />
+                          <line x1="550" y1="260" x2="835" y2="450" />
+                          <line x1="650" y1="260" x2="1125" y2="450" />
+                          <line x1="0" y1="285" x2="800" y2="285" />
+                          <line x1="0" y1="320" x2="800" y2="320" />
+                          <line x1="0" y1="370" x2="800" y2="370" />
+                          <line x1="0" y1="430" x2="800" y2="430" />
+                        </g>
+
+                        {/* Luz da janela no piso */}
+                        <polygon points="330,260 470,260 580,450 220,450" fill="#ffffff" opacity="0.07" />
+
+                        {/* Janela */}
+                        <rect x="325" y="80" width="150" height="90" rx="3" fill="url(#tourWindow)" />
+                        <rect x="325" y="80" width="150" height="90" rx="3" fill="none" stroke="#e8f0ff" strokeWidth="3" />
+                        <line x1="400" y1="80" x2="400" y2="170" stroke="#e8f0ff" strokeWidth="3" />
+                        <line x1="325" y1="125" x2="475" y2="125" stroke="#e8f0ff" strokeWidth="3" />
+
+                        {/* Porta para o próximo cômodo */}
+                        <polygon points="675,110 740,90 740,374 675,292" fill="url(#tourDoor)" />
+                        <polygon points="675,110 740,90 740,374 675,292" fill="none" stroke="#f3e2c4" strokeWidth="3" />
+
+                        {/* Quadro na parede esquerda */}
+                        <polygon points="45,95 115,125 115,205 45,250" fill="#12142f" stroke="#8a8fd6" strokeWidth="3" />
+                        <polygon points="55,115 105,137 105,193 55,228" fill="#7C3AED" opacity="0.7" />
+                        <polygon points="55,185 80,170 105,193 55,228" fill="#2F6FED" opacity="0.8" />
+
+                        {/* Luminária pendente */}
+                        <line x1="400" y1="0" x2="400" y2="38" stroke="#c9ccff" strokeWidth="2" />
+                        <polygon points="378,38 422,38 436,62 364,62" fill="#ffd9a0" />
+                        <ellipse cx="400" cy="64" rx="34" ry="5" fill="#ffd9a0" opacity="0.35" />
+
+                        {/* Tapete */}
+                        <ellipse cx="400" cy="345" rx="210" ry="48" fill="#7C3AED" opacity="0.38" />
+                        <ellipse cx="400" cy="345" rx="160" ry="34" fill="#4C4FE0" opacity="0.35" />
+
+                        {/* Sofá */}
+                        <rect x="290" y="172" width="220" height="56" rx="12" fill="#5a5fe8" />
+                        <rect x="278" y="205" width="24" height="58" rx="9" fill="#4448c9" />
+                        <rect x="498" y="205" width="24" height="58" rx="9" fill="#4448c9" />
+                        <rect x="296" y="212" width="208" height="50" rx="10" fill="#6a6ff5" />
+                        <line x1="400" y1="214" x2="400" y2="260" stroke="#4448c9" strokeWidth="2" />
+                        <rect x="312" y="190" width="56" height="30" rx="8" fill="#B0389E" opacity="0.85" />
+
+                        {/* Mesinha de centro */}
+                        <rect x="335" y="318" width="130" height="14" rx="4" fill="#d9d4ff" opacity="0.9" />
+                        <rect x="345" y="332" width="8" height="22" fill="#9a95d6" />
+                        <rect x="447" y="332" width="8" height="22" fill="#9a95d6" />
+                        <rect x="375" y="306" width="22" height="12" rx="3" fill="#ffd9a0" />
+
+                        {/* Planta */}
+                        <rect x="176" y="218" width="34" height="44" rx="6" fill="#d7d9ff" />
+                        <ellipse cx="193" cy="200" rx="14" ry="30" fill="#0D9488" transform="rotate(-18 193 200)" />
+                        <ellipse cx="193" cy="196" rx="14" ry="32" fill="#14b8a6" transform="rotate(14 193 196)" />
+                        <ellipse cx="193" cy="190" rx="12" ry="30" fill="#0f766e" />
+                      </g>
+                    </g>
+                  </g>
+
+                  {/* Efeito de óculos de VR */}
+                  <rect width="800" height="450" fill="url(#tourVignette)" />
+
+                  {/* Mira central */}
+                  <circle cx="400" cy="225" r="7" fill="none" stroke="#ffffff" strokeOpacity="0.75" strokeWidth="2" />
+                  <circle cx="400" cy="225" r="1.8" fill="#ffffff" fillOpacity="0.9" />
+
+                  {/* HUD */}
+                  <g>
+                    <rect x="300" y="396" width="200" height="30" rx="15" fill="#000" fillOpacity="0.45" />
+                    <circle cx="324" cy="411" r="4.5" fill="#ef4444" />
+                    <text x="340" y="416" fill="#ffffff" fillOpacity="0.9" fontSize="14" fontFamily="Inter, Arial, sans-serif">
+                      Tour virtual · Sala de estar
+                    </text>
+                  </g>
+                </svg>
+              </div>
+              <div className="dd-tour-mockup-thumbs">
+                <span className="active">Sala</span>
+                <span>Quarto</span>
+                <span>Cozinha</span>
+                <span>Varanda</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="dd-process-band">
         <div className="dd-process-band-inner">
           <span className="dd-auth-eyebrow">Fluxo Domus</span>
