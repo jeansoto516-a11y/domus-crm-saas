@@ -229,7 +229,21 @@ async function createTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE INDEX IF NOT EXISTS idx_property_360_photos_property ON property_360_photos(property_id);
+            CREATE INDEX IF NOT EXISTS idx_property_360_photos_property ON property_360_photos(property_id);
+
+      CREATE TABLE IF NOT EXISTS projects_3d (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        project_type TEXT NOT NULL DEFAULT 'predio',
+        model_url TEXT NOT NULL,
+        cover_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_projects_3d_company ON projects_3d(company_id);
 
       CREATE INDEX IF NOT EXISTS idx_properties_company ON properties(company_id);
       CREATE INDEX IF NOT EXISTS idx_property_photos_property ON property_photos(property_id);

@@ -16,6 +16,7 @@ const goalRoutes = require('./routes/goalRoutes');
 const rentalRoutes = require('./routes/rentalRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
+const projectRoutes = require('./routes/projectRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,7 +30,8 @@ app.use('/messages', messageRoutes);
 app.use('/goals', goalRoutes);
 app.use('/rentals', rentalRoutes);
 app.use('/reminders', reminderRoutes);
-
+app.use('/properties', propertyRoutes);
+app.use('/projects-3d', projectRoutes);
 
 app.get('/', (req, res) => {
   res.json({
