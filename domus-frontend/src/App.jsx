@@ -30,6 +30,7 @@ import CreateProperty from './pages/createproperty';
 import EditProperty from './pages/editproperty';
 import MetaAds from './pages/metaads';
 import Tour360 from './pages/tour360';
+import Projects3D from './pages/projects3d';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -260,11 +261,20 @@ function App() {
           }
         />
 
-        <Route
+                <Route
           path="/tour-360"
           element={
             <PrivateRoute>
               <Tour360 />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/projetos-3d"
+          element={
+            <PrivateRoute>
+              <Projects3D />
             </PrivateRoute>
           }
         />

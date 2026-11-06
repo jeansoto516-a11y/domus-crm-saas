@@ -206,6 +206,9 @@ function Profile() {
             <button onClick={() => navigate('/tour-360')}>
             <Icon name="vr" /> Tour Virtual 360°
             </button>
+            <button onClick={() => navigate('/projetos-3d')}>
+            <Icon name="cube" /> Projetos 3D
+            </button>
             <button onClick={() => navigate('/leads/novo')}>
                 <Icon name="userPlus" /> Novo lead
             </button>

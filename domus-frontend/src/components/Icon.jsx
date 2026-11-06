@@ -15,7 +15,8 @@ export default function Icon({ name }) {
     filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54z" />,
     download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>,
     facebook: <><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M14 8.5h-1.2a1.3 1.3 0 0 0-1.3 1.3V11h2.3l-.3 2h-2v5h-2v-5H9.2v-2h1.3V9.6A3 3 0 0 1 13.5 6.6H14z" /></>,
-    vr: <><path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-3.5a1 1 0 0 1-.9-.55L12 14l-1.6 2.45a1 1 0 0 1-.9.55H6a2 2 0 0 1-2-2z" /><circle cx="8.5" cy="12" r="1.3" /><circle cx="15.5" cy="12" r="1.3" /></>
+    vr: <><path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-3.5a1 1 0 0 1-.9-.55L12 14l-1.6 2.45a1 1 0 0 1-.9.55H6a2 2 0 0 1-2-2z" /><circle cx="8.5" cy="12" r="1.3" /><circle cx="15.5" cy="12" r="1.3" /></>,
+    cube: <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><path d="M3.3 7L12 12l8.7-5M12 22V12" /></>
     };
 
     return <svg {...common}>{paths[name]}</svg>;

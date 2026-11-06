@@ -61,6 +61,9 @@ function MetaAds() {
             <button onClick={() => navigate('/tour-360')}>
             <Icon name="vr" /> Tour Virtual 360°
             </button>
+            <button onClick={() => navigate('/projetos-3d')}>
+            <Icon name="cube" /> Projetos 3D
+            </button>
             <button onClick={() => navigate('/brokers')}>
             <Icon name="users" /> Corretores
             </button>
