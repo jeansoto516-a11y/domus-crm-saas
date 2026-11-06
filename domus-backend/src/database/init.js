@@ -243,7 +243,29 @@ async function createTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE INDEX IF NOT EXISTS idx_projects_3d_company ON projects_3d(company_id);
+            CREATE INDEX IF NOT EXISTS idx_projects_3d_company ON projects_3d(company_id);
+
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS sale_status TEXT DEFAULT 'venda';
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS address TEXT;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS price NUMERIC;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS condo_fee NUMERIC;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS iptu NUMERIC;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS bedrooms INTEGER;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS bathrooms INTEGER;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS parking_spots INTEGER;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS area NUMERIC;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS highlights TEXT;
+      ALTER TABLE projects_3d ADD COLUMN IF NOT EXISTS floor_plan_url TEXT;
+
+      CREATE TABLE IF NOT EXISTS project_3d_photos (
+        id SERIAL PRIMARY KEY,
+        project_id INTEGER REFERENCES projects_3d(id) ON DELETE CASCADE,
+        url TEXT NOT NULL,
+        position INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_project_3d_photos_project ON project_3d_photos(project_id);
 
       CREATE INDEX IF NOT EXISTS idx_properties_company ON properties(company_id);
       CREATE INDEX IF NOT EXISTS idx_property_photos_property ON property_photos(property_id);

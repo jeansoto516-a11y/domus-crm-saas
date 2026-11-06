@@ -14,7 +14,9 @@ const upload = multer({
 const uploadProjectFiles = (req, res, next) => {
     upload.fields([
         { name: 'model', maxCount: 1 },
-        { name: 'cover', maxCount: 1 }
+        { name: 'cover', maxCount: 1 },
+        { name: 'floor_plan', maxCount: 1 },
+        { name: 'photos', maxCount: 8 }
     ])(req, res, (err) => {
         if (err) {
             const message = err.code === 'LIMIT_FILE_SIZE'
@@ -28,6 +30,8 @@ const uploadProjectFiles = (req, res, next) => {
 
 router.get('/', authMiddleware, checkSubscription, projectController.getProjects);
 router.post('/', authMiddleware, checkSubscription, uploadProjectFiles, projectController.createProject);
+router.put('/:id', authMiddleware, checkSubscription, uploadProjectFiles, projectController.updateProject);
+router.delete('/:id/photos/:photoId', authMiddleware, checkSubscription, projectController.deleteProjectPhoto);
 router.delete('/:id', authMiddleware, checkSubscription, projectController.deleteProject);
 
 module.exports = router;
