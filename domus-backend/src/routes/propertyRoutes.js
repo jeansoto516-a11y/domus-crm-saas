@@ -20,6 +20,7 @@ router.post('/', authMiddleware, checkSubscription, propertyController.createPro
 router.put('/:id', authMiddleware, checkSubscription, propertyController.updateProperty);
 router.delete('/:id', authMiddleware, checkSubscription, propertyController.deleteProperty);
 
+router.get('/:id/matching-leads', authMiddleware, checkSubscription, propertyController.getMatchingLeads);
 router.post('/:id/photos', authMiddleware, checkSubscription, upload.array('photos', 10), propertyController.uploadPropertyPhotos);
 router.delete('/:id/photos/:photoId', authMiddleware, checkSubscription, propertyController.deletePropertyPhoto);
 

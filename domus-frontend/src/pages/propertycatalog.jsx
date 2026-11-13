@@ -33,6 +33,9 @@ function PropertyCatalog() {
 
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+    const [matchesOpen, setMatchesOpen] = useState(false);
+    const [matchesData, setMatchesData] = useState(null);
+    const [matchesLoading, setMatchesLoading] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [newLeadsCount, setNewLeadsCount] = useState(0);
 
@@ -84,6 +87,39 @@ function PropertyCatalog() {
     };
 
     const closeProperty = () => setSelectedProperty(null);
+
+    const openMatches = async () => {
+        setMatchesOpen(true);
+        setMatchesData(null);
+        setMatchesLoading(true);
+
+        try {
+            const { data } = await api.get(`/properties/${selectedProperty.id}/matching-leads`);
+            setMatchesData(data);
+        } catch (err) {
+            setError(err.response?.data?.error || 'Nao foi possivel buscar os leads compativeis.');
+            setMatchesOpen(false);
+        } finally {
+            setMatchesLoading(false);
+        }
+    };
+
+    const closeMatches = () => {
+        setMatchesOpen(false);
+        setMatchesData(null);
+    };
+
+    const openWhatsApp = (lead, property) => {
+        if (!lead.phone) return;
+
+        const digits = lead.phone.replace(/\D/g, '');
+        const phoneWithCountry = digits.startsWith('55') ? digits : `55${digits}`;
+        const message = encodeURIComponent(
+            `Olá ${lead.name}! Separei um imóvel que combina com o que você procura: "${property.title}" em ${property.city}. Quer saber mais?`
+        );
+
+        window.open(`https://wa.me/${phoneWithCountry}?text=${message}`, '_blank');
+    };
 
     const handleDelete = async (id, title) => {
     const confirmDelete = window.confirm(`Deseja realmente excluir o imovel "${title}"?`);
@@ -310,6 +346,9 @@ function PropertyCatalog() {
                 )}
 
                 <div className="dd-form-actions" style={{ marginTop: 20 }}>
+                <button className="dd-btn-small dd-btn-suggestions" onClick={openMatches}>
+                    Ver leads compativeis
+                </button>
                 <button className="dd-btn-small" onClick={() => navigate(`/catalogo/${selectedProperty.id}/editar`)}>
                     Editar imovel
                 </button>
@@ -317,6 +356,55 @@ function PropertyCatalog() {
                     Excluir imovel
                 </button>
                 </div>
+            </div>
+            </div>
+        </div>
+        )}
+
+        {matchesOpen && (
+        <div className="dd-modal-overlay" onClick={closeMatches}>
+            <div className="dd-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="dd-modal-header">
+                <h2>Leads compatíveis</h2>
+                <button className="dd-modal-close" onClick={closeMatches}>×</button>
+            </div>
+
+            <div className="dd-modal-body">
+                {matchesLoading ? (
+                <p style={{ color: 'var(--dd-muted)' }}>Buscando leads compatíveis...</p>
+                ) : !matchesData || matchesData.matches.length === 0 ? (
+                <p style={{ color: 'var(--dd-muted)' }}>
+                    Nenhum lead ativo combina com este imóvel. Só entram leads com o mapeamento preenchido.
+                </p>
+                ) : (
+                <div className="dd-suggestions-list">
+                    {matchesData.matches.map((lead) => (
+                    <div key={lead.id} className="dd-suggestion-card">
+                        <div className="dd-suggestion-body">
+                        <div className="dd-suggestion-top">
+                            <strong>{lead.name}</strong>
+                            <span className={`dd-match-badge ${lead.match_percent >= 70 ? 'high' : lead.match_percent >= 40 ? 'mid' : 'low'}`}>
+                            {lead.match_percent}% compatível
+                            </span>
+                        </div>
+
+                        <span className="dd-property-location">
+                            {lead.phone || lead.email || 'Sem contato'}
+                            {lead.corretor ? ` · ${lead.corretor}` : ''}
+                        </span>
+
+                        {lead.phone && (
+                            <div className="dd-row-actions">
+                            <button className="dd-btn-small dd-btn-whatsapp" onClick={() => openWhatsApp(lead, selectedProperty)}>
+                                WhatsApp
+                            </button>
+                            </div>
+                        )}
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                )}
             </div>
             </div>
         </div>

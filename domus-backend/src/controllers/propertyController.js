@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const supabase = require('../config/supabase');
 const { calculateScore, getTemperature } = require('../services/leadScoringService');
+const { calculateMatch, MIN_MATCH_PERCENT } = require('../services/matchingService');
 
 /**
  * Listar imoveis da empresa
@@ -803,3 +804,82 @@ exports.deletePropertyPhoto = async (req, res) => {
 
 };
 
+/**
+ * Match reverso: leads compativeis com um imovel
+ */
+exports.getMatchingLeads = async (req, res) => {
+
+    const { id } = req.params;
+
+    try {
+
+        const propertyResult = await pool.query(
+            `SELECT * FROM properties WHERE id = $1 AND company_id = $2`,
+            [id, req.user.company_id]
+        );
+
+        if (propertyResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Imovel nao encontrado.' });
+        }
+
+        const property = propertyResult.rows[0];
+
+        const values = [req.user.company_id];
+        let where = `WHERE leads.company_id = $1 AND leads.status != 'fechado'`;
+
+        if (req.user.role !== 'admin') {
+            where += ` AND leads.user_id = $${values.length + 1}`;
+            values.push(req.user.id);
+        }
+
+        if (property.lead_type !== 'ambos') {
+            where += ` AND leads.lead_type = $${values.length + 1}`;
+            values.push(property.lead_type);
+        }
+
+        const leadsResult = await pool.query(
+            `
+            SELECT
+                leads.id, leads.name, leads.phone, leads.email, leads.status,
+                leads.lead_type, leads.temperature,
+                users.name AS corretor,
+                lp.property_type, lp.city, lp.region, lp.bedrooms, lp.garage_spots, lp.budget_max
+            FROM leads
+            JOIN lead_profiles lp ON lp.lead_id = leads.id
+            LEFT JOIN users ON users.id = leads.user_id
+            ${where}
+            `,
+            values
+        );
+
+        const matches = leadsResult.rows
+            .map((row) => ({
+                id: row.id,
+                name: row.name,
+                phone: row.phone,
+                email: row.email,
+                status: row.status,
+                lead_type: row.lead_type,
+                temperature: row.temperature,
+                corretor: req.user.role === 'admin' ? row.corretor : null,
+                match_percent: calculateMatch(row, row.lead_type, property)
+            }))
+            .filter((lead) => lead.match_percent !== null && lead.match_percent >= MIN_MATCH_PERCENT)
+            .sort((a, b) => b.match_percent - a.match_percent);
+
+        return res.json({
+            property: { id: property.id, title: property.title },
+            matches
+        });
+
+    } catch (err) {
+
+        console.error('Erro ao buscar leads compativeis:', err);
+
+        return res.status(500).json({
+            error: 'Erro ao buscar leads compativeis.'
+        });
+
+    }
+
+};
