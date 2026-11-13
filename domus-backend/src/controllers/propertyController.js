@@ -1,7 +1,7 @@
 const pool = require('../config/db');
 const supabase = require('../config/supabase');
 const { calculateScore, getTemperature } = require('../services/leadScoringService');
-const { calculateMatch, MIN_MATCH_PERCENT } = require('../services/matchingService');
+const { calculateMatch, notifyMatchingLeads, MIN_MATCH_PERCENT } = require('../services/matchingService');
 
 /**
  * Listar imoveis da empresa
@@ -151,6 +151,10 @@ exports.createProperty = async (req, res) => {
                 owner_name || null, owner_contact || null
             ]
         );
+
+                notifyMatchingLeads(result.rows[0]).catch((err) => {
+            console.error('Erro ao avisar leads compativeis:', err);
+        });
 
         return res.status(201).json(result.rows[0]);
 
