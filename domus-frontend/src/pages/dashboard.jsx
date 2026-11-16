@@ -243,6 +243,9 @@ function Dashboard() {
           <button onClick={() => navigate('/alugueis')}>
             <Icon name="file" /> Alugueis
           </button>
+          <button onClick={() => navigate('/financeiro')}>
+            <Icon name="money" /> Financeiro
+          </button>
           <button data-tour="nav-leads" onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
             {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}

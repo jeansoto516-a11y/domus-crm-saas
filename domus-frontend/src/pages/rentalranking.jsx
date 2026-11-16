@@ -53,6 +53,9 @@ function RentalRanking() {
             <button className="active" onClick={() => navigate('/alugueis')}>
                 <Icon name="file" /> Alugueis
             </button>
+            <button onClick={() => navigate('/financeiro')}>
+                <Icon name="money" /> Financeiro
+            </button>
             <button onClick={() => navigate('/leads')}>
                 <Icon name="users" /> Leads
             </button>

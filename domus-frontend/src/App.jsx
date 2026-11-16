@@ -31,6 +31,7 @@ import EditProperty from './pages/editproperty';
 import MetaAds from './pages/metaads';
 import Tour360 from './pages/tour360';
 import Projects3D from './pages/projects3d';
+import Financeiro from './pages/financeiro';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -275,6 +276,15 @@ function App() {
           element={
             <PrivateRoute>
               <Projects3D />
+            </PrivateRoute>
+          }
+        />
+
+                <Route
+          path="/financeiro"
+          element={
+            <PrivateRoute>
+              <Financeiro />
             </PrivateRoute>
           }
         />

@@ -445,6 +445,9 @@ function Leads() {
           <button onClick={() => navigate('/alugueis')}>
             <Icon name="file" /> Alugueis
           </button>
+          <button onClick={() => navigate('/financeiro')}>
+            <Icon name="money" /> Financeiro
+          </button>
           <button className="active" onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
             {newLeadsCounts.count > 0 && <span className="dd-badge">{newLeadsCounts.count}</span>}

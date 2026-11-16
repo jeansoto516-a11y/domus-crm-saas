@@ -172,6 +172,9 @@ function CreateProperty() {
             <button onClick={() => navigate('/alugueis')}>
             <Icon name="file" /> Alugueis
             </button>
+            <button onClick={() => navigate('/financeiro')}>
+            <Icon name="money" /> Financeiro
+            </button>
             <button onClick={() => navigate('/leads')}>
             <Icon name="users" /> Leads
             {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}

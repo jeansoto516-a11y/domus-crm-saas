@@ -244,7 +244,21 @@ async function createTables() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_sales_company_date ON sales(company_id, sale_date);
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_sales_lead_unique ON sales(lead_id) WHERE lead_id IS NOT NULL;
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_sales_lead_unique ON sales(lead_id) WHERE lead_id IS NOT NULL;
+
+      CREATE TABLE IF NOT EXISTS ad_investments (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        channel TEXT NOT NULL,
+        description TEXT,
+        amount NUMERIC NOT NULL,
+        target TEXT NOT NULL DEFAULT 'geral',
+        invest_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_ad_investments_company_date ON ad_investments(company_id, invest_date);
 
       CREATE TABLE IF NOT EXISTS property_360_photos (
         id SERIAL PRIMARY KEY,
