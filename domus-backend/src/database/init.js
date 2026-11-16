@@ -222,7 +222,29 @@ async function createTables() {
 
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS meta_ad_account_id TEXT;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS meta_access_token TEXT;
-      ALTER TABLE companies ADD COLUMN IF NOT EXISTS meta_connected_at TIMESTAMP;
+            ALTER TABLE companies ADD COLUMN IF NOT EXISTS meta_connected_at TIMESTAMP;
+
+      CREATE TABLE IF NOT EXISTS sales (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+        lead_id INTEGER REFERENCES leads(id) ON DELETE SET NULL,
+        property_id INTEGER REFERENCES properties(id) ON DELETE SET NULL,
+        broker_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        description TEXT,
+        sale_value NUMERIC NOT NULL,
+        commission_percent NUMERIC NOT NULL,
+        broker_percent NUMERIC NOT NULL DEFAULT 50,
+        commission_value NUMERIC NOT NULL,
+        broker_commission_value NUMERIC NOT NULL,
+        agency_commission_value NUMERIC NOT NULL,
+        sale_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_sales_company_date ON sales(company_id, sale_date);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_sales_lead_unique ON sales(lead_id) WHERE lead_id IS NOT NULL;
 
       CREATE TABLE IF NOT EXISTS property_360_photos (
         id SERIAL PRIMARY KEY,

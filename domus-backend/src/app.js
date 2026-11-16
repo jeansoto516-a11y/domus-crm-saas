@@ -18,6 +18,7 @@ const reminderRoutes = require('./routes/reminderRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const metaAdsRoutes = require('./routes/metaAdsRouter');
+const saleRoutes = require('./routes/saleRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +35,7 @@ app.use('/reminders', reminderRoutes);
 app.use('/properties', propertyRoutes);
 app.use('/projects-3d', projectRoutes);
 app.use('/meta-ads', metaAdsRoutes);
+app.use('/sales', saleRoutes);
 app.get('/', (req, res) => {
   res.json({
     name: 'Domus CRM API',
