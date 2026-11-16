@@ -22,6 +22,22 @@ const temperatureLabels = {
   frio: 'Frio'
 };
 
+const formatMoney = (value) =>
+  Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const todayLocal = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const emptySaleForm = {
+  property_id: '',
+  sale_value: '',
+  commission_percent: '',
+  broker_percent: '50',
+  sale_date: ''
+};
+
 function Leads() {
   const [leads, setLeads] = useState([]);
   const [filters, setFilters] = useState({ status: '', startDate: '', endDate: '', lead_type: 'venda' });
@@ -44,6 +60,21 @@ function Leads() {
   const [savingProfile, setSavingProfile] = useState(false);
   const navigate = useNavigate();
   const [staleLeadIds, setStaleLeadIds] = useState(new Set());
+
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  }, []);
+  const isAdmin = user.role === 'admin';
+
+  const [saleLead, setSaleLead] = useState(null);
+  const [saleForm, setSaleForm] = useState(emptySaleForm);
+  const [saleProperties, setSaleProperties] = useState([]);
+  const [savingSale, setSavingSale] = useState(false);
+  const [saleError, setSaleError] = useState('');
   const [newLeadsCounts, setNewLeadsCounts] = useState({ count: 0, venda: 0, aluguel: 0 });
 
   const totals = useMemo(() => {
@@ -139,19 +170,120 @@ function Leads() {
     setFilters((current) => ({ ...current, [name]: value }));
   };
 
+    const applyStatus = async (lead, status) => {
+    const { data } = await api.put(`/leads/${lead.id}`, { status });
+    setLeads((current) => current.map((item) => (item.id === lead.id ? data : item)));
+  };
+
+  const openSaleModal = (lead) => {
+    setSaleLead(lead);
+    setSaleForm({ ...emptySaleForm, sale_date: todayLocal() });
+    setSaleError('');
+
+    api.get('/properties', { params: { lead_type: 'venda' } })
+      .then((res) => setSaleProperties(res.data.filter((p) => p.status !== 'vendido')))
+      .catch(() => setSaleProperties([]));
+  };
+
+  const closeSaleModal = () => {
+    if (savingSale) return;
+    setSaleLead(null);
+  };
+
+  const updateSaleField = (event) => {
+    const { name, value } = event.target;
+
+    setSaleForm((current) => {
+      const next = { ...current, [name]: value };
+
+      if (name === 'property_id' && value && !current.sale_value) {
+        const property = saleProperties.find((p) => String(p.id) === value);
+        if (property?.price) next.sale_value = String(property.price);
+      }
+
+      return next;
+    });
+  };
+
+  const handleSaveSale = async (event) => {
+    event.preventDefault();
+    setSaleError('');
+
+    if (!saleForm.sale_value || Number(saleForm.sale_value) <= 0) {
+      setSaleError('Informe o valor da venda.');
+      return;
+    }
+
+    if (saleForm.commission_percent === '') {
+      setSaleError('Informe o percentual de comissão.');
+      return;
+    }
+
+    if (saleForm.broker_percent === '') {
+      setSaleError('Informe a parte do corretor na comissão.');
+      return;
+    }
+
+    try {
+      setSavingSale(true);
+
+      try {
+        await api.post('/sales', {
+          lead_id: saleLead.id,
+          property_id: saleForm.property_id || null,
+          sale_value: saleForm.sale_value,
+          commission_percent: saleForm.commission_percent,
+          broker_percent: saleForm.broker_percent,
+          sale_date: saleForm.sale_date
+        });
+      } catch (err) {
+        if (err.response?.status !== 409) throw err;
+      }
+
+      await applyStatus(saleLead, 'fechado');
+      setSaleLead(null);
+    } catch (err) {
+      setSaleError(err.response?.data?.error || 'Não foi possível registrar a venda.');
+    } finally {
+      setSavingSale(false);
+    }
+  };
+
+  const closeWithoutSale = async () => {
+    try {
+      setSavingSale(true);
+      await applyStatus(saleLead, 'fechado');
+      setSaleLead(null);
+    } catch (err) {
+      setSaleError(err.response?.data?.error || 'Não foi possível atualizar o lead.');
+    } finally {
+      setSavingSale(false);
+    }
+  };
+
   const changeStatus = async (lead, direction) => {
     const currentIndex = flow.indexOf(lead.status);
     const nextIndex = currentIndex + direction;
 
     if (nextIndex < 0 || nextIndex >= flow.length) return;
 
+    const nextStatus = flow[nextIndex];
+
+    if (nextStatus === 'fechado' && isAdmin && lead.lead_type === 'venda') {
+      openSaleModal(lead);
+      return;
+    }
+
     try {
-      const { data } = await api.put(`/leads/${lead.id}`, { status: flow[nextIndex] });
-      setLeads((current) => current.map((item) => (item.id === lead.id ? data : item)));
+      await applyStatus(lead, nextStatus);
     } catch (err) {
       setError(err.response?.data?.error || 'Nao foi possivel atualizar o lead.');
     }
   };
+
+  const saleValueNumber = Number(saleForm.sale_value) || 0;
+  const commissionTotal = (saleValueNumber * (Number(saleForm.commission_percent) || 0)) / 100;
+  const brokerShare = (commissionTotal * (Number(saleForm.broker_percent) || 0)) / 100;
 
   const loadHistory = async (leadId) => {
     try {
@@ -338,7 +470,7 @@ function Leads() {
           <button onClick={() => navigate('/metas')}>
             <Icon name="filter" /> Metas
           </button>
-          <button className="active" onClick={() => navigate('/meta-ads')}>
+          <button onClick={() => navigate('/meta-ads')}>
           <Icon name="facebook" /> Meta Ads
           </button>
           <button onClick={() => navigate('/perfil')}>
@@ -825,6 +957,75 @@ function Leads() {
           </div>
         )}
       </section>
+            {saleLead && (
+        <div className="dd-modal-overlay" onClick={closeSaleModal}>
+          <div className="dd-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="dd-modal-header">
+              <h2>Registrar venda</h2>
+              <button className="dd-modal-close" onClick={closeSaleModal}>×</button>
+            </div>
+
+            <div className="dd-modal-body">
+              <p style={{ color: 'var(--dd-muted)', fontSize: 13, marginTop: 0 }}>
+                Lead: <strong>{saleLead.name}</strong>. Informe os dados da venda para o financeiro.
+              </p>
+
+              {saleError && <div className="dd-alert-error">{saleError}</div>}
+
+              <form className="dd-form" onSubmit={handleSaveSale}>
+                <label className="dd-field">
+                  Imóvel vendido (opcional)
+                  <select className="dd-select" name="property_id" onChange={updateSaleField} value={saleForm.property_id}>
+                    <option value="">Não vincular</option>
+                    {saleProperties.map((property) => (
+                      <option key={property.id} value={property.id}>{property.title}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="dd-field">
+                  Valor da venda (R$)
+                  <input className="dd-input" name="sale_value" onChange={updateSaleField} type="number" min="0" step="any" value={saleForm.sale_value} />
+                </label>
+
+                <label className="dd-field">
+                  Comissão sobre a venda (%)
+                  <input className="dd-input" name="commission_percent" onChange={updateSaleField} type="number" min="0" max="100" step="0.01" value={saleForm.commission_percent} />
+                </label>
+
+                <label className="dd-field">
+                  Parte do corretor na comissão (%)
+                  <input className="dd-input" name="broker_percent" onChange={updateSaleField} type="number" min="0" max="100" step="0.01" value={saleForm.broker_percent} />
+                </label>
+
+                <label className="dd-field">
+                  Data da venda
+                  <input className="dd-input" name="sale_date" onChange={updateSaleField} type="date" value={saleForm.sale_date} />
+                </label>
+
+                <div className="dd-profile-grid">
+                  <div className="dd-profile-item"><span>Comissão total</span><strong>{formatMoney(commissionTotal)}</strong></div>
+                  <div className="dd-profile-item"><span>Corretor</span><strong>{formatMoney(brokerShare)}</strong></div>
+                  <div className="dd-profile-item"><span>Imobiliária</span><strong>{formatMoney(commissionTotal - brokerShare)}</strong></div>
+                </div>
+
+                <div className="dd-form-actions">
+                  <button className="dd-btn-secondary" type="button" disabled={savingSale} onClick={closeSaleModal}>
+                    Cancelar
+                  </button>
+                  <button className="dd-btn-secondary" type="button" disabled={savingSale} onClick={closeWithoutSale}>
+                    Fechar sem venda
+                  </button>
+                  <button className="dd-btn-primary" type="submit" disabled={savingSale}>
+                    {savingSale ? 'Salvando...' : 'Registrar venda'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <RemindersWidget />
     </main>
   );
