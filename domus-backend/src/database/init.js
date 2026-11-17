@@ -213,6 +213,7 @@ async function createTables() {
 
       ALTER TABLE properties ADD COLUMN IF NOT EXISTS owner_name TEXT;
       ALTER TABLE properties ADD COLUMN IF NOT EXISTS owner_contact TEXT;
+      ALTER TABLE leads ADD COLUMN IF NOT EXISTS property_id INTEGER REFERENCES properties(id) ON DELETE SET NULL;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS whatsapp TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS leads_last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;

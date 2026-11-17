@@ -188,8 +188,9 @@ function Leads() {
 
   const openSaleModal = (lead) => {
     setSaleLead(lead);
-        setSaleForm({
+    setSaleForm({
       ...emptySaleForm,
+      property_id: lead.property_id ? String(lead.property_id) : '',
       sale_date: todayLocal(),
       sale_value: lead.proposal_value ? formatMoneyInput(Number(lead.proposal_value)) : ''
     });
@@ -252,10 +253,10 @@ function Leads() {
           sale_date: saleForm.sale_date
         });
       } catch (err) {
-        if (err.response?.status !== 409) throw err;
+    if (err.response?.status !== 409) throw err;
       }
 
-      await applyStatus(saleLead, 'fechado');
+      await applyStatus(saleLead, 'fechado', saleForm.property_id ? { property_id: Number(saleForm.property_id) } : {});
       setSaleLead(null);
     } catch (err) {
       setSaleError(err.response?.data?.error || 'Não foi possível registrar a venda.');
@@ -279,7 +280,7 @@ function Leads() {
     const openProposalModal = (lead) => {
     setProposalLead(lead);
     setProposalForm({
-      property_id: '',
+      property_id: lead.property_id ? String(lead.property_id) : '',
       proposal_value: lead.proposal_value ? formatMoneyInput(Number(lead.proposal_value)) : ''
     });
     setProposalError('');
@@ -310,7 +311,10 @@ function Leads() {
     try {
       setSavingProposal(true);
       setProposalError('');
-      await applyStatus(proposalLead, 'proposta', value !== null ? { proposal_value: value } : {});
+      const extra = {};
+      if (value !== null) extra.proposal_value = value;
+      if (!skipValue && proposalForm.property_id) extra.property_id = Number(proposalForm.property_id);
+      await applyStatus(proposalLead, 'proposta', extra);
       setProposalLead(null);
     } catch (err) {
       setProposalError(err.response?.data?.error || 'Não foi possível atualizar o lead.');

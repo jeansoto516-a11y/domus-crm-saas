@@ -312,6 +312,22 @@ exports.updateLead = async (req, res) => {
 
     }
 
+        let propertyId = null;
+
+    if (req.body.property_id !== undefined && req.body.property_id !== null && req.body.property_id !== '') {
+
+        propertyId = Number(req.body.property_id);
+
+        if (!Number.isInteger(propertyId) || propertyId <= 0) {
+
+            return res.status(400).json({
+                error: 'Imovel invalido.'
+            });
+
+        }
+
+    }
+
     const values = [];
 
     let where = buildLeadScope(req, values);
@@ -338,6 +354,23 @@ exports.updateLead = async (req, res) => {
 
         }
 
+                if (propertyId !== null) {
+
+            const propertyCheck = await pool.query(
+                `SELECT id FROM properties WHERE id = $1 AND company_id = $2`,
+                [propertyId, req.user.company_id]
+            );
+
+            if (propertyCheck.rows.length === 0) {
+
+                return res.status(404).json({
+                    error: 'Imovel nao encontrado.'
+                });
+
+            }
+
+        }
+
         const score = calculateScore({
             ...currentLead.rows[0],
             status
@@ -353,8 +386,9 @@ exports.updateLead = async (req, res) => {
                 score = $2,
                 temperature = $3,
                 proposal_value = COALESCE($4, proposal_value),
+                property_id = COALESCE($5, property_id),
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $5
+            WHERE id = $6
             RETURNING *
             `,
             [
@@ -362,6 +396,7 @@ exports.updateLead = async (req, res) => {
                 score,
                 temperature,
                 proposalValue,
+                propertyId,
                 id
             ]
         );
@@ -371,6 +406,43 @@ exports.updateLead = async (req, res) => {
                 `INSERT INTO lead_history (lead_id, user_id, type, content) VALUES ($1, $2, 'nota', $3)`,
                 [id, req.user.id, `Valor da proposta informado: ${proposalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`]
             );
+        }
+
+                const previousStatus = currentLead.rows[0].status;
+        const updatedLead = result.rows[0];
+
+        if (updatedLead.property_id) {
+
+            if (status === 'fechado' && previousStatus !== 'fechado') {
+
+                const closedPropertyStatus = updatedLead.lead_type === 'aluguel' ? 'alugado' : 'vendido';
+
+                await pool.query(
+                    `UPDATE properties SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND company_id = $3`,
+                    [closedPropertyStatus, updatedLead.property_id, req.user.company_id]
+                );
+
+            }
+
+            if (previousStatus === 'fechado' && status !== 'fechado') {
+
+                await pool.query(
+                    `UPDATE properties SET status = 'disponivel', updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND company_id = $2 AND status IN ('vendido', 'alugado')`,
+                    [updatedLead.property_id, req.user.company_id]
+                );
+
+            }
+
+        }
+
+        // Ao sair de Fechado, a venda registrada deixa de valer no Financeiro
+        if (previousStatus === 'fechado' && status !== 'fechado') {
+
+            await pool.query(
+                `DELETE FROM sales WHERE lead_id = $1 AND company_id = $2`,
+                [id, req.user.company_id]
+            );
+
         }
 
         return res.json(result.rows[0]);
