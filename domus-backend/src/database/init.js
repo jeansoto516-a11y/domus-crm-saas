@@ -174,9 +174,9 @@ async function createTables() {
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS trial_reminder_3d_sent BOOLEAN DEFAULT false;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS trial_reminder_last_day_sent BOOLEAN DEFAULT false;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS public_slug TEXT UNIQUE;
-      ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_type TEXT DEFAULT 'venda';
+      ALTER TABLE leads ADD COLUMN IF NOT EXISTS proposal_value NUMERIC;
       ALTER TABLE companies ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'normal';
-            ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
       CREATE TABLE IF NOT EXISTS properties (
         id SERIAL PRIMARY KEY,

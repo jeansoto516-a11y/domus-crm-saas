@@ -296,11 +296,19 @@ exports.updateLead = async (req, res) => {
 
     const status = normalizeStatus(req.body.status);
 
-    if (!status || !validStatus.includes(status)) {
+        let proposalValue = null;
 
-        return res.status(400).json({
-            error: 'Status invalido.'
-        });
+    if (req.body.proposal_value !== undefined && req.body.proposal_value !== null && req.body.proposal_value !== '') {
+
+        proposalValue = Number(req.body.proposal_value);
+
+        if (Number.isNaN(proposalValue) || proposalValue <= 0) {
+
+            return res.status(400).json({
+                error: 'Valor da proposta invalido.'
+            });
+
+        }
 
     }
 
@@ -344,22 +352,26 @@ exports.updateLead = async (req, res) => {
                 status = $1,
                 score = $2,
                 temperature = $3,
+                proposal_value = COALESCE($4, proposal_value),
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $4
+            WHERE id = $5
             RETURNING *
             `,
             [
                 status,
                 score,
                 temperature,
+                proposalValue,
                 id
             ]
         );
 
-        await pool.query(
-            `INSERT INTO lead_history (lead_id, user_id, type, content) VALUES ($1, $2, 'status', $3)`,
-            [id, req.user.id, `Status alterado para: ${status}`]
-        );
+                if (proposalValue !== null) {
+            await pool.query(
+                `INSERT INTO lead_history (lead_id, user_id, type, content) VALUES ($1, $2, 'nota', $3)`,
+                [id, req.user.id, `Valor da proposta informado: ${proposalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`]
+            );
+        }
 
         return res.json(result.rows[0]);
 

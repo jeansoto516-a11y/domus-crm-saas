@@ -38,6 +38,11 @@ const emptySaleForm = {
   sale_date: ''
 };
 
+const emptyProposalForm = {
+  property_id: '',
+  proposal_value: ''
+};
+
 function Leads() {
   const [leads, setLeads] = useState([]);
   const [filters, setFilters] = useState({ status: '', startDate: '', endDate: '', lead_type: 'venda' });
@@ -76,6 +81,11 @@ function Leads() {
   const [savingSale, setSavingSale] = useState(false);
   const [saleError, setSaleError] = useState('');
   const [newLeadsCounts, setNewLeadsCounts] = useState({ count: 0, venda: 0, aluguel: 0 });
+  const [proposalLead, setProposalLead] = useState(null);
+  const [proposalForm, setProposalForm] = useState(emptyProposalForm);
+  const [proposalProperties, setProposalProperties] = useState([]);
+  const [savingProposal, setSavingProposal] = useState(false);
+  const [proposalError, setProposalError] = useState('');
 
   const totals = useMemo(() => {
     return leads.reduce(
@@ -166,18 +176,22 @@ function Leads() {
   }, []);
 
   const updateFilter = (event) => {
-    const { name, value } = event.target;
+  const { name, value } = event.target;
     setFilters((current) => ({ ...current, [name]: value }));
   };
 
-    const applyStatus = async (lead, status) => {
-    const { data } = await api.put(`/leads/${lead.id}`, { status });
+    const applyStatus = async (lead, status, extra = {}) => {
+    const { data } = await api.put(`/leads/${lead.id}`, { status, ...extra });
     setLeads((current) => current.map((item) => (item.id === lead.id ? data : item)));
   };
 
   const openSaleModal = (lead) => {
     setSaleLead(lead);
-    setSaleForm({ ...emptySaleForm, sale_date: todayLocal() });
+        setSaleForm({
+      ...emptySaleForm,
+      sale_date: todayLocal(),
+      sale_value: lead.proposal_value ? String(Number(lead.proposal_value)) : ''
+    });
     setSaleError('');
 
     api.get('/properties', { params: { lead_type: 'venda' } })
@@ -261,13 +275,66 @@ function Leads() {
     }
   };
 
-  const changeStatus = async (lead, direction) => {
+    const openProposalModal = (lead) => {
+    setProposalLead(lead);
+    setProposalForm({
+      property_id: '',
+      proposal_value: lead.proposal_value ? String(Number(lead.proposal_value)) : ''
+    });
+    setProposalError('');
+
+    api.get('/properties', { params: { lead_type: lead.lead_type } })
+      .then((res) => setProposalProperties(res.data.filter((p) => p.status !== 'vendido' && p.status !== 'alugado')))
+      .catch(() => setProposalProperties([]));
+  };
+
+  const closeProposalModal = () => {
+    if (savingProposal) return;
+    setProposalLead(null);
+  };
+
+  const updateProposalField = (event) => {
+    const { name, value } = event.target;
+    setProposalForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const moveToProposal = async (skipValue) => {
+    const value = skipValue ? '' : proposalForm.proposal_value;
+
+    if (value !== '' && Number(value) <= 0) {
+      setProposalError('Informe um valor de proposta válido.');
+      return;
+    }
+
+    try {
+      setSavingProposal(true);
+      setProposalError('');
+      await applyStatus(proposalLead, 'proposta', value !== '' ? { proposal_value: Number(value) } : {});
+      setProposalLead(null);
+    } catch (err) {
+      setProposalError(err.response?.data?.error || 'Não foi possível atualizar o lead.');
+    } finally {
+      setSavingProposal(false);
+    }
+  };
+
+  const handleSaveProposal = (event) => {
+    event.preventDefault();
+    moveToProposal(false);
+  };
+
+    const changeStatus = async (lead, direction) => {
     const currentIndex = flow.indexOf(lead.status);
     const nextIndex = currentIndex + direction;
 
     if (nextIndex < 0 || nextIndex >= flow.length) return;
 
-    const nextStatus = flow[nextIndex];
+        const nextStatus = flow[nextIndex];
+
+    if (nextStatus === 'proposta' && direction === 1) {
+      openProposalModal(lead);
+      return;
+    }
 
     if (nextStatus === 'fechado' && isAdmin && lead.lead_type === 'venda') {
       openSaleModal(lead);
@@ -284,6 +351,15 @@ function Leads() {
   const saleValueNumber = Number(saleForm.sale_value) || 0;
   const commissionTotal = (saleValueNumber * (Number(saleForm.commission_percent) || 0)) / 100;
   const brokerShare = (commissionTotal * (Number(saleForm.broker_percent) || 0)) / 100;
+  const proposalProperty = proposalProperties.find((p) => String(p.id) === proposalForm.property_id);
+  const proposalReferencePrice = proposalProperty
+    ? Number(proposalLead?.lead_type === 'aluguel' ? proposalProperty.rent_price : proposalProperty.price) || 0
+    : 0;
+  const proposalValueNumber = Number(proposalForm.proposal_value) || 0;
+  const proposalDiff = proposalValueNumber - proposalReferencePrice;
+  const proposalDiffPercent = proposalReferencePrice > 0
+    ? ((proposalDiff / proposalReferencePrice) * 100).toFixed(1)
+    : '0.0';
 
   const loadHistory = async (leadId) => {
     try {
@@ -623,9 +699,11 @@ function Leads() {
                     <strong>Score: {lead.score || 0}</strong>
                   </div>
 
-                  <div style={{ color: 'var(--dd-muted)', fontSize: 12 }}>
-                    {new Date(lead.created_at).toLocaleDateString('pt-BR')}
-                  </div>
+                    {lead.proposal_value && (
+                    <div style={{ fontSize: 12 }}>
+                      Proposta: <strong>{formatMoney(lead.proposal_value)}</strong>
+                    </div>
+                  )}
 
                                     <div className="dd-row-actions" onClick={(e) => e.stopPropagation()}>
                     <button
@@ -973,6 +1051,12 @@ function Leads() {
                 Lead: <strong>{saleLead.name}</strong>. Informe os dados da venda para o financeiro.
               </p>
 
+                {saleLead.proposal_value && (
+                <p style={{ color: 'var(--dd-muted)', fontSize: 13, marginTop: 0 }}>
+                  Valor da proposta: <strong>{formatMoney(saleLead.proposal_value)}</strong>. Confirme ou corrija o valor final da venda.
+                </p>
+              )}
+
               {saleError && <div className="dd-alert-error">{saleError}</div>}
 
               <form className="dd-form" onSubmit={handleSaveSale}>
@@ -1029,6 +1113,69 @@ function Leads() {
         </div>
       )}
 
+
+            {proposalLead && (
+        <div className="dd-modal-overlay" onClick={closeProposalModal}>
+          <div className="dd-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="dd-modal-header">
+              <h2>Valor da proposta</h2>
+              <button className="dd-modal-close" onClick={closeProposalModal}>×</button>
+            </div>
+
+            <div className="dd-modal-body">
+              <p style={{ color: 'var(--dd-muted)', fontSize: 13, marginTop: 0 }}>
+                Lead: <strong>{proposalLead.name}</strong>. Informe o valor da proposta (opcional).
+              </p>
+
+              {proposalError && <div className="dd-alert-error">{proposalError}</div>}
+
+              <form className="dd-form" onSubmit={handleSaveProposal}>
+                <label className="dd-field">
+                  Imóvel para comparar (opcional)
+                  <select className="dd-select" name="property_id" onChange={updateProposalField} value={proposalForm.property_id}>
+                    <option value="">Não comparar</option>
+                    {proposalProperties.map((property) => (
+                      <option key={property.id} value={property.id}>{property.title}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="dd-field">
+                  Valor da proposta (R$)
+                  <input className="dd-input" name="proposal_value" onChange={updateProposalField} type="number" min="0" step="any" value={proposalForm.proposal_value} />
+                </label>
+
+                {proposalReferencePrice > 0 && (
+                  <div className="dd-profile-grid">
+                    <div className="dd-profile-item">
+                      <span>{proposalLead.lead_type === 'aluguel' ? 'Aluguel anunciado' : 'Preço anunciado'}</span>
+                      <strong>{formatMoney(proposalReferencePrice)}</strong>
+                    </div>
+                    {proposalValueNumber > 0 && (
+                      <div className="dd-profile-item">
+                        <span>Diferença</span>
+                        <strong>{formatMoney(proposalDiff)} ({proposalDiffPercent}%)</strong>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="dd-form-actions">
+                  <button className="dd-btn-secondary" type="button" disabled={savingProposal} onClick={closeProposalModal}>
+                    Cancelar
+                  </button>
+                  <button className="dd-btn-secondary" type="button" disabled={savingProposal} onClick={() => moveToProposal(true)}>
+                    Mover sem valor
+                  </button>
+                  <button className="dd-btn-primary" type="submit" disabled={savingProposal}>
+                    {savingProposal ? 'Salvando...' : 'Salvar e mover'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       <RemindersWidget />
     </main>
   );
