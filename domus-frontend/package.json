@@ -13,6 +13,7 @@
     "@google/model-viewer": "^4.4.0",
     "@mercadopago/sdk-react": "^1.0.7",
     "axios": "^1.15.2",
+    "exceljs": "^4.4.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.2",

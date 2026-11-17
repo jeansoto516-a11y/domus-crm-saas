@@ -97,6 +97,13 @@ const emptyInvestment = {
     invest_date: ''
 };
 
+function openPicker(e) {
+    try {
+        if (e.target.showPicker) e.target.showPicker();
+    } catch (err) {
+        // navegador sem suporte: o ícone do calendário continua funcionando
+    }
+}
 function Stat({ label, value, hint }) {
     return (
         <div className="dd-card">
@@ -141,6 +148,7 @@ function Financeiro() {
     const [invError, setInvError] = useState('');
 
     const [saving, setSaving] = useState(false);
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
         const check = () => {
@@ -645,6 +653,318 @@ function Financeiro() {
         );
     };
 
+        const exportExcel = async () => {
+        if (!summary) return;
+
+        try {
+            setExporting(true);
+
+            const mod = await import('exceljs');
+            const ExcelJS = mod.default || mod;
+
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Domus CRM';
+            workbook.created = new Date();
+
+            const MONEY = '"R$" #,##0.00';
+            const HEADER_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D2A4A' } };
+            const HEADER_FONT = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+            const styleHeader = (row) => {
+                row.eachCell((cell) => {
+                    cell.fill = HEADER_FILL;
+                    cell.font = HEADER_FONT;
+                });
+            };
+
+            const setWidths = (sheet, widths) => {
+                widths.forEach((width, index) => {
+                    sheet.getColumn(index + 1).width = width;
+                });
+            };
+
+            const addTitle = (sheet, title) => {
+                sheet.addRow([title]).font = { bold: true, size: 14 };
+                sheet.addRow([`Período: ${fmtDate(period.start)} a ${fmtDate(period.end)}`]);
+                sheet.addRow([]);
+            };
+
+            const addSection = (sheet, text) => {
+                sheet.addRow([text]).font = { bold: true, size: 12 };
+            };
+
+            const addTable = (sheet, headers, rows, moneyCols = []) => {
+                styleHeader(sheet.addRow(headers));
+                rows.forEach((row) => {
+                    const added = sheet.addRow(row);
+                    moneyCols.forEach((col) => {
+                        added.getCell(col).numFmt = MONEY;
+                    });
+                });
+                sheet.addRow([]);
+            };
+
+            const addKpis = (sheet, rows) => {
+                styleHeader(sheet.addRow(['Indicador', 'Valor']));
+                rows.forEach(([label, value, type]) => {
+                    const added = sheet.addRow([label, value]);
+                    if (type === 'money') added.getCell(2).numFmt = MONEY;
+                    added.getCell(2).alignment = { horizontal: 'right' };
+                });
+                sheet.addRow([]);
+            };
+
+            const c = summary.consolidado;
+            const v = summary.vendas;
+            const a = summary.alugueis;
+            const inv = summary.investimentos;
+
+            // ---------- Consolidado ----------
+            const sheetC = workbook.addWorksheet('Consolidado');
+            setWidths(sheetC, [58, 22, 22]);
+            addTitle(sheetC, 'Financeiro - Consolidado');
+            addTable(
+                sheetC,
+                ['Indicador', 'Previsto', 'Caixa'],
+                [
+                    ['Receita de vendas (parte da imobiliária)', c.previsto.receita_vendas, c.caixa.receita_vendas],
+                    ['Receita de aluguéis (taxa adm. menos comissão do corretor)', c.previsto.receita_alugueis, c.caixa.receita_alugueis],
+                    ['Receita total', c.previsto.receita_total, c.caixa.receita_total],
+                    ['Investimento', c.previsto.investimento, c.caixa.investimento],
+                    ['Lucro', c.previsto.lucro, c.caixa.lucro],
+                    ['ROI', pct(c.previsto.roi), pct(c.caixa.roi)]
+                ],
+                [2, 3]
+            );
+            addKpis(sheetC, [
+                ['Vendas no período', v.quantidade, 'number'],
+                ['Custo por venda', c.custo_por_venda === null ? '—' : c.custo_por_venda, 'money'],
+                ['Leads no período', c.leads === null ? '—' : c.leads, 'number'],
+                ['Custo por lead', c.custo_por_lead === null ? '—' : c.custo_por_lead, 'money']
+            ]);
+
+            // ---------- Vendas ----------
+            const sheetV = workbook.addWorksheet('Vendas');
+            setWidths(sheetV, [30, 24, 30, 24, 22, 22, 22, 22]);
+            addTitle(sheetV, 'Financeiro - Vendas');
+            addKpis(sheetV, [
+                ['VGV (valor vendido)', v.vgv, 'money'],
+                ['Comissão total', v.comissao_total, 'money'],
+                ['Parte dos corretores', v.comissao_corretores, 'money'],
+                ['Parte da imobiliária', v.comissao_imobiliaria, 'money'],
+                ['Ticket médio', v.ticket_medio, 'money'],
+                ['Quantidade de vendas', v.quantidade, 'number']
+            ]);
+
+            addSection(sheetV, 'Ranking por corretor');
+            addTable(
+                sheetV,
+                ['Corretor', 'Vendas', 'VGV', 'Comissão do corretor', 'Comissão da imobiliária'],
+                v.ranking.map((row) => [row.name, row.quantidade, row.vgv, row.comissao_corretor, row.comissao_imobiliaria]),
+                [3, 4, 5]
+            );
+
+            addSection(sheetV, 'Evolução mensal');
+            addTable(
+                sheetV,
+                ['Mês', 'Vendas', 'VGV', 'Comissão da imobiliária'],
+                v.evolucao.map((row) => [monthLabel(row.month), row.quantidade, row.vgv, row.comissao_imobiliaria]),
+                [3, 4]
+            );
+
+            addSection(sheetV, 'Vendas do período');
+            addTable(
+                sheetV,
+                ['Data', 'Lead', 'Imóvel / descrição', 'Corretor', 'Valor da venda', 'Comissão total', 'Parte do corretor', 'Parte da imobiliária'],
+                sales.map((sale) => [
+                    fmtDate(sale.sale_date),
+                    sale.lead_name || '',
+                    sale.property_title || sale.description || '',
+                    sale.broker_name || '',
+                    Number(sale.sale_value),
+                    Number(sale.commission_value),
+                    Number(sale.broker_commission_value),
+                    Number(sale.agency_commission_value)
+                ]),
+                [5, 6, 7, 8]
+            );
+
+            // ---------- Aluguéis ----------
+            const sheetA = workbook.addWorksheet('Aluguéis');
+            setWidths(sheetA, [42, 22, 24, 24, 26]);
+            addTitle(sheetA, 'Financeiro - Aluguéis');
+            addKpis(sheetA, [
+                ['Registros no período', a.registros, 'number'],
+                ['Taxa de administração (todos)', a.previsto.taxa_adm, 'money'],
+                ['Comissões dos corretores (todos)', a.previsto.comissao_corretores, 'money'],
+                ['Receita da imobiliária - prevista', a.previsto.receita_imobiliaria, 'money'],
+                ['Receita da imobiliária - paga', a.pago.receita_imobiliaria, 'money'],
+                ['Comissões já pagas', a.pago.comissao_corretores, 'money']
+            ]);
+
+            addSection(sheetA, 'Por situação do pagamento');
+            addTable(
+                sheetA,
+                ['Situação', 'Registros', 'Valor dos aluguéis', 'Taxa de administração', 'Comissão dos corretores'],
+                ['pendente', 'pago', 'atrasado'].map((key) => [
+                    statusLabels[key],
+                    a.por_status[key].qtd,
+                    a.por_status[key].valor_aluguel,
+                    a.por_status[key].taxa_adm,
+                    a.por_status[key].comissao
+                ]),
+                [3, 4, 5]
+            );
+
+            addSection(sheetA, 'Receita por mês');
+            addTable(
+                sheetA,
+                ['Mês', 'Prevista', 'Paga'],
+                a.evolucao.map((row) => [monthLabel(row.month), row.previsto, row.pago]),
+                [2, 3]
+            );
+
+            // ---------- Investimentos ----------
+            const sheetI = workbook.addWorksheet('Investimentos');
+            setWidths(sheetI, [30, 26, 30, 18, 22]);
+            addTitle(sheetI, 'Financeiro - Investimentos');
+            addKpis(sheetI, [
+                ['Meta Ads (automático)', inv.meta.total, 'money'],
+                ['Outros canais (manual)', inv.manual, 'money'],
+                ['Investimento total', inv.total, 'money'],
+                ['Meta Ads conectado', inv.meta.connected ? 'Sim' : 'Não', 'text']
+            ]);
+
+            addSection(sheetI, 'Lançamentos manuais');
+            addTable(
+                sheetI,
+                ['Data', 'Canal', 'Descrição', 'Destino', 'Valor'],
+                investments.map((item) => [
+                    fmtDate(item.invest_date),
+                    item.channel,
+                    item.description || '',
+                    targetLabels[item.target] || item.target,
+                    Number(item.amount)
+                ]),
+                [5]
+            );
+
+            // ---------- Download ----------
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `financeiro-domus_${period.start}_a_${period.end}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Erro ao exportar Excel:', err);
+            setError('Nao foi possivel exportar o arquivo Excel.');
+        } finally {
+            setExporting(false);
+        }
+    };
+        const renderDashboard = () => {
+        const v = summary.vendas;
+        const a = summary.alugueis;
+        const c = summary.consolidado;
+        const inv = summary.investimentos;
+
+        const round2 = (n) => Math.round(n * 100) / 100;
+
+        const monthMap = {};
+
+        v.evolucao.forEach((row) => {
+            monthMap[row.month] = (monthMap[row.month] || 0) + row.comissao_imobiliaria;
+        });
+
+        a.evolucao.forEach((row) => {
+            monthMap[row.month] = (monthMap[row.month] || 0) + row.previsto;
+        });
+
+        const revenueByMonth = Object.keys(monthMap)
+            .sort()
+            .map((month) => ({ label: monthLabel(month), value: round2(monthMap[month]) }));
+
+        const resultData = [
+            { label: 'Receita', value: c.previsto.receita_total },
+            { label: 'Investimento', value: c.previsto.investimento },
+            { label: 'Lucro', value: c.previsto.lucro }
+        ];
+
+        const brokerData = v.ranking.map((row) => ({ label: row.name, value: row.vgv }));
+
+        const commissionSplit = [
+            { label: 'Corretores', value: round2(v.comissao_corretores + a.previsto.comissao_corretores) },
+            { label: 'Imobiliária', value: round2(v.comissao_imobiliaria + a.previsto.receita_imobiliaria) }
+        ].filter((item) => item.value > 0);
+
+        const rentalStatus = ['pendente', 'pago', 'atrasado']
+            .map((key) => ({ label: statusLabels[key], value: a.por_status[key].valor_aluguel }))
+            .filter((item) => item.value > 0);
+
+        const channelData = (invSummary?.manual?.by_channel || []).map((row) => ({
+            label: row.channel,
+            value: Number(row.total)
+        }));
+
+        if (inv.meta.connected && inv.meta.total > 0) {
+            channelData.push({ label: 'Meta Ads', value: inv.meta.total });
+        }
+
+        return (
+            <section className="dd-panel" style={{ marginTop: 24 }}>
+                <h2 style={{ margin: '0 0 4px' }}>Dashboard de indicadores</h2>
+                <p style={{ color: 'var(--dd-muted)', margin: 0, fontSize: 13 }}>
+                    Período: {fmtDate(period.start)} a {fmtDate(period.end)}. Aluguéis considerados pelo cenário previsto.
+                </p>
+
+                <div style={chartsGrid}>
+                    <ChartCard
+                        title="Receita da imobiliária por mês"
+                        data={revenueByMonth}
+                        availableTypes={['bar', 'line', 'area']}
+                        valueLabel="Receita"
+                    />
+                    <ChartCard
+                        title="Receita, investimento e lucro"
+                        data={resultData}
+                        availableTypes={['bar']}
+                        valueLabel="Valor"
+                    />
+                    <ChartCard
+                        title="VGV por corretor"
+                        data={brokerData}
+                        availableTypes={['bar', 'pie']}
+                        valueLabel="VGV"
+                    />
+                    <ChartCard
+                        title="Divisão das comissões"
+                        data={commissionSplit}
+                        availableTypes={['pie', 'bar']}
+                        valueLabel="Comissão"
+                    />
+                    <ChartCard
+                        title="Aluguéis por situação"
+                        data={rentalStatus}
+                        availableTypes={['pie', 'bar']}
+                        valueLabel="Valor dos aluguéis"
+                    />
+                    <ChartCard
+                        title="Investimento por canal"
+                        data={channelData}
+                        availableTypes={['bar', 'pie']}
+                        valueLabel="Investido"
+                    />
+                </div>
+            </section>
+        );
+    };
     const tabs = [
         { key: 'consolidado', label: 'Consolidado' },
         { key: 'vendas', label: 'Vendas' },
@@ -724,6 +1044,8 @@ function Financeiro() {
                         <input
                             type="date"
                             className="dd-input"
+                            style={{ colorScheme: 'dark', cursor: 'pointer' }}
+                            onClick={openPicker}
                             value={draft.start}
                             onChange={(e) => setDraft((cur) => ({ ...cur, start: e.target.value }))}
                         />
@@ -731,6 +1053,8 @@ function Financeiro() {
                         <input
                             type="date"
                             className="dd-input"
+                            style={{ colorScheme: 'dark', cursor: 'pointer' }}
+                            onClick={openPicker}
                             value={draft.end}
                             onChange={(e) => setDraft((cur) => ({ ...cur, end: e.target.value }))}
                         />
@@ -738,6 +1062,9 @@ function Financeiro() {
                         <button className="dd-btn-small" onClick={() => applyPreset('month')}>Mês atual</button>
                         <button className="dd-btn-small" onClick={() => applyPreset('prev')}>Mês anterior</button>
                         <button className="dd-btn-small" onClick={() => applyPreset('year')}>Ano atual</button>
+                        <button className="dd-btn-small" disabled={exporting || !summary} onClick={exportExcel}>
+                        {exporting ? 'Exportando...' : 'Exportar Excel'}
+                        </button>
                     </div>
 
                     <div className="dd-tabs" style={{ marginTop: 16 }}>
@@ -765,6 +1092,8 @@ function Financeiro() {
                         )}
                     </div>
                 </section>
+
+                {summary && renderDashboard()}
             </section>
 
             {showSale && (
