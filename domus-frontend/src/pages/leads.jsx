@@ -4,6 +4,7 @@ import api from '../services/api';
 import TrialBanner from '../components/TrialBanner';
 import RemindersWidget from '../components/RemindersWidget';
 import Icon from '../components/Icon';
+import MoneyInput, { parseMoney, formatMoneyInput } from '../components/MoneyInput';
 import '../styles/dark-theme.css';
 
 const flow = ['novo', 'contato', 'visita', 'proposta', 'fechado'];
@@ -190,7 +191,7 @@ function Leads() {
         setSaleForm({
       ...emptySaleForm,
       sale_date: todayLocal(),
-      sale_value: lead.proposal_value ? String(Number(lead.proposal_value)) : ''
+      sale_value: lead.proposal_value ? formatMoneyInput(Number(lead.proposal_value)) : ''
     });
     setSaleError('');
 
@@ -212,7 +213,7 @@ function Leads() {
 
       if (name === 'property_id' && value && !current.sale_value) {
         const property = saleProperties.find((p) => String(p.id) === value);
-        if (property?.price) next.sale_value = String(property.price);
+      if (property?.price) next.sale_value = formatMoneyInput(Number(property.price));
       }
 
       return next;
@@ -223,17 +224,17 @@ function Leads() {
     event.preventDefault();
     setSaleError('');
 
-    if (!saleForm.sale_value || Number(saleForm.sale_value) <= 0) {
+  if (!parseMoney(saleForm.sale_value) || parseMoney(saleForm.sale_value) <= 0) {
       setSaleError('Informe o valor da venda.');
       return;
     }
 
-    if (saleForm.commission_percent === '') {
+  if (parseMoney(saleForm.commission_percent) === null) {
       setSaleError('Informe o percentual de comissão.');
       return;
     }
 
-    if (saleForm.broker_percent === '') {
+  if (parseMoney(saleForm.broker_percent) === null) {
       setSaleError('Informe a parte do corretor na comissão.');
       return;
     }
@@ -245,9 +246,9 @@ function Leads() {
         await api.post('/sales', {
           lead_id: saleLead.id,
           property_id: saleForm.property_id || null,
-          sale_value: saleForm.sale_value,
-          commission_percent: saleForm.commission_percent,
-          broker_percent: saleForm.broker_percent,
+          sale_value: parseMoney(saleForm.sale_value),
+          commission_percent: parseMoney(saleForm.commission_percent),
+          broker_percent: parseMoney(saleForm.broker_percent),
           sale_date: saleForm.sale_date
         });
       } catch (err) {
@@ -279,7 +280,7 @@ function Leads() {
     setProposalLead(lead);
     setProposalForm({
       property_id: '',
-      proposal_value: lead.proposal_value ? String(Number(lead.proposal_value)) : ''
+      proposal_value: lead.proposal_value ? formatMoneyInput(Number(lead.proposal_value)) : ''
     });
     setProposalError('');
 
@@ -299,9 +300,9 @@ function Leads() {
   };
 
   const moveToProposal = async (skipValue) => {
-    const value = skipValue ? '' : proposalForm.proposal_value;
+        const value = skipValue ? null : parseMoney(proposalForm.proposal_value);
 
-    if (value !== '' && Number(value) <= 0) {
+    if (!skipValue && proposalForm.proposal_value !== '' && (value === null || value <= 0)) {
       setProposalError('Informe um valor de proposta válido.');
       return;
     }
@@ -309,7 +310,7 @@ function Leads() {
     try {
       setSavingProposal(true);
       setProposalError('');
-      await applyStatus(proposalLead, 'proposta', value !== '' ? { proposal_value: Number(value) } : {});
+      await applyStatus(proposalLead, 'proposta', value !== null ? { proposal_value: value } : {});
       setProposalLead(null);
     } catch (err) {
       setProposalError(err.response?.data?.error || 'Não foi possível atualizar o lead.');
@@ -348,14 +349,14 @@ function Leads() {
     }
   };
 
-  const saleValueNumber = Number(saleForm.sale_value) || 0;
-  const commissionTotal = (saleValueNumber * (Number(saleForm.commission_percent) || 0)) / 100;
-  const brokerShare = (commissionTotal * (Number(saleForm.broker_percent) || 0)) / 100;
+  const saleValueNumber = parseMoney(saleForm.sale_value) || 0;
+  const commissionTotal = (saleValueNumber * (parseMoney(saleForm.commission_percent) || 0)) / 100;
+  const brokerShare = (commissionTotal * (parseMoney(saleForm.broker_percent) || 0)) / 100;
   const proposalProperty = proposalProperties.find((p) => String(p.id) === proposalForm.property_id);
   const proposalReferencePrice = proposalProperty
     ? Number(proposalLead?.lead_type === 'aluguel' ? proposalProperty.rent_price : proposalProperty.price) || 0
     : 0;
-  const proposalValueNumber = Number(proposalForm.proposal_value) || 0;
+  const proposalValueNumber = parseMoney(proposalForm.proposal_value) || 0;
   const proposalDiff = proposalValueNumber - proposalReferencePrice;
   const proposalDiffPercent = proposalReferencePrice > 0
     ? ((proposalDiff / proposalReferencePrice) * 100).toFixed(1)
@@ -1072,17 +1073,17 @@ function Leads() {
 
                 <label className="dd-field">
                   Valor da venda (R$)
-                  <input className="dd-input" name="sale_value" onChange={updateSaleField} type="number" min="0" step="any" value={saleForm.sale_value} />
+                                    <MoneyInput name="sale_value" onChange={updateSaleField} value={saleForm.sale_value} placeholder="Ex.: 450.000,00" />
                 </label>
 
                 <label className="dd-field">
                   Comissão sobre a venda (%)
-                  <input className="dd-input" name="commission_percent" onChange={updateSaleField} type="number" min="0" max="100" step="0.01" value={saleForm.commission_percent} />
+                                    <MoneyInput name="commission_percent" onChange={updateSaleField} value={saleForm.commission_percent} placeholder="Ex.: 5,00" />
                 </label>
 
                 <label className="dd-field">
                   Parte do corretor na comissão (%)
-                  <input className="dd-input" name="broker_percent" onChange={updateSaleField} type="number" min="0" max="100" step="0.01" value={saleForm.broker_percent} />
+                                    <MoneyInput name="broker_percent" onChange={updateSaleField} value={saleForm.broker_percent} placeholder="Ex.: 50,00" />
                 </label>
 
                 <label className="dd-field">
@@ -1142,7 +1143,7 @@ function Leads() {
 
                 <label className="dd-field">
                   Valor da proposta (R$)
-                  <input className="dd-input" name="proposal_value" onChange={updateProposalField} type="number" min="0" step="any" value={proposalForm.proposal_value} />
+                                    <MoneyInput name="proposal_value" onChange={updateProposalField} value={proposalForm.proposal_value} placeholder="Ex.: 450.000,00" />
                 </label>
 
                 {proposalReferencePrice > 0 && (
