@@ -31,16 +31,26 @@ exports.createSale = async (req, res) => {
     }
 
     const companyId = req.user.company_id;
+    const isAdmin = req.user.role === 'admin';
     const leadId = toNumber(req.body.lead_id);
     const propertyId = toNumber(req.body.property_id);
-    let brokerId = toNumber(req.body.broker_id);
+    let brokerId = isAdmin ? toNumber(req.body.broker_id) : req.user.id;
+
+    if (!isAdmin && !leadId) {
+        return res.status(400).json({ error: 'Informe o lead da venda.' });
+    }
 
     try {
         if (leadId) {
-            const leadResult = await pool.query(
-                `SELECT id, user_id FROM leads WHERE id = $1 AND company_id = $2`,
-                [leadId, companyId]
-            );
+            const leadValues = [leadId, companyId];
+            let leadQuery = `SELECT id, user_id FROM leads WHERE id = $1 AND company_id = $2`;
+
+            if (!isAdmin) {
+                leadQuery += ` AND user_id = $3`;
+                leadValues.push(req.user.id);
+            }
+
+            const leadResult = await pool.query(leadQuery, leadValues);
 
             if (leadResult.rows.length === 0) {
                 return res.status(404).json({ error: 'Lead nao encontrado.' });

@@ -341,7 +341,7 @@ function Leads() {
       return;
     }
 
-    if (nextStatus === 'fechado' && isAdmin && lead.lead_type === 'venda') {
+    if (nextStatus === 'fechado' && lead.lead_type === 'venda') {
       openSaleModal(lead);
       return;
     }
@@ -1105,9 +1105,11 @@ function Leads() {
                   <button className="dd-btn-secondary" type="button" disabled={savingSale} onClick={closeSaleModal}>
                     Cancelar
                   </button>
-                  <button className="dd-btn-secondary" type="button" disabled={savingSale} onClick={closeWithoutSale}>
-                    Fechar sem venda
-                  </button>
+                    {isAdmin && (
+                    <button className="dd-btn-secondary" type="button" disabled={savingSale} onClick={closeWithoutSale}>
+                      Fechar sem venda
+                    </button>
+                  )}
                   <button className="dd-btn-primary" type="submit" disabled={savingSale}>
                     {savingSale ? 'Salvando...' : 'Registrar venda'}
                   </button>

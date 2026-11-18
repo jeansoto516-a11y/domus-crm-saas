@@ -7,7 +7,7 @@ const adminMiddleware = require('../middlewares/adminMiddleware');
 const saleController = require('../controllers/saleController');
 
 router.get('/', authMiddleware, checkSubscription, adminMiddleware, saleController.getSales);
-router.post('/', authMiddleware, checkSubscription, adminMiddleware, saleController.createSale);
+router.post('/', authMiddleware, checkSubscription, saleController.createSale);
 router.delete('/:id', authMiddleware, checkSubscription, adminMiddleware, saleController.deleteSale);
 
 module.exports = router;
