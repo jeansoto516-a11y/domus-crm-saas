@@ -584,3 +584,164 @@ exports.getDashboard = async (req, res) => {
         return res.status(500).json({ error: 'Erro ao buscar dashboard de alugueis.' });
     }
 };
+
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Criar contrato de aluguel a partir do fechamento de um lead de aluguel
+ */
+exports.createContractFromLead = async (req, res) => {
+    const companyId = req.user.company_id;
+    const isAdmin = req.user.role === 'admin';
+
+    const toNumber = (value) => (
+        value === undefined || value === null || value === '' ? null : Number(value)
+    );
+
+    const leadId = toNumber(req.body.lead_id);
+    const catalogPropertyId = toNumber(req.body.property_id);
+    const rentValue = toNumber(req.body.rent_value);
+    const dueDay = toNumber(req.body.due_day) ?? 10;
+    const contractStart = req.body.contract_start;
+    const contractEnd = req.body.contract_end;
+    const guaranteeType = req.body.guarantee_type || 'nenhuma';
+    const adminFeePercent = isAdmin ? toNumber(req.body.admin_fee_percent) : null;
+    const brokerCommissionPercent = isAdmin ? toNumber(req.body.broker_commission_percent) : null;
+    let depositValue = toNumber(req.body.deposit_value);
+    let address = (req.body.address || '').toString().trim();
+
+    if (!leadId) {
+        return res.status(400).json({ error: 'Informe o lead do aluguel.' });
+    }
+
+    if (!Number.isFinite(rentValue) || rentValue <= 0) {
+        return res.status(400).json({ error: 'Informe o valor do aluguel.' });
+    }
+
+    if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) {
+        return res.status(400).json({ error: 'O dia de vencimento deve estar entre 1 e 31.' });
+    }
+
+    if (!DATE_RE.test(contractStart || '') || !DATE_RE.test(contractEnd || '')) {
+        return res.status(400).json({ error: 'Informe o inicio e o fim do contrato.' });
+    }
+
+    if (contractEnd < contractStart) {
+        return res.status(400).json({ error: 'O fim do contrato deve ser depois do inicio.' });
+    }
+
+    if (!['fiador', 'caucao', 'nenhuma'].includes(guaranteeType)) {
+        return res.status(400).json({ error: 'Garantia invalida.' });
+    }
+
+    if (guaranteeType === 'caucao') {
+        if (!Number.isFinite(depositValue) || depositValue <= 0) {
+            return res.status(400).json({ error: 'Informe o valor da caucao.' });
+        }
+    } else {
+        depositValue = null;
+    }
+
+    if (adminFeePercent !== null && (!Number.isFinite(adminFeePercent) || adminFeePercent < 0 || adminFeePercent > 100)) {
+        return res.status(400).json({ error: 'A taxa de administracao deve estar entre 0 e 100%.' });
+    }
+
+    if (brokerCommissionPercent !== null && (!Number.isFinite(brokerCommissionPercent) || brokerCommissionPercent < 0 || brokerCommissionPercent > 100)) {
+        return res.status(400).json({ error: 'A comissao do corretor deve estar entre 0 e 100%.' });
+    }
+
+    try {
+        const leadValues = [leadId, companyId];
+        let leadQuery = `SELECT id, name, email, phone, user_id, lead_type FROM leads WHERE id = $1 AND company_id = $2`;
+
+        if (!isAdmin) {
+            leadQuery += ` AND user_id = $3`;
+            leadValues.push(req.user.id);
+        }
+
+        const leadResult = await pool.query(leadQuery, leadValues);
+
+        if (leadResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Lead nao encontrado.' });
+        }
+
+        const lead = leadResult.rows[0];
+
+        if (lead.lead_type !== 'aluguel') {
+            return res.status(400).json({ error: 'Este lead nao e de aluguel.' });
+        }
+
+        const existing = await pool.query(`SELECT id FROM rental_properties WHERE lead_id = $1`, [leadId]);
+
+        if (existing.rows.length > 0) {
+            return res.status(409).json({ error: 'Este lead ja tem um contrato de aluguel.' });
+        }
+
+        let ownerName = null;
+        let ownerContact = null;
+
+        if (catalogPropertyId) {
+            const propertyResult = await pool.query(
+                `SELECT id, title, region, city, owner_name, owner_contact FROM properties WHERE id = $1 AND company_id = $2`,
+                [catalogPropertyId, companyId]
+            );
+
+            if (propertyResult.rows.length === 0) {
+                return res.status(404).json({ error: 'Imovel nao encontrado.' });
+            }
+
+            const property = propertyResult.rows[0];
+
+            ownerName = property.owner_name || null;
+            ownerContact = property.owner_contact || null;
+
+            if (!address) {
+                address = [property.title, property.region, property.city].filter(Boolean).join(' - ');
+            }
+        }
+
+        if (!address) {
+            return res.status(400).json({ error: 'Informe o imovel ou o endereco.' });
+        }
+
+        const result = await pool.query(
+            `
+            INSERT INTO rental_properties
+            (company_id, broker_id, address, tenant_name, tenant_contact, owner_name, owner_contact,
+             rent_value, due_day, contract_start, contract_end, admin_fee_percent, broker_commission_percent,
+             lead_id, guarantee_type, deposit_value)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, COALESCE($12, 8), COALESCE($13, 50), $14, $15, $16)
+            RETURNING *
+            `,
+            [
+                companyId,
+                lead.user_id,
+                address,
+                lead.name,
+                lead.phone || lead.email || null,
+                ownerName,
+                ownerContact,
+                rentValue,
+                dueDay,
+                contractStart,
+                contractEnd,
+                adminFeePercent,
+                brokerCommissionPercent,
+                leadId,
+                guaranteeType,
+                depositValue
+            ]
+        );
+
+        return res.status(201).json(result.rows[0]);
+
+    } catch (err) {
+        if (err.code === '23505') {
+            return res.status(409).json({ error: 'Este lead ja tem um contrato de aluguel.' });
+        }
+
+        console.error('Erro ao criar contrato a partir do lead:', err);
+        return res.status(500).json({ error: 'Erro ao criar contrato de aluguel.' });
+    }
+};

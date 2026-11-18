@@ -44,6 +44,32 @@ const emptyProposalForm = {
   proposal_value: ''
 };
 
+const emptyRentalForm = {
+  property_id: '',
+  address: '',
+  rent_value: '',
+  due_day: '10',
+  contract_start: '',
+  contract_end: '',
+  guarantee_type: 'nenhuma',
+  deposit_value: '',
+  admin_fee_percent: '8',
+  broker_commission_percent: '50'
+};
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+const addMonthsMinusOneDay = (dateStr, months) => {
+  if (!dateStr) return '';
+
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1 + months, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  const end = new Date(target.getFullYear(), target.getMonth(), Math.min(d, lastDay) - 1);
+
+  return `${end.getFullYear()}-${pad2(end.getMonth() + 1)}-${pad2(end.getDate())}`;
+};
+
 function Leads() {
   const [leads, setLeads] = useState([]);
   const [filters, setFilters] = useState({ status: '', startDate: '', endDate: '', lead_type: 'venda' });
@@ -87,6 +113,11 @@ function Leads() {
   const [proposalProperties, setProposalProperties] = useState([]);
   const [savingProposal, setSavingProposal] = useState(false);
   const [proposalError, setProposalError] = useState('');
+  const [rentalLead, setRentalLead] = useState(null);
+  const [rentalForm, setRentalForm] = useState(emptyRentalForm);
+  const [rentalProperties, setRentalProperties] = useState([]);
+  const [savingRental, setSavingRental] = useState(false);
+  const [rentalError, setRentalError] = useState('');
 
   const totals = useMemo(() => {
     return leads.reduce(
@@ -328,6 +359,115 @@ function Leads() {
     moveToProposal(false);
   };
 
+      const openRentalModal = (lead) => {
+    setRentalLead(lead);
+    setRentalForm({
+      ...emptyRentalForm,
+      property_id: lead.property_id ? String(lead.property_id) : '',
+      rent_value: lead.proposal_value ? formatMoneyInput(Number(lead.proposal_value)) : '',
+      contract_start: todayLocal()
+    });
+    setRentalError('');
+
+    api.get('/properties', { params: { lead_type: 'aluguel' } })
+      .then((res) => setRentalProperties(res.data.filter((p) => p.status !== 'alugado' && p.status !== 'vendido')))
+      .catch(() => setRentalProperties([]));
+  };
+
+  const closeRentalModal = () => {
+    if (savingRental) return;
+    setRentalLead(null);
+  };
+
+  const updateRentalField = (event) => {
+    const { name, value } = event.target;
+
+    setRentalForm((current) => {
+      const next = { ...current, [name]: value };
+
+      if (name === 'property_id' && value && !current.rent_value) {
+        const property = rentalProperties.find((p) => String(p.id) === value);
+        if (property?.rent_price) next.rent_value = formatMoneyInput(Number(property.rent_price));
+      }
+
+      return next;
+    });
+  };
+
+  const setRentalDuration = (months) => {
+    setRentalForm((current) => ({
+      ...current,
+      contract_end: addMonthsMinusOneDay(current.contract_start, months)
+    }));
+  };
+
+  const handleSaveRental = async (event) => {
+    event.preventDefault();
+    setRentalError('');
+
+    const rentValue = parseMoney(rentalForm.rent_value);
+    const depositValue = parseMoney(rentalForm.deposit_value);
+
+    if (!rentValue || rentValue <= 0) {
+      setRentalError('Informe o valor do aluguel.');
+      return;
+    }
+
+    if (!rentalForm.property_id && !rentalForm.address.trim()) {
+      setRentalError('Escolha um imóvel ou informe o endereço.');
+      return;
+    }
+
+    if (!rentalForm.contract_start || !rentalForm.contract_end) {
+      setRentalError('Informe o início e o fim do contrato.');
+      return;
+    }
+
+    if (rentalForm.contract_end < rentalForm.contract_start) {
+      setRentalError('O fim do contrato deve ser depois do início.');
+      return;
+    }
+
+    if (rentalForm.guarantee_type === 'caucao' && (!depositValue || depositValue <= 0)) {
+      setRentalError('Informe o valor da caução.');
+      return;
+    }
+
+    try {
+      setSavingRental(true);
+
+      try {
+        await api.post('/rentals/contracts/from-lead', {
+          lead_id: rentalLead.id,
+          property_id: rentalForm.property_id ? Number(rentalForm.property_id) : null,
+          address: rentalForm.address.trim(),
+          rent_value: rentValue,
+          due_day: Number(rentalForm.due_day) || 10,
+          contract_start: rentalForm.contract_start,
+          contract_end: rentalForm.contract_end,
+          guarantee_type: rentalForm.guarantee_type,
+          deposit_value: rentalForm.guarantee_type === 'caucao' ? depositValue : null,
+          admin_fee_percent: isAdmin ? parseMoney(rentalForm.admin_fee_percent) : undefined,
+          broker_commission_percent: isAdmin ? parseMoney(rentalForm.broker_commission_percent) : undefined
+        });
+      } catch (err) {
+        if (err.response?.status !== 409) throw err;
+      }
+
+      await applyStatus(
+        rentalLead,
+        'fechado',
+        rentalForm.property_id ? { property_id: Number(rentalForm.property_id) } : {}
+      );
+
+      setRentalLead(null);
+    } catch (err) {
+      setRentalError(err.response?.data?.error || 'Não foi possível registrar o contrato.');
+    } finally {
+      setSavingRental(false);
+    }
+  };
+
     const changeStatus = async (lead, direction) => {
     const currentIndex = flow.indexOf(lead.status);
     const nextIndex = currentIndex + direction;
@@ -343,6 +483,11 @@ function Leads() {
 
     if (nextStatus === 'fechado' && lead.lead_type === 'venda') {
       openSaleModal(lead);
+      return;
+    }
+
+    if (nextStatus === 'fechado' && lead.lead_type === 'aluguel') {
+      openRentalModal(lead);
       return;
     }
 
@@ -365,6 +510,22 @@ function Leads() {
   const proposalDiffPercent = proposalReferencePrice > 0
     ? ((proposalDiff / proposalReferencePrice) * 100).toFixed(1)
     : '0.0';
+
+    const rentalMonths = (() => {
+    const start = rentalForm.contract_start;
+    const end = rentalForm.contract_end;
+
+    if (!start || !end || end < start) return 0;
+
+    const [sy, sm] = start.split('-').map(Number);
+    const [ey, em] = end.split('-').map(Number);
+
+    return (ey - sy) * 12 + (em - sm) + 1;
+  })();
+
+  const rentalRentNumber = parseMoney(rentalForm.rent_value) || 0;
+  const rentalAdminFee = (rentalRentNumber * (parseMoney(rentalForm.admin_fee_percent) ?? 8)) / 100;
+  const rentalBrokerShare = (rentalAdminFee * (parseMoney(rentalForm.broker_commission_percent) ?? 50)) / 100;  
 
   const loadHistory = async (leadId) => {
     try {
@@ -1183,6 +1344,127 @@ function Leads() {
           </div>
         </div>
       )}
+
+             {rentalLead && (
+        <div className="dd-modal-overlay" onClick={closeRentalModal}>
+          <div className="dd-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="dd-modal-header">
+              <h2>Fechar aluguel</h2>
+              <button className="dd-modal-close" onClick={closeRentalModal}>×</button>
+            </div>
+
+            <div className="dd-modal-body">
+              <p style={{ color: 'var(--dd-muted)', fontSize: 13, marginTop: 0 }}>
+                Lead: <strong>{rentalLead.name}</strong>. Informe os dados do contrato de aluguel.
+              </p>
+
+              {rentalLead.proposal_value && (
+                <p style={{ color: 'var(--dd-muted)', fontSize: 13, marginTop: 0 }}>
+                  Valor da proposta: <strong>{formatMoney(rentalLead.proposal_value)}</strong>. Confirme ou corrija o valor do aluguel.
+                </p>
+              )}
+
+              {rentalError && <div className="dd-alert-error">{rentalError}</div>}
+
+              <form className="dd-form" onSubmit={handleSaveRental}>
+                <label className="dd-field">
+                  Imóvel do catálogo (opcional)
+                  <select className="dd-select" name="property_id" onChange={updateRentalField} value={rentalForm.property_id}>
+                    <option value="">Não vincular</option>
+                    {rentalProperties.map((property) => (
+                      <option key={property.id} value={property.id}>{property.title}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="dd-field">
+                  Endereço (obrigatório se não escolher um imóvel)
+                  <input className="dd-input" name="address" onChange={updateRentalField} value={rentalForm.address} />
+                </label>
+
+                <label className="dd-field">
+                  Valor do aluguel (R$)
+                  <MoneyInput name="rent_value" onChange={updateRentalField} value={rentalForm.rent_value} placeholder="Ex.: 2.500,00" />
+                </label>
+
+                <label className="dd-field">
+                  Dia de vencimento
+                  <input className="dd-input" name="due_day" onChange={updateRentalField} type="number" min="1" max="31" value={rentalForm.due_day} />
+                </label>
+
+                <label className="dd-field">
+                  Início do contrato
+                  <input className="dd-input" name="contract_start" onChange={updateRentalField} type="date" value={rentalForm.contract_start} />
+                </label>
+
+                <label className="dd-field">
+                  Fim do contrato
+                  <input className="dd-input" name="contract_end" onChange={updateRentalField} type="date" value={rentalForm.contract_end} />
+                </label>
+
+                <div className="dd-row-actions">
+                  {[12, 24, 30, 36].map((months) => (
+                    <button key={months} type="button" className="dd-btn-small" onClick={() => setRentalDuration(months)}>
+                      {months} meses
+                    </button>
+                  ))}
+                </div>
+
+                <label className="dd-field">
+                  Garantia do aluguel
+                  <select className="dd-select" name="guarantee_type" onChange={updateRentalField} value={rentalForm.guarantee_type}>
+                    <option value="nenhuma">Nenhuma</option>
+                    <option value="fiador">Fiador</option>
+                    <option value="caucao">Caução</option>
+                  </select>
+                </label>
+
+                {rentalForm.guarantee_type === 'caucao' && (
+                  <label className="dd-field">
+                    Valor da caução (R$)
+                    <MoneyInput name="deposit_value" onChange={updateRentalField} value={rentalForm.deposit_value} placeholder="Ex.: 5.000,00" />
+                  </label>
+                )}
+
+                {isAdmin && (
+                  <>
+                    <label className="dd-field">
+                      Taxa de administração (%)
+                      <MoneyInput name="admin_fee_percent" onChange={updateRentalField} value={rentalForm.admin_fee_percent} placeholder="Ex.: 8,00" />
+                    </label>
+
+                    <label className="dd-field">
+                      Parte do corretor na taxa (%)
+                      <MoneyInput name="broker_commission_percent" onChange={updateRentalField} value={rentalForm.broker_commission_percent} placeholder="Ex.: 50,00" />
+                    </label>
+                  </>
+                )}
+
+                <div className="dd-profile-grid">
+                  <div className="dd-profile-item"><span>Prazo</span><strong>{rentalMonths} mês(es)</strong></div>
+                  {isAdmin && (
+                    <>
+                      <div className="dd-profile-item"><span>Taxa adm. mensal</span><strong>{formatMoney(rentalAdminFee)}</strong></div>
+                      <div className="dd-profile-item"><span>Corretor (mês)</span><strong>{formatMoney(rentalBrokerShare)}</strong></div>
+                      <div className="dd-profile-item"><span>Imobiliária (mês)</span><strong>{formatMoney(rentalAdminFee - rentalBrokerShare)}</strong></div>
+                    </>
+                  )}
+                </div>
+
+                <div className="dd-form-actions">
+                  <button className="dd-btn-secondary" type="button" disabled={savingRental} onClick={closeRentalModal}>
+                    Cancelar
+                  </button>
+                  <button className="dd-btn-primary" type="submit" disabled={savingRental}>
+                    {savingRental ? 'Salvando...' : 'Registrar contrato'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <RemindersWidget />
     </main>
   );

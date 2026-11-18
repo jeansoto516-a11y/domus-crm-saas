@@ -155,7 +155,10 @@ async function createTables() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_rental_properties_company ON rental_properties(company_id);
-      CREATE INDEX IF NOT EXISTS idx_rental_payments_property ON rental_payments(property_id, reference_month);
+      ALTER TABLE rental_properties ADD COLUMN IF NOT EXISTS lead_id INTEGER REFERENCES leads(id) ON DELETE SET NULL;
+      ALTER TABLE rental_properties ADD COLUMN IF NOT EXISTS guarantee_type TEXT;
+      ALTER TABLE rental_properties ADD COLUMN IF NOT EXISTS deposit_value NUMERIC;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_rental_properties_lead_unique ON rental_properties(lead_id) WHERE lead_id IS NOT NULL;
 
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0;
       ALTER TABLE leads ADD COLUMN IF NOT EXISTS temperature TEXT DEFAULT 'frio';

@@ -8,7 +8,7 @@ const rentalAccessMiddleware = require('../middlewares/rentalAccessMiddleware');
 const rentalController = require('../controllers/rentalController');
 
 router.get('/properties', authMiddleware, checkSubscription, rentalAccessMiddleware, rentalController.getProperties);
-router.post('/properties', authMiddleware, checkSubscription, rentalAccessMiddleware, rentalController.createProperty);
+router.post('/contracts/from-lead', authMiddleware, checkSubscription, rentalAccessMiddleware, rentalController.createContractFromLead);
 router.put('/properties/:id', authMiddleware, checkSubscription, adminMiddleware, rentalController.updateProperty);
 router.delete('/properties/:id', authMiddleware, checkSubscription, adminMiddleware, rentalController.deleteProperty);
 router.post('/generate-month', authMiddleware, checkSubscription, adminMiddleware, rentalController.generateMonthlyPayments);

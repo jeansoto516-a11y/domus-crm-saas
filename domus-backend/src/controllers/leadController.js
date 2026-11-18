@@ -371,6 +371,35 @@ exports.updateLead = async (req, res) => {
 
         }
 
+                if (
+            currentLead.rows[0].status === 'fechado' &&
+            status !== 'fechado' &&
+            currentLead.rows[0].lead_type === 'aluguel'
+        ) {
+
+            const paidCheck = await pool.query(
+                `
+                SELECT 1
+                FROM rental_payments
+                JOIN rental_properties ON rental_properties.id = rental_payments.property_id
+                WHERE rental_properties.lead_id = $1
+                AND rental_properties.company_id = $2
+                AND rental_payments.status = 'pago'
+                LIMIT 1
+                `,
+                [id, req.user.company_id]
+            );
+
+            if (paidCheck.rows.length > 0) {
+
+                return res.status(409).json({
+                    error: 'Este contrato de aluguel ja tem pagamentos recebidos. Ajuste o contrato em Alugueis antes de tirar o lead de Fechado.'
+                });
+
+            }
+
+        }
+
         const score = calculateScore({
             ...currentLead.rows[0],
             status
@@ -440,6 +469,16 @@ exports.updateLead = async (req, res) => {
 
             await pool.query(
                 `DELETE FROM sales WHERE lead_id = $1 AND company_id = $2`,
+                [id, req.user.company_id]
+            );
+
+        }
+
+                // Ao sair de Fechado, o contrato de aluguel criado a partir do lead e removido
+        if (previousStatus === 'fechado' && status !== 'fechado') {
+
+            await pool.query(
+                `DELETE FROM rental_properties WHERE lead_id = $1 AND company_id = $2`,
                 [id, req.user.company_id]
             );
 
