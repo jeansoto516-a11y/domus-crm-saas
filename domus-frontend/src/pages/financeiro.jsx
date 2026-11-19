@@ -1166,6 +1166,134 @@ function Financeiro() {
                 [5]
             );
 
+                        // ---------- Aluguéis futuros ----------
+            if (future) {
+                const sheetF = workbook.addWorksheet('Aluguéis futuros');
+                setWidths(sheetF, [34, 22, 22, 24, 22, 22, 24, 22, 22, 24]);
+
+                sheetF.addRow(['Financeiro - Aluguéis futuros']).font = { bold: true, size: 14 };
+                sheetF.addRow([`Período: ${fmtDate(future.period.start)} a ${fmtDate(future.period.end)} (${future.period.months} meses)`]);
+                sheetF.addRow(['Mês cheio em cada mês de vigência, com o valor atual do aluguel e sem previsão de reajuste.']);
+                sheetF.addRow([]);
+
+                const fc = future.consolidado;
+
+                addKpis(sheetF, [
+                    ['Contratos no período', fc.contratos, 'number'],
+                    ['Aluguéis (soma)', fc.aluguel_total, 'money'],
+                    ['Taxa de administração', fc.taxa_adm, 'money'],
+                    ['Comissão dos corretores', fc.comissao_corretores, 'money'],
+                    ['Receita da imobiliária', fc.receita_imobiliaria, 'money'],
+                    ['Repasse aos proprietários', fc.repasse_proprietarios, 'money']
+                ]);
+
+                addSection(sheetF, 'Mês a mês');
+                styleHeader(sheetF.addRow([
+                    'Mês',
+                    'Contratos',
+                    'Aluguéis',
+                    'Taxa de administração',
+                    'Comissão dos corretores',
+                    'Receita da imobiliária',
+                    'Repasse aos proprietários'
+                ]));
+
+                future.meses.forEach((row) => {
+                    const added = sheetF.addRow([
+                        monthLabel(row.month),
+                        row.contratos,
+                        row.aluguel_total,
+                        row.taxa_adm,
+                        row.comissao_corretores,
+                        row.receita_imobiliaria,
+                        row.repasse_proprietarios
+                    ]);
+
+                    [3, 4, 5, 6, 7].forEach((col) => {
+                        added.getCell(col).numFmt = MONEY;
+                    });
+                });
+
+                const totalRow = sheetF.addRow([
+                    'Total do período',
+                    fc.contratos,
+                    fc.aluguel_total,
+                    fc.taxa_adm,
+                    fc.comissao_corretores,
+                    fc.receita_imobiliaria,
+                    fc.repasse_proprietarios
+                ]);
+
+                [3, 4, 5, 6, 7].forEach((col) => {
+                    totalRow.getCell(col).numFmt = MONEY;
+                });
+
+                totalRow.font = { bold: true };
+                sheetF.addRow([]);
+
+                addSection(sheetF, 'Comissões por corretor');
+                addTable(
+                    sheetF,
+                    ['Corretor', 'Contratos', 'Comissão no período'],
+                    future.por_corretor.map((row) => [row.name, row.contratos, row.comissao]),
+                    [3]
+                );
+
+                addSection(sheetF, 'Contratos considerados');
+                addTable(
+                    sheetF,
+                    ['Imóvel', 'Inquilino', 'Corretor', 'Aluguel', 'Início', 'Fim', 'Meses no período', 'Taxa adm. no período', 'Comissão do corretor', 'Receita da imobiliária'],
+                    future.contratos.map((contract) => [
+                        contract.address,
+                        contract.tenant_name || '',
+                        contract.broker_name || '',
+                        contract.rent_value,
+                        contract.contract_start ? fmtDate(contract.contract_start) : '',
+                        contract.contract_end ? fmtDate(contract.contract_end) : 'Sem data',
+                        contract.meses_no_periodo,
+                        contract.taxa_adm_total,
+                        contract.comissao_corretor_total,
+                        contract.receita_imobiliaria_total
+                    ]),
+                    [4, 8, 9, 10]
+                );
+            }
+
+            // ---------- Cauções ----------
+            if (deposits) {
+                const sheetD = workbook.addWorksheet('Cauções');
+                setWidths(sheetD, [28, 24, 34, 24, 20, 20, 16, 16, 14]);
+
+                sheetD.addRow(['Financeiro - Controle de cauções']).font = { bold: true, size: 14 };
+                sheetD.addRow([`Posição em ${fmtDate(todayStr())}`]);
+                sheetD.addRow(['Controle administrativo apartado. As cauções não entram em receita, lucro, ROI nem comissões.']);
+                sheetD.addRow([]);
+
+                addKpis(sheetD, [
+                    ['Cauções ativas', deposits.quantidade_ativas, 'number'],
+                    ['Valor sob custódia (contratos ativos)', deposits.total_ativas, 'money'],
+                    ['Cauções registradas no total', deposits.quantidade_total, 'number']
+                ]);
+
+                addSection(sheetD, 'Cauções');
+                addTable(
+                    sheetD,
+                    ['Lead', 'Contato', 'Imóvel', 'Corretor', 'Aluguel', 'Caução', 'Início', 'Fim', 'Situação'],
+                    deposits.itens.map((item) => [
+                        item.lead_name || '',
+                        item.contact || '',
+                        item.address,
+                        item.broker_name || '',
+                        item.rent_value,
+                        item.deposit_value,
+                        item.contract_start ? fmtDate(item.contract_start) : '',
+                        item.contract_end ? fmtDate(item.contract_end) : '',
+                        item.status === 'ativo' ? 'Ativo' : item.status
+                    ]),
+                    [5, 6]
+                );
+            }
+
             // ---------- Download ----------
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], {
