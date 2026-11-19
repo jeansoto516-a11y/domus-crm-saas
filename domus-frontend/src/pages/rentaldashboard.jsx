@@ -47,6 +47,31 @@ const monthLabel = (key) => {
 
 const round2 = (n) => Math.round(n * 100) / 100;
 
+const dateKey = (value) => String(value || '').slice(0, 10);
+
+const formatDateBr = (key) => {
+    if (!key) return '-';
+    const [y, m, d] = key.split('-');
+    return `${d}/${m}/${y}`;
+};
+
+const daysBetween = (fromKey, toKey) => {
+    const [fy, fm, fd] = fromKey.split('-').map(Number);
+    const [ty, tm, td] = toKey.split('-').map(Number);
+    return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86400000);
+};
+
+const contractMonths = (startKey, endKey) => {
+    if (!startKey || !endKey || endKey < startKey) return 0;
+
+    const [sy, sm] = startKey.split('-').map(Number);
+    const [ey, em] = endKey.split('-').map(Number);
+
+  return (ey - sy) * 12 + (em - sm) + 1;
+};
+
+const guaranteeLabels = { fiador: 'Fiador', caucao: 'Caução', nenhuma: 'Sem garantia' };
+
 function countBy(list, field) {
     return list.reduce((acc, item) => {
     const key = item[field];
@@ -87,6 +112,7 @@ function RentalDashboard() {
     const [data, setData] = useState(null);
     const [leads, setLeads] = useState([]);
     const [properties, setProperties] = useState([]);
+    const [contracts, setContracts] = useState([]);
     const [filters, setFilters] = useState({ startDate: '', endDate: '' });
     const [showFilters, setShowFilters] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -124,11 +150,19 @@ function RentalDashboard() {
         setLoading(true);
         setError('');
 
-        const [rentalRes, leadsRes, propertiesRes] = await Promise.all([
+                const [rentalRes, leadsRes, propertiesRes, contractsRes] = await Promise.all([
             api.get('/rentals/dashboard'),
             api.get('/leads', { params: { lead_type: 'aluguel', ...filters } }),
-            api.get('/properties', { params: { lead_type: 'aluguel' } }).catch(() => ({ data: [] }))
+            api.get('/properties', { params: { lead_type: 'aluguel' } }).catch(() => ({ data: [] })),
+            api.get('/rentals/properties').catch(() => ({ data: [] }))
         ]);
+
+        if (!active) return;
+
+                setData(rentalRes.data);
+        setLeads(Array.isArray(leadsRes.data) ? leadsRes.data : []);
+        setProperties(Array.isArray(propertiesRes.data) ? propertiesRes.data : []);
+        setContracts(Array.isArray(contractsRes.data) ? contractsRes.data : []);
 
         if (!active) return;
 
@@ -300,6 +334,91 @@ function RentalDashboard() {
     label: row.name,
     value: Number(row.imoveis_ativos) || 0
     }));
+
+      // ---------- Contratos de aluguel ----------
+  const todayKey = localDateKey(new Date());
+
+  const activeContracts = contracts.filter((c) => c.status === 'ativo');
+  const inactiveContracts = contracts.filter((c) => c.status !== 'ativo');
+
+  const expiringContracts = activeContracts
+    .filter((c) => c.contract_end)
+    .map((c) => ({ ...c, daysLeft: daysBetween(todayKey, dateKey(c.contract_end)) }))
+    .filter((c) => c.daysLeft <= 90)
+    .sort((a, b) => a.daysLeft - b.daysLeft);
+
+    const overdueContracts = expiringContracts.filter((c) => c.daysLeft < 0);
+    const expiring30 = expiringContracts.filter((c) => c.daysLeft >= 0 && c.daysLeft <= 30);
+
+    const averageRent = activeContracts.length > 0
+    ? activeContracts.reduce((sum, c) => sum + Number(c.rent_value || 0), 0) / activeContracts.length
+    : 0;
+
+    const durations = activeContracts
+    .filter((c) => c.contract_start && c.contract_end)
+    .map((c) => contractMonths(dateKey(c.contract_start), dateKey(c.contract_end)))
+    .filter((months) => months > 0);
+
+    const averageDuration = durations.length > 0
+    ? durations.reduce((sum, months) => sum + months, 0) / durations.length
+    : 0;
+
+    const guaranteeCounts = { fiador: 0, caucao: 0, nenhuma: 0 };
+
+    activeContracts.forEach((c) => {
+    const key = c.guarantee_type === 'fiador' || c.guarantee_type === 'caucao' ? c.guarantee_type : 'nenhuma';
+    guaranteeCounts[key] += 1;
+    });
+
+    const depositsTotal = activeContracts
+    .filter((c) => c.guarantee_type === 'caucao')
+    .reduce((sum, c) => sum + Number(c.deposit_value || 0), 0);
+
+    const guaranteeChartData = Object.entries(guaranteeLabels).map(([key, label]) => ({
+    label,
+    value: guaranteeCounts[key]
+    }));
+
+    const createdMap = {};
+
+    contracts.forEach((c) => {
+    const key = monthKey(localDateKey(c.created_at));
+    if (key) createdMap[key] = (createdMap[key] || 0) + 1;
+    });
+
+    const createdChartData = Object.keys(createdMap)
+    .sort()
+    .map((key) => ({ label: monthLabel(key), value: createdMap[key] }));
+
+    const currentMonthKey = todayKey.slice(0, 7);
+    const endingMap = {};
+
+    activeContracts.forEach((c) => {
+    if (!c.contract_end) return;
+    const key = monthKey(dateKey(c.contract_end));
+    if (key && key >= currentMonthKey) endingMap[key] = (endingMap[key] || 0) + 1;
+    });
+
+    const endingChartData = Object.keys(endingMap)
+    .sort()
+    .map((key) => ({ label: monthLabel(key), value: endingMap[key] }));
+
+    const durationChartData = [
+    { label: 'Até 12 meses', value: durations.filter((m) => m <= 12).length },
+    { label: '13 a 24 meses', value: durations.filter((m) => m > 12 && m <= 24).length },
+    { label: '25 a 36 meses', value: durations.filter((m) => m > 24 && m <= 36).length },
+    { label: 'Mais de 36 meses', value: durations.filter((m) => m > 36).length }
+    ];
+
+    const recentContracts = [...contracts]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5);
+
+    const expiryLabel = (daysLeft) => {
+    if (daysLeft === 0) return 'Vence hoje';
+    if (daysLeft > 0) return `Vence em ${daysLeft} dia(s)`;
+    return `Vencido há ${Math.abs(daysLeft)} dia(s)`;
+    };
 
     return (
     <main className="dd-shell app-shell">
@@ -670,6 +789,213 @@ function RentalDashboard() {
                     <p className="dd-card-desc">Total a pagar aos corretores no mes atual.</p>
                 </article>
                 </section>
+            </section>
+
+                            <section className="dd-panel">
+              <div className="dd-panel-head">
+                <div>
+                  <h2>Contratos de aluguel</h2>
+                  <p>Visão dos aluguéis feitos: situação, garantias, prazos e vencimentos.</p>
+                </div>
+                <button className="dd-link-button" onClick={() => navigate('/alugueis/imoveis')}>
+                  Ver imoveis
+                </button>
+              </div>
+
+              {contracts.length === 0 ? (
+                <div className="dd-empty">Nenhum contrato de aluguel cadastrado.</div>
+              ) : (
+                <>
+                  <section className="dd-grid-3" style={{ marginBottom: 16 }}>
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#0D9488' }}><Icon name="check" /></span>
+                      </div>
+                      <span className="dd-card-label">Contratos ativos</span>
+                      <strong className="dd-card-value">{activeContracts.length}</strong>
+                      <p className="dd-card-desc">Aluguéis em andamento.</p>
+                    </article>
+
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#6B7280' }}><Icon name="file" /></span>
+                      </div>
+                      <span className="dd-card-label">Encerrados ou inativos</span>
+                      <strong className="dd-card-value">{inactiveContracts.length}</strong>
+                      <p className="dd-card-desc">Contratos fora de vigência.</p>
+                    </article>
+
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#7C3AED' }}><Icon name="money" /></span>
+                      </div>
+                      <span className="dd-card-label">Aluguel médio</span>
+                      <strong className="dd-card-value">{formatCurrency(averageRent)}</strong>
+                      <p className="dd-card-desc">Média dos contratos ativos.</p>
+                    </article>
+
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#4C4FE0' }}><Icon name="calendar" /></span>
+                      </div>
+                      <span className="dd-card-label">Prazo médio</span>
+                      <strong className="dd-card-value">{averageDuration.toFixed(1).replace('.', ',')} meses</strong>
+                      <p className="dd-card-desc">Duração média dos contratos ativos.</p>
+                    </article>
+
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#D97706' }}><Icon name="calendar" /></span>
+                      </div>
+                      <span className="dd-card-label">A vencer em 30 dias</span>
+                      <strong className="dd-card-value">{expiring30.length}</strong>
+                      <p className="dd-card-desc">Contratos que terminam no próximo mês.</p>
+                    </article>
+
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#E11D48' }}><Icon name="flame" /></span>
+                      </div>
+                      <span className="dd-card-label">Vencidos ainda ativos</span>
+                      <strong className="dd-card-value">{overdueContracts.length}</strong>
+                      <p className="dd-card-desc">Passaram da data de fim e seguem ativos.</p>
+                    </article>
+                  </section>
+
+                  <section className="dd-grid-3" style={{ marginBottom: 16 }}>
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#2F6FED' }}><Icon name="users" /></span>
+                      </div>
+                      <span className="dd-card-label">Com fiador</span>
+                      <strong className="dd-card-value">{guaranteeCounts.fiador}</strong>
+                      <p className="dd-card-desc">Contratos ativos com fiador.</p>
+                    </article>
+
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#B0389E' }}><Icon name="file" /></span>
+                      </div>
+                      <span className="dd-card-label">Com caução</span>
+                      <strong className="dd-card-value">{guaranteeCounts.caucao}</strong>
+                      <p className="dd-card-desc">Contratos ativos com caução.</p>
+                    </article>
+
+                    <article className="dd-card">
+                      <div className="dd-card-top">
+                        <span className="dd-icon-badge" style={{ background: '#6B7280' }}><Icon name="check" /></span>
+                      </div>
+                      <span className="dd-card-label">Sem garantia</span>
+                      <strong className="dd-card-value">{guaranteeCounts.nenhuma}</strong>
+                      <p className="dd-card-desc">Contratos ativos sem garantia informada.</p>
+                    </article>
+
+                    {isAdmin && (
+                      <article className="dd-card">
+                        <div className="dd-card-top">
+                          <span className="dd-icon-badge" style={{ background: '#0D9488' }}><Icon name="money" /></span>
+                        </div>
+                        <span className="dd-card-label">Valor sob custódia (caução)</span>
+                        <strong className="dd-card-value">{formatCurrency(depositsTotal)}</strong>
+                        <p className="dd-card-desc">Controle apartado. Não entra na receita da imobiliária.</p>
+                      </article>
+                    )}
+                  </section>
+
+                  <div className="dd-charts-grid">
+                    <ChartCard
+                      title="Contratos ativos por garantia"
+                      data={guaranteeChartData}
+                      availableTypes={['pie', 'bar']}
+                      valueLabel="Contratos"
+                    />
+                    <ChartCard
+                      title="Aluguéis feitos por mês"
+                      data={createdChartData}
+                      availableTypes={['bar', 'line', 'area']}
+                      valueLabel="Contratos"
+                    />
+                    <ChartCard
+                      title="Vencimentos por mês"
+                      data={endingChartData}
+                      availableTypes={['bar', 'line']}
+                      valueLabel="Contratos"
+                    />
+                    <ChartCard
+                      title="Prazo dos contratos"
+                      data={durationChartData}
+                      availableTypes={['bar', 'pie']}
+                      valueLabel="Contratos"
+                    />
+                  </div>
+
+                  <h3 style={{ margin: '24px 0 12px' }}>Contratos a vencer e vencidos (próximos 90 dias)</h3>
+
+                  {expiringContracts.length === 0 ? (
+                    <div className="dd-empty">Nenhum contrato vence nos próximos 90 dias.</div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="dd-table">
+                        <thead>
+                          <tr>
+                            <th>Imóvel</th>
+                            <th>Inquilino</th>
+                            <th>Corretor</th>
+                            <th>Fim do contrato</th>
+                            <th>Situação</th>
+                            <th>Aluguel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {expiringContracts.map((c) => (
+                            <tr key={c.id}>
+                                <td>{c.address}</td>
+                                <td>{c.tenant_name || '-'}</td>
+                                <td>{c.corretor || '-'}</td>
+                                <td>{formatDateBr(dateKey(c.contract_end))}</td>
+                                <td>{expiryLabel(c.daysLeft)}</td>
+                                <td>{formatCurrency(c.rent_value)}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </table>
+                    </div>
+                    )}
+
+                    <h3 style={{ margin: '24px 0 12px' }}>Aluguéis mais recentes</h3>
+
+                    <div style={{ overflowX: 'auto' }}>
+                    <table className="dd-table">
+                        <thead>
+                        <tr>
+                            <th>Imóvel</th>
+                            <th>Inquilino</th>
+                            <th>Corretor</th>
+                            <th>Aluguel</th>
+                            <th>Período</th>
+                            <th>Garantia</th>
+                            <th>Origem</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {recentContracts.map((c) => (
+                            <tr key={c.id}>
+                            <td>{c.address}</td>
+                            <td>{c.tenant_name || '-'}</td>
+                            <td>{c.corretor || '-'}</td>
+                            <td>{formatCurrency(c.rent_value)}</td>
+                            <td>
+                                {c.contract_start ? formatDateBr(dateKey(c.contract_start)) : '-'} a {c.contract_end ? formatDateBr(dateKey(c.contract_end)) : '-'}
+                            </td>
+                            <td>{guaranteeLabels[c.guarantee_type] || 'Sem garantia'}</td>
+                            <td>{c.lead_id ? 'Lead' : 'Manual'}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                    </div>
+                </>
+                )}
             </section>
 
             <section className="dd-panel">
