@@ -3,6 +3,15 @@ const supabase = require('../config/supabase');
 const { calculateScore, getTemperature } = require('../services/leadScoringService');
 const { calculateMatch, notifyMatchingLeads, MIN_MATCH_PERCENT } = require('../services/matchingService');
 
+async function isLinkedToProject(propertyId, companyId) {
+    const result = await pool.query(
+        `SELECT project_3d_id FROM properties WHERE id = $1 AND company_id = $2`,
+        [propertyId, companyId]
+    );
+
+    return result.rows.length > 0 && result.rows[0].project_3d_id !== null;
+}
+
 /**
  * Listar imoveis da empresa
  */
@@ -25,8 +34,9 @@ exports.getProperties = async (req, res) => {
 
         const result = await pool.query(
             `
-            SELECT
+                        SELECT
                 properties.*,
+                EXISTS (SELECT 1 FROM property_360_photos p360 WHERE p360.property_id = properties.id) AS has_360,
                 COALESCE(
                     (
                         SELECT json_agg(json_build_object('id', pp.id, 'url', pp.url) ORDER BY pp.position ASC)
@@ -258,6 +268,12 @@ exports.deleteProperty = async (req, res) => {
             return res.status(404).json({ error: 'Imovel nao encontrado.' });
         }
 
+                if (await isLinkedToProject(id, req.user.company_id)) {
+            return res.status(400).json({
+                error: 'Este imovel vem de um Projeto 3D. Exclua pelo Projeto 3D.'
+            });
+        }
+
         const photos = await pool.query(
             `SELECT url FROM property_photos WHERE property_id = $1`,
             [id]
@@ -307,6 +323,12 @@ exports.uploadPropertyPhotos = async (req, res) => {
 
         if (propertyCheck.rows.length === 0) {
             return res.status(404).json({ error: 'Imovel nao encontrado.' });
+        }
+
+                if (await isLinkedToProject(id, req.user.company_id)) {
+            return res.status(400).json({
+                error: 'As fotos deste imovel sao gerenciadas pelo Projeto 3D.'
+            });
         }
 
         const currentCountResult = await pool.query(
@@ -777,6 +799,12 @@ exports.deletePropertyPhoto = async (req, res) => {
             return res.status(404).json({ error: 'Imovel nao encontrado.' });
         }
 
+                if (await isLinkedToProject(id, req.user.company_id)) {
+            return res.status(400).json({
+                error: 'As fotos deste imovel sao gerenciadas pelo Projeto 3D.'
+            });
+        }
+        
         const photo = await pool.query(
             `SELECT url FROM property_photos WHERE id = $1 AND property_id = $2`,
             [photoId, id]

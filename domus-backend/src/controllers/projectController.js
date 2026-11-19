@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const supabase = require('../config/supabase');
+const { syncProjectToCatalog } = require('../services/projectCatalogService');
 
 const BUCKET = 'properties';
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -31,6 +32,14 @@ const toInt = (value) => {
 };
 
 const pathFromUrl = (url) => (url ? url.split(`/${BUCKET}/`)[1] : null);
+
+async function syncCatalog(projectId) {
+    try {
+        await syncProjectToCatalog(projectId);
+    } catch (err) {
+        console.error('Erro ao sincronizar projeto 3D com o catalogo:', err);
+    }
+}
 
 function readFields(body) {
     return {
@@ -156,6 +165,8 @@ exports.createProject = async (req, res) => {
         const projectId = result.rows[0].id;
 
         await savePhotos(projectId, photoFiles, 0);
+                await syncCatalog(projectId);
+
 
         const created = await pool.query(`${PROJECT_SELECT} WHERE p.id = $1`, [projectId]);
 
@@ -221,6 +232,7 @@ exports.updateProject = async (req, res) => {
         );
 
         await savePhotos(id, photoFiles, currentCount);
+                await syncCatalog(id);
 
         const updated = await pool.query(`${PROJECT_SELECT} WHERE p.id = $1`, [id]);
 
@@ -260,6 +272,7 @@ exports.deleteProjectPhoto = async (req, res) => {
         }
 
         await pool.query(`DELETE FROM project_3d_photos WHERE id = $1`, [photoId]);
+                await syncCatalog(id);
 
         return res.json({ message: 'Foto excluida com sucesso.' });
     } catch (err) {

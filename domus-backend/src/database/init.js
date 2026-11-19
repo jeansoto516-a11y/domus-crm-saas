@@ -310,6 +310,8 @@ async function createTables() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_project_3d_photos_project ON project_3d_photos(project_id);
+      ALTER TABLE properties ADD COLUMN IF NOT EXISTS project_3d_id INTEGER REFERENCES projects_3d(id) ON DELETE CASCADE;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_properties_project_3d_unique ON properties(project_3d_id) WHERE project_3d_id IS NOT NULL;
 
       CREATE INDEX IF NOT EXISTS idx_properties_company ON properties(company_id);
       CREATE INDEX IF NOT EXISTS idx_property_photos_property ON property_photos(property_id);
