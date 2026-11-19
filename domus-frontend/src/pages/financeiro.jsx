@@ -65,6 +65,15 @@ function getPeriod(kind) {
     };
 }
 
+function getFuturePeriod() {
+    const now = new Date();
+
+    return {
+        start: fmtLocal(now),
+        end: fmtLocal(new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()))
+    };
+}
+
 const statusLabels = {
     pendente: 'Pendente',
     pago: 'Pago',
@@ -149,6 +158,12 @@ function Financeiro() {
 
     const [saving, setSaving] = useState(false);
     const [exporting, setExporting] = useState(false);
+    const [future, setFuture] = useState(null);
+    const [futurePeriod, setFuturePeriod] = useState(getFuturePeriod());
+    const [futureDraft, setFutureDraft] = useState(getFuturePeriod());
+    const [futureLoading, setFutureLoading] = useState(false);
+    const [futureError, setFutureError] = useState('');
+    const [deposits, setDeposits] = useState(null);
 
     useEffect(() => {
         const check = () => {
@@ -201,6 +216,40 @@ function Financeiro() {
         loadAll();
     }, [loadAll]);
 
+        const loadFuture = useCallback(async () => {
+        try {
+            setFutureLoading(true);
+            setFutureError('');
+
+            const res = await api.get('/finance/future-rentals', {
+                params: { startDate: futurePeriod.start, endDate: futurePeriod.end }
+            });
+
+            setFuture(res.data);
+        } catch (err) {
+            setFutureError(err.response?.data?.error || 'Nao foi possivel calcular os alugueis futuros.');
+        } finally {
+            setFutureLoading(false);
+        }
+    }, [futurePeriod.start, futurePeriod.end]);
+
+    useEffect(() => {
+        loadFuture();
+    }, [loadFuture]);
+
+    const loadDeposits = useCallback(async () => {
+        try {
+            const res = await api.get('/finance/deposits');
+            setDeposits(res.data);
+        } catch (err) {
+            setError(err.response?.data?.error || 'Nao foi possivel carregar as cauções.');
+        }
+    }, []);
+
+    useEffect(() => {
+        loadDeposits();
+    }, [loadDeposits]);
+
     const applyDraft = () => {
         if (!draft.start || !draft.end || draft.start > draft.end) {
             setError('Periodo invalido.');
@@ -213,6 +262,26 @@ function Financeiro() {
         const p = getPeriod(kind);
         setDraft(p);
         setPeriod(p);
+    };
+
+        const applyFutureDraft = () => {
+        if (!futureDraft.start || !futureDraft.end || futureDraft.start > futureDraft.end) {
+            setFutureError('Periodo invalido.');
+            return;
+        }
+
+        setFuturePeriod({ ...futureDraft });
+    };
+
+    const applyFuturePreset = (months) => {
+        const now = new Date();
+        const p = {
+            start: fmtLocal(now),
+            end: fmtLocal(new Date(now.getFullYear(), now.getMonth() + months, now.getDate()))
+        };
+
+        setFutureDraft(p);
+        setFuturePeriod(p);
     };
 
     // ---------- Venda manual ----------
@@ -567,9 +636,12 @@ function Financeiro() {
                     />
                 </div>
 
-                <p style={{ color: 'var(--dd-muted)', fontSize: 13, marginTop: 12 }}>
+                                <p style={{ color: 'var(--dd-muted)', fontSize: 13, marginTop: 12 }}>
                     Para gerar os registros do mês e marcar pagamentos, use a página Aluguéis.
                 </p>
+
+                {renderFuturos()}
+                {renderCaucoes()}
             </>
         );
     };
@@ -652,6 +724,251 @@ function Financeiro() {
             </>
         );
     };
+
+        const renderFuturos = () => (
+        <>
+            <h3 style={{ margin: '32px 0 4px' }}>Aluguéis futuros</h3>
+            <p style={{ color: 'var(--dd-muted)', margin: '0 0 12px', fontSize: 13 }}>
+                Projeção dos contratos ativos: mês cheio em cada mês de vigência, com o valor atual do aluguel e sem previsão de reajuste.
+            </p>
+
+            <div className="dd-analytics-filters" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                <input
+                    type="date"
+                    className="dd-input"
+                    style={{ colorScheme: 'dark', cursor: 'pointer' }}
+                    onClick={openPicker}
+                    value={futureDraft.start}
+                    onChange={(e) => setFutureDraft((cur) => ({ ...cur, start: e.target.value }))}
+                />
+                <span style={{ color: 'var(--dd-muted)' }}>até</span>
+                <input
+                    type="date"
+                    className="dd-input"
+                    style={{ colorScheme: 'dark', cursor: 'pointer' }}
+                    onClick={openPicker}
+                    value={futureDraft.end}
+                    onChange={(e) => setFutureDraft((cur) => ({ ...cur, end: e.target.value }))}
+                />
+                <button className="dd-btn-small" onClick={applyFutureDraft}>Calcular</button>
+                <button className="dd-btn-small" onClick={() => applyFuturePreset(6)}>6 meses</button>
+                <button className="dd-btn-small" onClick={() => applyFuturePreset(12)}>12 meses</button>
+                <button className="dd-btn-small" onClick={() => applyFuturePreset(24)}>24 meses</button>
+            </div>
+
+            {futureError && <div className="dd-alert-error" style={{ marginTop: 12 }}>{futureError}</div>}
+
+            {futureLoading && !future ? (
+                <div className="dd-empty">Calculando aluguéis futuros...</div>
+            ) : !future ? null : (
+                <>
+                    <p style={{ color: 'var(--dd-muted)', fontSize: 13, margin: '12px 0' }}>
+                        Período: {fmtDate(future.period.start)} a {fmtDate(future.period.end)} ({future.period.months} meses)
+                    </p>
+
+                    <div className="dd-grid-3">
+                        <Stat label="Contratos no período" value={future.consolidado.contratos} />
+                        <Stat label="Aluguéis (soma)" value={brl(future.consolidado.aluguel_total)} hint="Valor bruto dos aluguéis" />
+                        <Stat label="Taxa de administração" value={brl(future.consolidado.taxa_adm)} />
+                        <Stat label="Comissão dos corretores" value={brl(future.consolidado.comissao_corretores)} hint="Parte dos corretores na taxa" />
+                        <Stat label="Receita da imobiliária" value={brl(future.consolidado.receita_imobiliaria)} hint="Taxa menos comissão dos corretores" />
+                        <Stat label="Repasse aos proprietários" value={brl(future.consolidado.repasse_proprietarios)} hint="Aluguel menos taxa de administração" />
+                    </div>
+
+                    <div style={chartsGrid}>
+                        <ChartCard
+                            title="Receita da imobiliária por mês"
+                            data={future.meses.map((row) => ({ label: monthLabel(row.month), value: row.receita_imobiliaria }))}
+                            availableTypes={['bar', 'line', 'area']}
+                            valueLabel="Receita"
+                        />
+                        <ChartCard
+                            title="Comissão dos corretores por mês"
+                            data={future.meses.map((row) => ({ label: monthLabel(row.month), value: row.comissao_corretores }))}
+                            availableTypes={['bar', 'line', 'area']}
+                            valueLabel="Comissão"
+                        />
+                        <ChartCard
+                            title="Aluguéis por mês"
+                            data={future.meses.map((row) => ({ label: monthLabel(row.month), value: row.aluguel_total }))}
+                            availableTypes={['bar', 'line', 'area']}
+                            valueLabel="Aluguéis"
+                        />
+                    </div>
+
+                    <h3 style={{ margin: '24px 0 12px' }}>Mês a mês</h3>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="dd-table">
+                            <thead>
+                                <tr>
+                                    <th>Mês</th>
+                                    <th>Contratos</th>
+                                    <th>Aluguéis</th>
+                                    <th>Taxa de administração</th>
+                                    <th>Comissão dos corretores</th>
+                                    <th>Receita da imobiliária</th>
+                                    <th>Repasse aos proprietários</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {future.meses.map((row) => (
+                                    <tr key={row.month}>
+                                        <td>{monthLabel(row.month)}</td>
+                                        <td>{row.contratos}</td>
+                                        <td>{brl(row.aluguel_total)}</td>
+                                        <td>{brl(row.taxa_adm)}</td>
+                                        <td>{brl(row.comissao_corretores)}</td>
+                                        <td>{brl(row.receita_imobiliaria)}</td>
+                                        <td>{brl(row.repasse_proprietarios)}</td>
+                                    </tr>
+                                ))}
+                                <tr style={{ fontWeight: 700 }}>
+                                    <td>Total do período</td>
+                                    <td>{future.consolidado.contratos}</td>
+                                    <td>{brl(future.consolidado.aluguel_total)}</td>
+                                    <td>{brl(future.consolidado.taxa_adm)}</td>
+                                    <td>{brl(future.consolidado.comissao_corretores)}</td>
+                                    <td>{brl(future.consolidado.receita_imobiliaria)}</td>
+                                    <td>{brl(future.consolidado.repasse_proprietarios)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {future.por_corretor.length > 0 && (
+                        <>
+                            <h3 style={{ margin: '24px 0 12px' }}>Comissões por corretor</h3>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="dd-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Corretor</th>
+                                            <th>Contratos</th>
+                                            <th>Comissão no período</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {future.por_corretor.map((row) => (
+                                            <tr key={`${row.broker_id}-${row.name}`}>
+                                                <td>{row.name}</td>
+                                                <td>{row.contratos}</td>
+                                                <td>{brl(row.comissao)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
+
+                    {future.contratos.length > 0 && (
+                        <>
+                            <h3 style={{ margin: '24px 0 12px' }}>Contratos considerados</h3>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="dd-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Imóvel</th>
+                                            <th>Inquilino</th>
+                                            <th>Corretor</th>
+                                            <th>Aluguel</th>
+                                            <th>Início</th>
+                                            <th>Fim</th>
+                                            <th>Meses no período</th>
+                                            <th>Taxa adm. no período</th>
+                                            <th>Comissão do corretor</th>
+                                            <th>Receita da imobiliária</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {future.contratos.map((contract) => (
+                                            <tr key={contract.id}>
+                                                <td>{contract.address}</td>
+                                                <td>{contract.tenant_name || '-'}</td>
+                                                <td>{contract.broker_name || '-'}</td>
+                                                <td>{brl(contract.rent_value)}</td>
+                                                <td>{fmtDate(contract.contract_start)}</td>
+                                                <td>{contract.contract_end ? fmtDate(contract.contract_end) : 'Sem data'}</td>
+                                                <td>{contract.meses_no_periodo}</td>
+                                                <td>{brl(contract.taxa_adm_total)}</td>
+                                                <td>{brl(contract.comissao_corretor_total)}</td>
+                                                <td>{brl(contract.receita_imobiliaria_total)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
+                </>
+            )}
+        </>
+    );
+
+    const renderCaucoes = () => (
+        <>
+            <h3 style={{ margin: '32px 0 4px' }}>Controle de cauções</h3>
+            <p style={{ color: 'var(--dd-muted)', margin: '0 0 12px', fontSize: 13 }}>
+                Controle administrativo apartado. As cauções não entram em receita, lucro, ROI nem comissões.
+            </p>
+
+            {!deposits ? (
+                <div className="dd-empty">Carregando cauções...</div>
+            ) : (
+                <>
+                    <div className="dd-grid-3">
+                        <Stat
+                            label="Cauções ativas"
+                            value={deposits.quantidade_ativas}
+                            hint={`${deposits.quantidade_total} registrada(s) no total`}
+                        />
+                        <Stat
+                            label="Valor sob custódia"
+                            value={brl(deposits.total_ativas)}
+                            hint="Soma das cauções de contratos ativos"
+                        />
+                    </div>
+
+                    {deposits.itens.length === 0 ? (
+                        <div className="dd-empty" style={{ marginTop: 12 }}>Nenhuma caução registrada.</div>
+                    ) : (
+                        <div style={{ overflowX: 'auto', marginTop: 12 }}>
+                            <table className="dd-table">
+                                <thead>
+                                    <tr>
+                                        <th>Lead</th>
+                                        <th>Contato</th>
+                                        <th>Imóvel</th>
+                                        <th>Corretor</th>
+                                        <th>Aluguel</th>
+                                        <th>Caução</th>
+                                        <th>Início</th>
+                                        <th>Fim</th>
+                                        <th>Situação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {deposits.itens.map((item) => (
+                                        <tr key={item.id}>
+                                            <td>{item.lead_name || '-'}</td>
+                                            <td>{item.contact || '-'}</td>
+                                            <td>{item.address}</td>
+                                            <td>{item.broker_name || '-'}</td>
+                                            <td>{brl(item.rent_value)}</td>
+                                            <td>{brl(item.deposit_value)}</td>
+                                            <td>{item.contract_start ? fmtDate(item.contract_start) : '-'}</td>
+                                            <td>{item.contract_end ? fmtDate(item.contract_end) : '-'}</td>
+                                            <td>{item.status === 'ativo' ? 'Ativo' : item.status}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </>
+            )}
+        </>
+    );
 
         const exportExcel = async () => {
         if (!summary) return;
