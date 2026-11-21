@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import RemindersWidget from '../components/RemindersWidget';
 import Icon from '../components/Icon';
+import MoneyInput, { parseMoney } from '../components/MoneyInput';
 import '../styles/dark-theme.css';
 
 const statusLabels = {
@@ -23,6 +24,15 @@ function formatMoney(value) {
     return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+
+function getPropertyValue(property, leadTypeFilter) {
+    if (leadTypeFilter === 'aluguel') return Number(property.rent_price) || null;
+    if (leadTypeFilter === 'venda') return Number(property.price) || null;
+    if (property.lead_type === 'aluguel') return Number(property.rent_price) || null;
+
+    return Number(property.price) || Number(property.rent_price) || null;
+}
+
 function PropertyCatalog() {
     const navigate = useNavigate();
 
@@ -30,6 +40,8 @@ function PropertyCatalog() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filters, setFilters] = useState({ lead_type: '', status: '' });
+    const [valueFilter, setValueFilter] = useState({ min: '', max: '' });
+
 
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [activePhotoIndex, setActivePhotoIndex] = useState(0);
@@ -80,6 +92,27 @@ function PropertyCatalog() {
     const { name, value } = event.target;
     setFilters((current) => ({ ...current, [name]: value }));
     };
+
+    
+    const updateValueFilter = (event) => {
+    const { name, value } = event.target;
+    setValueFilter((current) => ({ ...current, [name]: value }));
+    };
+
+    const minValue = parseMoney(valueFilter.min);
+    const maxValue = parseMoney(valueFilter.max);
+
+    const visibleProperties = properties.filter((property) => {
+        if (minValue === null && maxValue === null) return true;
+
+        const value = getPropertyValue(property, filters.lead_type);
+
+        if (value === null) return false;
+        if (minValue !== null && value < minValue) return false;
+        if (maxValue !== null && value > maxValue) return false;
+
+        return true;
+    });
 
     const openProperty = (property) => {
     setSelectedProperty(property);
@@ -221,7 +254,21 @@ function PropertyCatalog() {
                 <option value="alugado">Alugado</option>
             </select>
             </label>
-            <button className="dd-btn-secondary" onClick={() => setFilters({ lead_type: '', status: '' })}>
+                        <label>
+            Valor mínimo
+            <MoneyInput name="min" onChange={updateValueFilter} value={valueFilter.min} placeholder="Ex.: 300.000,00" />
+            </label>
+            <label>
+            Valor máximo
+            <MoneyInput name="max" onChange={updateValueFilter} value={valueFilter.max} placeholder="Ex.: 600.000,00" />
+            </label>
+            <button
+            className="dd-btn-secondary"
+            onClick={() => {
+                setFilters({ lead_type: '', status: '' });
+                setValueFilter({ min: '', max: '' });
+            }}
+            >
             Limpar
             </button>
         </section>
@@ -234,9 +281,14 @@ function PropertyCatalog() {
             <p>Cadastre o primeiro imovel do catalogo.</p>
             <button className="dd-btn-primary" style={{ marginTop: 12 }} onClick={() => navigate('/catalogo/novo')}>Cadastrar imovel</button>
             </div>
+                ) : visibleProperties.length === 0 ? (
+            <div className="dd-empty">
+            <h2>Nenhum imovel nessa faixa de valor</h2>
+            <p>Ajuste o valor minimo ou maximo, ou clique em Limpar.</p>
+            </div>
         ) : (
             <div className="dd-property-grid">
-            {properties.map((property) => {
+            {visibleProperties.map((property) => {
                 const cover = property.photos?.[0]?.url;
 
                 return (
