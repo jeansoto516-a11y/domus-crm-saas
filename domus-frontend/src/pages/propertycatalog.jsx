@@ -254,7 +254,16 @@ function PropertyCatalog() {
 
                     <div className="dd-property-body">
                     <strong>{property.title}</strong>
-                    <span className="dd-property-location">{property.city} - {property.region}</span>
+                    <span className="dd-property-location">
+                        {[property.city, property.region].filter(Boolean).join(' - ') || 'Local não informado'}
+                    </span>
+
+                    {(property.project_3d_id || property.has_360) && (
+                    <div className="dd-property-specs">
+                        {property.project_3d_id && <span>Projeto 3D</span>}
+                        {property.has_360 && <span>Tour 360°</span>}
+                    </div>
+                    )}
 
                     <div className="dd-property-specs">
                         {property.bedrooms > 0 && <span>{property.bedrooms} dorm.</span>}
@@ -331,6 +340,11 @@ function PropertyCatalog() {
                 <div className="dd-profile-item"><span>Status</span><strong>{statusLabels[selectedProperty.status]}</strong></div>
                 </div>
 
+                                {selectedProperty.project_3d_id && !selectedProperty.city && (
+                <p style={{ color: 'var(--dd-muted)', fontSize: 13 }}>
+                    Imóvel vindo de Projeto 3D: a cidade ainda não foi informada. Use "Editar imovel" para preencher.
+                </p>
+                )}
                 {selectedProperty.description && (
                 <div className="dd-profile-notes">
                     <span>Descricao</span>
@@ -355,9 +369,21 @@ function PropertyCatalog() {
                 <button className="dd-btn-small" onClick={() => navigate(`/catalogo/${selectedProperty.id}/editar`)}>
                     Editar imovel
                 </button>
+                                {selectedProperty.project_3d_id && (
+                <button className="dd-btn-small" onClick={() => navigate('/projetos-3d')}>
+                    Abrir em Projetos 3D
+                </button>
+                )}
+                {selectedProperty.has_360 && (
+                <button className="dd-btn-small" onClick={() => navigate('/tour-360')}>
+                    Ver tour 360
+                </button>
+                )}
+                {!selectedProperty.project_3d_id && (
                 <button className="dd-btn-small" onClick={() => handleDelete(selectedProperty.id, selectedProperty.title)}>
                     Excluir imovel
                 </button>
+                )}
                 </div>
             </div>
             </div>
