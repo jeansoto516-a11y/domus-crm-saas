@@ -33,6 +33,7 @@ import Tour360 from './pages/tour360';
 import Projects3D from './pages/projects3d';
 import Financeiro from './pages/financeiro';
 import SidebarToggle from './components/SidebarToggle';
+import StickyOffsets from './components/StickyOffsets';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -57,6 +58,7 @@ function App() {
   return (
         <BrowserRouter>
       <SidebarToggle />
+      <StickyOffsets />
       <Routes>
           <Route path="/" element={<Home />} />
             <Route path="/termos" element={<Termos />} />

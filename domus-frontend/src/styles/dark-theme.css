@@ -3334,3 +3334,24 @@ body.dd-sidebar-collapsed .dd-main {
     border-bottom: 1px solid var(--dd-border);
   }
 }
+
+
+/* Barras de filtros e pesquisa fixas abaixo do cabecalho */
+@media (min-width: 641px) {
+  .dd-main > .dd-filters-row {
+    position: sticky;
+    top: var(--dd-header-h, 0px);
+    z-index: 40;
+    margin: 0 -40px 16px;
+    padding: 12px 40px;
+    background: rgba(10, 15, 30, 0.94);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--dd-border);
+  }
+
+  .dd-main > .dd-filters-panel {
+    position: sticky;
+    top: var(--dd-header-h, 0px);
+    z-index: 40;
+  }
+}
