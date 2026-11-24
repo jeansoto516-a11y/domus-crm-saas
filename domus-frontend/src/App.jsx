@@ -38,9 +38,18 @@ function PrivateRoute({ children }) {
   return token ? children : <Navigate to="/login" replace />;
 }
 
+function getHomePath() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user.role === 'super_admin' ? '/admin' : '/catalogo';
+  } catch {
+    return '/catalogo';
+  }
+}
+
 function PublicRoute({ children }) {
   const token = localStorage.getItem('token');
-  return token ? <Navigate to="/dashboard" replace /> : children;
+  return token ? <Navigate to={getHomePath()} replace /> : children;
 }
 
 function App() {

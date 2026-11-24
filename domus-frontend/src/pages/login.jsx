@@ -28,7 +28,7 @@ function Login() {
       const { data } = await api.post('/auth/login', form);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/dashboard');
+      navigate(data.user?.role === 'super_admin' ? '/admin' : '/catalogo');
     } catch (err) {
       setError(err.response?.data?.error || 'Nao foi possivel entrar. Confira seus dados.');
     } finally {

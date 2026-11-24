@@ -188,10 +188,10 @@ function PropertyCatalog() {
             <Icon name="users" /> Leads
             {newLeadsCount > 0 && <span className="dd-badge">{newLeadsCount}</span>}
             </button>
-            <button className="active" onClick={() => navigate('/leads/novo')}>
+            <button onClick={() => navigate('/leads/novo')}>
             <Icon name="userPlus" /> Novo lead
             </button>
-            <button onClick={() => navigate('/catalogo')}>
+            <button className="active" onClick={() => navigate('/catalogo')}>
             <Icon name="file" /> Catalogo de imoveis
             </button>
             <button onClick={() => navigate('/tour-360')}>
@@ -209,7 +209,7 @@ function PropertyCatalog() {
             <button onClick={() => navigate('/metas')}>
             <Icon name="filter" /> Metas
             </button>
-            <button className="active" onClick={() => navigate('/meta-ads')}>
+            <button onClick={() => navigate('/meta-ads')}>
             <Icon name="facebook" /> Meta Ads
             </button>
             <button onClick={() => navigate('/perfil')}>
