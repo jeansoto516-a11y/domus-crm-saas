@@ -32,6 +32,7 @@ import MetaAds from './pages/metaads';
 import Tour360 from './pages/tour360';
 import Projects3D from './pages/projects3d';
 import Financeiro from './pages/financeiro';
+import SidebarToggle from './components/SidebarToggle';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -54,7 +55,8 @@ function PublicRoute({ children }) {
 
 function App() {
   return (
-    <BrowserRouter>
+        <BrowserRouter>
+      <SidebarToggle />
       <Routes>
           <Route path="/" element={<Home />} />
             <Route path="/termos" element={<Termos />} />
