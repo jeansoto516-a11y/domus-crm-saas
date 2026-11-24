@@ -3319,3 +3319,18 @@ body.dd-sidebar-collapsed .dd-main {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
   }
 }
+
+
+/* Cabecalho das paginas fixo ao rolar */
+@media (min-width: 641px) {
+  .dd-main > .dd-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    margin: -32px -40px 24px;
+    padding: 24px 40px 16px;
+    background: rgba(10, 15, 30, 0.94);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--dd-border);
+  }
+}
