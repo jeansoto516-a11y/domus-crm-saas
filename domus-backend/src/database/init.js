@@ -57,6 +57,17 @@ async function createTables() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_messages_company_id ON messages(company_id, created_at);
+            CREATE TABLE IF NOT EXISTS message_attachments (
+        id SERIAL PRIMARY KEY,
+        message_id INTEGER REFERENCES messages(id) ON DELETE CASCADE,
+        url TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        mime_type TEXT,
+        file_size BIGINT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_message_attachments_message ON message_attachments(message_id);
 
       
       CREATE TABLE IF NOT EXISTS goal_topics (
