@@ -3355,3 +3355,168 @@ body.dd-sidebar-collapsed .dd-main {
     z-index: 40;
   }
 }
+
+
+/* Mensagens: anexos */
+.dd-chat-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.dd-pending-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+  padding: 6px 8px;
+  background: var(--dd-panel-2);
+  border: 1px solid var(--dd-border);
+  border-radius: 10px;
+}
+
+.dd-pending-file img,
+.dd-file-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.dd-file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dd-blue-dim);
+  color: #BBD1FF;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.dd-pending-file-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dd-pending-file-name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dd-pending-file-size {
+  font-size: 11px;
+  color: var(--dd-muted);
+}
+
+.dd-pending-file button {
+  background: none;
+  border: none;
+  color: var(--dd-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+}
+
+.dd-chat-progress {
+  position: relative;
+  height: 22px;
+  margin-top: 10px;
+  background: var(--dd-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dd-chat-progress-bar {
+  height: 100%;
+  background: var(--dd-blue);
+  transition: width 0.2s ease;
+}
+
+.dd-chat-progress span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+}
+
+.dd-chat-clip {
+  padding: 8px 12px;
+}
+
+.dd-bubble-attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.dd-attach-img {
+  display: block;
+  max-width: 260px;
+  max-height: 220px;
+  border-radius: 10px;
+  object-fit: cover;
+  cursor: zoom-in;
+}
+
+.dd-attach-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.dd-attach-file:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dd-attach-file-info {
+  min-width: 0;
+}
+
+.dd-attach-file-info strong {
+  display: block;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-attach-file-info small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.dd-chat-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 3100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.88);
+  cursor: zoom-out;
+}
+
+.dd-chat-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
